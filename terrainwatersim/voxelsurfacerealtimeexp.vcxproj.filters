@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="source\gl\ScreenAlignedTriangle.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\ShaderObject.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\GLUtils.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\ShaderDataMetaInfo.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\math\NoiseGenerator.h">
+      <Filter>source\math</Filter>
+    </ClInclude>
+    <ClInclude Include="source\math\Random.h">
+      <Filter>source\math</Filter>
+    </ClInclude>
+    <ClInclude Include="source\math\camera\FreeCamera.h">
+      <Filter>source\math\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="source\math\camera\Camera.h">
+      <Filter>source\math\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\TimerQuery.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FolderChangeWatcher.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\UniquePtr.h">
+      <Filter>source\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="source\PCH.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\scene\Scene.h">
+      <Filter>source\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Application.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\GlobalEvents.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\OnScreenLogWriter.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\RenderWindow.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\config\InputConfig.h">
+      <Filter>source\config</Filter>
+    </ClInclude>
+    <ClInclude Include="source\config\GlobalCVar.h">
+      <Filter>source\config</Filter>
+    </ClInclude>
+    <ClInclude Include="source\scene\Background.h">
+      <Filter>source\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\Font.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="source\scene\AntTweakBarInterface.h">
+      <Filter>source\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\resources\UniformBuffer.h">
+      <Filter>source\gl\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\resources\textures\Texture3D.h">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\resources\textures\Texture.h">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="source\gl\resources\textures\Texture2D.h">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\include\stb_image\stb_image.h">
+      <Filter>stb_image</Filter>
+    </ClInclude>
+    <ClInclude Include="source\scene\Terrain.h">
+      <Filter>source\scene</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{28fff477-9955-454e-bfe1-bfaf3234915c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{8247614a-7221-4683-9e05-bbee2e8c3b4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gl">
+      <UniqueIdentifier>{f7eaace0-013f-4551-af10-b5f8d631dd5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math">
+      <UniqueIdentifier>{d49acb20-3704-4628-b4f9-aef0009cb326}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\math\camera">
+      <UniqueIdentifier>{fe332968-eb97-4d40-9ca3-f57cd673ad0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\utils">
+      <UniqueIdentifier>{9d55c8f1-4eba-43f6-9637-9abac9441523}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\scene">
+      <UniqueIdentifier>{ff7bc567-d66f-47e0-a58c-ccbafa616ad1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\config">
+      <UniqueIdentifier>{888a6c69-8e76-4a85-b23d-90a4c19e2cfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gl\resources">
+      <UniqueIdentifier>{78b2e374-1ddc-4a60-8334-e42cae42e921}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\gl\resources\textures">
+      <UniqueIdentifier>{ec691e07-4280-42f5-aecb-e87769b55569}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="stb_image">
+      <UniqueIdentifier>{9bb394f6-95a5-46c0-bc00-45bf13957863}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\screenTri.vert">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\background.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="source\gl\ShaderDataMetaInfo.inl">
+      <Filter>source\gl</Filter>
+    </None>
+    <None Include="shader\constantbuffers.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\helper.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="source\gl\resources\UniformBuffer.inl">
+      <Filter>source\gl\resources</Filter>
+    </None>
+    <None Include="shader\terrainRender.cont">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\terrainRender.eval">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\terrainRender.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\terrainRender.geom">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\terrainRender.vert">
+      <Filter>shader</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\gl\ScreenAlignedTriangle.cpp">
+      <Filter>source\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\ShaderObject.cpp">
+      <Filter>source\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\GLUtils.cpp">
+      <Filter>source\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\math\NoiseGenerator.cpp">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\math\Random.cpp">
+      <Filter>source\math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\math\camera\FreeCamera.cpp">
+      <Filter>source\math\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="source\math\camera\Camera.cpp">
+      <Filter>source\math\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\TimerQuery.cpp">
+      <Filter>source\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FolderChangeWatcher.cpp">
+      <Filter>source\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PCH.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene\Scene.cpp">
+      <Filter>source\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Application.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GlobalEvents.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\OnScreenLogWriter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderWindow.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\config\Input.cpp">
+      <Filter>source\config</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene\Background.cpp">
+      <Filter>source\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\Font.cpp">
+      <Filter>source\gl</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene\AntTweakBarInterface.cpp">
+      <Filter>source\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\UniformBuffer.cpp">
+      <Filter>source\gl\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\textures\Texture.cpp">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\textures\Texture3D.cpp">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\textures\Texture2D.cpp">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\include\stb_image\stb_image.c">
+      <Filter>stb_image</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene\Terrain.cpp">
+      <Filter>source\scene</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

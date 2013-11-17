@@ -1,0 +1,46 @@
+﻿#version 430
+
+#include "constantbuffers.glsl"
+
+layout(binding = 0, rgba8) restrict uniform image3D VolumeTexture;
+
+
+shared float textureCache[1000]; 
+
+// compute shader size
+layout (local_size_x = 10, local_size_y = 10, local_size_z = 10) in;
+void main()
+{
+	ivec3 volumeCoordinate = ivec3(gl_WorkGroupID.xyz) * ivec3(8,8,8) + ivec3(gl_LocalInvocationID.xyz) - ivec3(1,1,1);
+	uint textureCachePos = gl_LocalInvocationID.x + gl_LocalInvocationID.y*10 + gl_LocalInvocationID.z*100;
+
+	// fill shared memory
+	ivec3 textureSamplingPos = volumeCoordinate;
+	textureSamplingPos = clamp(textureSamplingPos, ivec3(0), VolumeMaxTextureLoad);
+	float ownValue = imageLoad(VolumeTexture, textureSamplingPos).w;
+	
+	textureCache[textureCachePos] = ownValue;
+
+	// early outs
+	// own iso to small
+	if(ownValue <= IsoValue)
+		return;
+	// border threads (useless now)
+	if(any(equal(gl_LocalInvocationID.xyz, uvec3(0))) || 
+	   any(equal(gl_LocalInvocationID.xyz, uvec3(9))) )
+		return;
+
+	// sync
+	barrier();
+
+	// compute normal
+	vec3 normal;
+	normal.x = textureCache[textureCachePos + 1] - textureCache[textureCachePos - 1];
+	normal.y = textureCache[textureCachePos + 10] - textureCache[textureCachePos - 10];
+	normal.z = textureCache[textureCachePos + 100] - textureCache[textureCachePos - 100];
+	normal = normalize(normal);
+
+	// store
+	vec4 newDataValue = vec4(normal * 0.5f + vec3(0.5f), ownValue);
+	imageStore(VolumeTexture, textureSamplingPos, newDataValue);
+}
