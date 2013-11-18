@@ -49,7 +49,7 @@ namespace gl
 
   private:
 
-    GLuint      m_BufferObject;
+    BufferId    m_BufferObject;
     ezUInt32    m_uiBufferSizeBytes;
     ezString    m_sBufferName;
 

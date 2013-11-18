@@ -23,7 +23,7 @@ namespace gl
   {
     for(Shader& shader : m_aShader)
     {
-      shader.iGLShaderObject = 0;
+      shader.shaderObject = 0;
       shader.sOrigin = "";
       shader.bLoaded = false;
     }
@@ -42,7 +42,7 @@ namespace gl
     for(Shader& shader : m_aShader)
     {
       if(shader.bLoaded)
-        glDeleteShader(shader.iGLShaderObject);
+        glDeleteShader(shader.shaderObject);
     }
 
     if(m_bContainsAssembledProgram)
@@ -213,12 +213,12 @@ namespace gl
       // destroy old shader
       if(shader.bLoaded)
       {
-        glDeleteShader(shader.iGLShaderObject);
+        glDeleteShader(shader.shaderObject);
         shader.sOrigin = "";
       }
 
       // memorize new data only if loading successful - this way a failed reload won't affect anything
-      shader.iGLShaderObject = shaderObjectTemp;
+      shader.shaderObject = shaderObjectTemp;
       shader.sOrigin = sOriginName;
 
       // remove old associated files
@@ -252,7 +252,7 @@ namespace gl
     {
       if(shader.bLoaded)
       {
-        glAttachShader(tempProgram, shader.iGLShaderObject);
+        glAttachShader(tempProgram, shader.shaderObject);
         ++numAttachedShader;
       }
     }
@@ -519,7 +519,7 @@ namespace gl
   }
   */
 
-  void ShaderObject::PrintShaderInfoLog(GLuint Shader, const ezString& sShaderName)
+  void ShaderObject::PrintShaderInfoLog(ShaderId Shader, const ezString& sShaderName)
   {
 #ifdef EZ_COMPILE_FOR_DEVELOPMENT
     GLint infologLength = 0;
@@ -542,7 +542,7 @@ namespace gl
   }
 
   // Print information about the linking step
-  void ShaderObject::PrintProgramInfoLog(GLuint Program)
+  void ShaderObject::PrintProgramInfoLog(ProgramId Program)
   {
 #ifdef EZ_COMPILE_FOR_DEVELOPMENT
     GLint infologLength = 0;

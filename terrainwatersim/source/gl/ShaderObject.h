@@ -94,9 +94,9 @@ namespace gl
 
   private:
     /// Print information about the compiling step
-    static void PrintShaderInfoLog(GLuint shader, const ezString& sShaderName);
+    static void PrintShaderInfoLog(ShaderId shader, const ezString& sShaderName);
     /// Print information about the linking step
-    static void PrintProgramInfoLog(GLuint program);
+    static void PrintProgramInfoLog(ProgramId program);
 
     /// file handler event for hot reloading
     void FileEventHandler(const ezString& changedShaderFile);
@@ -114,7 +114,7 @@ namespace gl
     void QueryBlockInformations(ezMap<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName);
     
     // the program itself
-    GLuint m_Program;
+    ProgramId m_Program;
     bool m_bContainsAssembledProgram;
 
     /// currently active shader object
@@ -127,7 +127,7 @@ namespace gl
     // underlying shaders
     struct Shader
     {
-      GLuint    iGLShaderObject;
+      ShaderId  shaderObject;
       ezString  sOrigin;
       bool      bLoaded;
     };

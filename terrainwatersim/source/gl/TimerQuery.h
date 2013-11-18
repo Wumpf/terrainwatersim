@@ -16,7 +16,7 @@ namespace gl
     ezTime GetLastTimeElapsed();
 
   private:
-    GLuint m_Query;
+    QueryId m_Query;
     bool m_queryResultAvailable;
   };
 }

@@ -85,6 +85,9 @@
     <ClInclude Include="source\scene\Terrain.h">
       <Filter>source\scene</Filter>
     </ClInclude>
+    <ClInclude Include="source\gl\gl.h">
+      <Filter>source\gl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -147,9 +150,6 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\terrainRender.frag">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\terrainRender.geom">
       <Filter>shader</Filter>
     </None>
     <None Include="shader\terrainRender.vert">

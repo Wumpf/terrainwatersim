@@ -20,7 +20,7 @@ public:
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
   
   float GetTerrainWorldSize() const             { return m_worldSize; }
-  void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; }
+  //void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; } // patch count changes!
 
   float GetMinBlockSizeWorld() const             { return m_minBlockSizeWorld; }
   void GetMinBlockSizeWorld(float worldSize)     { m_minBlockSizeWorld = worldSize; }
@@ -29,13 +29,20 @@ public:
   void SetPixelPerTriangle(float pixelPerTriangle);
 
 private:
-  void DrawRecursive(const ezVec2& min, const ezVec2& max, const ezVec2& cameraPos2D);
+  ezUInt32 FillInstanceBufferRecursive(const ezVec2& min, const ezVec2& max, const ezVec2& cameraPos2D);
+
+  struct PatchInstance
+  {
+    float size;
+    ezVec2 position;
+  };
 
   // Settings.
   float m_worldSize;
   float m_minBlockSizeWorld;
   float m_pixelPerTriangle;
   static const float m_maxTesselationFactor;
+  ezUInt32 m_maxNumRenderedPatchInstances;
   
 
   // Graphics resources.
@@ -44,11 +51,11 @@ private:
   gl::UniformBuffer m_terrainInfoUBO;
   gl::UniformBuffer m_patchInfoUBO;
 
-  GLuint m_patchVertexBuffer;
-  GLuint m_patchVertexArrayObject;
+  gl::BufferId m_patchVertexBuffer;
+  gl::VertexArrayObjectId m_patchVertexArray;
 
-  GLuint m_texturingSamplerObjectAnisotropic;
-  GLuint m_texturingSamplerObjectTrilinear;
+  gl::SamplerId m_texturingSamplerObjectAnisotropic;
+  gl::SamplerId m_texturingSamplerObjectTrilinear;
 
   ezUniquePtr<gl::Texture2D> m_pTextureY;
   ezUniquePtr<gl::Texture2D> m_pTextureXZ;

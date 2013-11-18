@@ -23,10 +23,10 @@ namespace gl
     void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_Format); }
     void BindImage(GLuint slotIndex, ImageAccess access, GLenum format);
 
-    GLuint GetInternHandle() { return m_TextureHandle; }
+    TextureId GetInternHandle() { return m_TextureHandle; }
 
   protected:
-    GLuint m_TextureHandle;
+    TextureId m_TextureHandle;
 
     const ezUInt32 m_uiWidth;
     const ezUInt32 m_uiHeight;

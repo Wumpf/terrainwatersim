@@ -12,7 +12,7 @@ namespace gl
     void Draw() const;
 
   private:
-    GLuint vbo;
-    GLuint vao;
+    BufferId vbo;
+    VertexArrayObjectId vao;
   };
 }

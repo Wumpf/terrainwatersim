@@ -172,6 +172,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\FolderChangeWatcher.h" />
     <ClInclude Include="source\GlobalEvents.h" />
     <ClInclude Include="source\gl\Font.h" />
+    <ClInclude Include="source\gl\gl.h" />
     <ClInclude Include="source\gl\GLUtils.h" />
     <ClInclude Include="source\gl\resources\textures\Texture.h" />
     <ClInclude Include="source\gl\resources\textures\Texture2D.h" />
@@ -202,7 +203,6 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\terrainRender.cont" />
     <None Include="shader\terrainRender.eval" />
     <None Include="shader\terrainRender.frag" />
-    <None Include="shader\terrainRender.geom" />
     <None Include="shader\terrainRender.vert" />
     <None Include="source\gl\resources\UniformBuffer.inl" />
     <None Include="source\gl\ShaderDataMetaInfo.inl" />
