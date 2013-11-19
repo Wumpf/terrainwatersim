@@ -29,13 +29,6 @@ public:
   void SetPixelPerTriangle(float pixelPerTriangle);
 
 private:
-  ezUInt32 FillInstanceBufferRecursive(const ezVec2& min, const ezVec2& max, const ezVec2& cameraPos2D);
-
-  struct PatchInstance
-  {
-    float size;
-    ezVec2 position;
-  };
 
   // Settings.
   float m_worldSize;
@@ -53,6 +46,9 @@ private:
 
   gl::BufferId m_patchVertexBuffer;
   gl::VertexArrayObjectId m_patchVertexArray;
+  gl::IndexBufferId m_patchIndexBuffer_full;
+  gl::IndexBufferId m_patchIndexBuffer_stitch1;
+  gl::IndexBufferId m_patchIndexBuffer_stitch2;
 
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;

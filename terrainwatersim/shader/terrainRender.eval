@@ -3,7 +3,7 @@
 #include "constantbuffers.glsl"
 #include "terrainRenderData.glsl"
 
-layout(quads, equal_spacing, cw) in;
+layout(triangles, fractional_odd_spacing, cw) in;
 
 layout(location = 0) in EvalInVertex In[];
 layout(location = 0) out FragInVertex Out;
@@ -13,32 +13,16 @@ in gl_PerVertex
 	vec4 gl_Position;
 } gl_in[];
 
-vec4 interpolateQuad(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
-{
-	vec4 a = mix(v0, v1, gl_TessCoord.x);
-	vec4 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
-
-vec3 interpolateQuad(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
-{
-	vec3 a = mix(v0, v1, gl_TessCoord.x);
-	vec3 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
-
-vec2 interpolateQuad(in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3)
-{
-	vec2 a = mix(v0, v1, gl_TessCoord.x);
-	vec2 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
 
 void main()
 {	
-	Out.HeightmapCoord = interpolateQuad(In[0].HeightmapCoord, In[1].HeightmapCoord, In[2].HeightmapCoord, In[3].HeightmapCoord);
+	Out.HeightmapCoord = gl_TessCoord.x * In[0].HeightmapCoord + 
+							gl_TessCoord.y * In[1].HeightmapCoord + 
+							gl_TessCoord.z * In[2].HeightmapCoord;
 
-	Out.WorldPos.xz = interpolateQuad(In[0].WorldPos2D, In[1].WorldPos2D, In[2].WorldPos2D, In[3].WorldPos2D);
+	Out.WorldPos.xz = gl_TessCoord.x * In[0].WorldPos2D +
+						gl_TessCoord.y * In[1].WorldPos2D +
+						gl_TessCoord.z * In[2].WorldPos2D;
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
 	Out.WorldPos.y = 0.0f; //textureLod(Heightmap, Out.HeightmapCoord, 0).x * HeightmapHeightScale;

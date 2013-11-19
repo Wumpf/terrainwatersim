@@ -19,7 +19,7 @@ namespace InputConfig
   const char* g_szAction_CameraRotateAxisXNeg = "X-";
   const char* g_szAction_CameraRotateAxisYNeg = "Y-";
 
-  const float g_fCameraMoveScale = 12.0f;
+  const float g_fCameraMoveScale = 100.0f;
   const float g_fCameraRotationScale = 0.01f;
 }
 

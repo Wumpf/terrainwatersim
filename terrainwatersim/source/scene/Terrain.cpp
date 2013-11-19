@@ -9,6 +9,7 @@
 #include "gl/GLUtils.h"
 
 #include "..\config\GlobalCVar.h"
+#include <Foundation\Math\Rect.h>
 
 namespace SceneConfig
 {
@@ -19,7 +20,7 @@ const float Terrain::m_maxTesselationFactor = 32.0f;
 
 Terrain::Terrain() :
   m_worldSize(1024.0f),
-  m_minBlockSizeWorld(32.0f)
+  m_minBlockSizeWorld(8.0f)
 {
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -67,19 +68,47 @@ Terrain::Terrain() :
   glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
   
 
-  // patch vertex buffer
-  ezVec2 patchVertices[] = {ezVec2(0.0f, 1.0f), ezVec2(1.0f, 1.0f), ezVec2(1.0f, 0.0f), ezVec2(0.0f, 0.0f) };
+  // Patch vertex buffer
+  ezVec2 patchVertices[9];
+  for(int x=0; x<3; ++x)
+  {
+    for(int y=0; y<3; ++y)
+      patchVertices[x + y * 3] = ezVec2(x * 0.5f, y * 0.5f);
+  }
   glGenBuffers(1, &m_patchVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_patchVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(patchVertices), patchVertices, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  // vertex array
-  glGenVertexArrays(1, &m_patchVertexArrayObject);
-  glBindVertexArray(m_patchVertexArrayObject);
+  // Patch index buffer
+    // Full patch
+  ezUInt8 indicesFull[] = { 0,1,4, 4,1,2, 0,4,3, 4,2,5, 3,4,6,  6,4,7, 7,4,8, 8,4,5 };  // optimize?
+  glGenBuffers(1, &m_patchIndexBuffer_full);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_full);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesFull), indicesFull, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // First stitch: Only one triangle at bottom
+  ezUInt8 indicesStitch1[] = { 0,1,4, 4,1,2, 0,4,3, 4,2,5, 3,4,6, 6,4,8, 8,4,5 };  // optimize?
+  glGenBuffers(1, &m_patchIndexBuffer_stitch1);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_stitch1);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesStitch1), indicesStitch1, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    // Second stitch: Only one triangle at bottom and right
+  ezUInt8 indicesStitch2[] = { 0,1,4, 4,1,2, 0,4,3, 3,4,6, 6,4,8, 8,4,2 };  // optimize?
+  glGenBuffers(1, &m_patchIndexBuffer_stitch2);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_stitch2);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicesStitch2), indicesStitch2, GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  
+
+  // patch vertex array
+  glGenVertexArrays(1, &m_patchVertexArray);
+  glBindVertexArray(m_patchVertexArray);
   glBindBuffer(GL_ARRAY_BUFFER, m_patchVertexBuffer);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-  
+
+  // patch instance vertex array
+
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
@@ -90,8 +119,11 @@ Terrain::Terrain() :
 
 Terrain::~Terrain()
 {
-  glDeleteVertexArrays(1, &m_patchVertexArrayObject);
+  glDeleteVertexArrays(1, &m_patchVertexArray);
   glDeleteBuffers(1, &m_patchVertexBuffer);
+  glDeleteBuffers(1, &m_patchIndexBuffer_full);
+  glDeleteBuffers(1, &m_patchIndexBuffer_stitch1);
+  glDeleteBuffers(1, &m_patchIndexBuffer_stitch2);
   glDeleteSamplers(1, &m_texturingSamplerObjectAnisotropic);
   glDeleteSamplers(1, &m_texturingSamplerObjectTrilinear);
 }
@@ -101,52 +133,65 @@ void Terrain::SetPixelPerTriangle(float pixelPerTriangle)
   m_terrainInfoUBO["TrianglesPerClipSpaceUnit"].Set((static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / pixelPerTriangle) / 2.0f);
 }
 
-void Terrain::DrawRecursive(const ezVec2& min, const ezVec2& max, const ezVec2& cameraPos2D)
-{
-  ezVec2 center = (min + max) / 2.0f;
-  float blockSize = max.x - min.x;
-  float distanceToCamSq = (center - cameraPos2D).GetLengthSquared();
-  if(blockSize > distanceToCamSq)
-    distanceToCamSq = 0.0f;
-
-  if(false)	// culling
-    return;
-
-
-  // Camera is more than two times the of the current block-size away? - far enough away to render NOW
-  if(distanceToCamSq / (blockSize * blockSize) > 6.0f ||
-    blockSize <= m_minBlockSizeWorld)	// minimum size
-  {
-
-    // todo: Push into instancing buffer rather than draw immediately!
-
-    m_patchInfoUBO["PatchWorldPosition"].Set(min); // 2D Position in world
-    m_patchInfoUBO["PatchWorldScale"].Set(blockSize); // Scale of the Patch
-
-    m_patchInfoUBO.UpdateGPUData();
-
-    glDrawArrays(GL_PATCHES, 0, 4);
-  }
-  else // subdivide
-  {
-    DrawRecursive(min, center, cameraPos2D);
-    DrawRecursive(ezVec2(center.x, min.y), ezVec2(max.x, center.y) , cameraPos2D);
-    DrawRecursive(center, max, cameraPos2D);
-    DrawRecursive(ezVec2(min.x, center.y), ezVec2(center.x, max.y) , cameraPos2D);
-  }
-}
 
 void Terrain::Draw(const ezVec3& cameraPosition)
 {
+  // Render.
   m_terrainRenderShader.Activate();
 
   m_terrainInfoUBO.BindBuffer(5);
   m_patchInfoUBO.BindBuffer(6);
 
-  glBindVertexArray(m_patchVertexArrayObject);
-  glPatchParameteri(GL_PATCH_VERTICES, 4);
+  
+  glBindVertexArray(m_patchVertexArray);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_full);
+  glPatchParameteri(GL_PATCH_VERTICES, 3);
  
-  DrawRecursive(ezVec2(0.0f), ezVec2(m_worldSize), ezVec2(cameraPosition.x, cameraPosition.z));
+  ezUInt32 ringThinkness = 8;
+  static const ezUInt32 numRings = 6;
+
+  float blockSize = m_minBlockSizeWorld;
+  
+
+  ezVec2 minBefore(0.0f);
+  ezVec2 maxBefore(0.0f);
+
+  for(int ring=0; ring<numRings; ++ring)
+  {
+    m_patchInfoUBO["PatchWorldScale"].Set(blockSize);
+
+    ezVec2 cameraBlockPosition = ezVec2(ezMath::Floor(cameraPosition.x / blockSize/2) * blockSize*2, ezMath::Floor(cameraPosition.z / blockSize/2) * blockSize*2);
+    ezVec2 positionMin = cameraBlockPosition - ezVec2(blockSize * ringThinkness);
+    ezVec2 positionMax = cameraBlockPosition + ezVec2(blockSize * ringThinkness);
+
+    // World is not infinite!
+    positionMin.x = ezMath::Clamp(positionMin.x, 0.0f, m_worldSize);
+    positionMin.y = ezMath::Clamp(positionMin.y, 0.0f, m_worldSize);
+    positionMax.x = ezMath::Clamp(positionMax.x, 0.0f, m_worldSize);
+    positionMax.y = ezMath::Clamp(positionMax.y, 0.0f, m_worldSize);
+
+    ezVec2 position;
+    for(position.x = positionMin.x; position.x < positionMax.x; position.x += blockSize)
+    {
+      for(position.y = positionMin.y; position.y < positionMax.y; position.y += blockSize)
+      {
+        // Skip tile position is within last ring. Since size doubles every time, these are not many.
+        if(!(position.x < minBefore.x || position.y < minBefore.y || position.x >= maxBefore.x || position.y >= maxBefore.y))
+          continue;
+
+        // Draw.
+        m_patchInfoUBO["PatchWorldPosition"].Set(position); // 2D Position in world
+        m_patchInfoUBO.UpdateGPUData();
+
+        glDrawElements(GL_PATCHES, 8 * 3, GL_UNSIGNED_BYTE, NULL);
+      }
+    }
+
+    minBefore = positionMin;
+    maxBefore = positionMax;
+    blockSize *= 2;
+  }
+
  
 //  glPatchParameteri(GL_PATCH_VERTICES, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
