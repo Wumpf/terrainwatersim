@@ -7,7 +7,20 @@ layout(location = 0) out ContInVertex Out;
 
 void main()
 {	
-    Out.WorldPos.xz = In.PatchRelPosition * PatchWorldScale + PatchWorldPosition;
+	vec2 patchRelPosition = In.PatchRelPosition;
+	if(PatchType == 4)
+		patchRelPosition.xy = 1.0f - patchRelPosition.xy;
+	else
+	{ 	
+		if(PatchType % 2 != 0)
+			patchRelPosition.y = 1.0f - patchRelPosition.y;
+		if(PatchType > 1)
+			patchRelPosition.xy = patchRelPosition.yx;
+	}
+
+
+
+    Out.WorldPos.xz = patchRelPosition * PatchWorldScale + PatchWorldPosition;
 	Out.HeightmapCoord = vec2(0.0f);//In.PatchRelPosition * PatchHeightmapTexcoordScale + PatchHeightmapTexcoordPosition;
 
 	// Todo: Using lower mipmaps could both improve quality and performance!

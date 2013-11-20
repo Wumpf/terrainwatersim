@@ -144,10 +144,10 @@ void Terrain::Draw(const ezVec3& cameraPosition)
 
   
   glBindVertexArray(m_patchVertexArray);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_full);
+ 
   glPatchParameteri(GL_PATCH_VERTICES, 3);
  
-  ezUInt32 ringThinkness = 8;
+  static const ezUInt32 ringThinkness = 8;
   static const ezUInt32 numRings = 6;
 
   float blockSize = m_minBlockSizeWorld;
@@ -160,6 +160,7 @@ void Terrain::Draw(const ezVec3& cameraPosition)
   {
     m_patchInfoUBO["PatchWorldScale"].Set(blockSize);
 
+    // snap to next grid
     ezVec2 cameraBlockPosition = ezVec2(ezMath::Floor(cameraPosition.x / blockSize/2) * blockSize*2, ezMath::Floor(cameraPosition.z / blockSize/2) * blockSize*2);
     ezVec2 positionMin = cameraBlockPosition - ezVec2(blockSize * ringThinkness);
     ezVec2 positionMax = cameraBlockPosition + ezVec2(blockSize * ringThinkness);
@@ -178,6 +179,41 @@ void Terrain::Draw(const ezVec3& cameraPosition)
         // Skip tile position is within last ring. Since size doubles every time, these are not many.
         if(!(position.x < minBefore.x || position.y < minBefore.y || position.x >= maxBefore.x || position.y >= maxBefore.y))
           continue;
+
+        int xBorder = 0;
+        int yBorder = 0;
+        if(position.y == positionMin.y)
+          yBorder = -1;
+        else if(position.y + blockSize >= positionMax.y)
+          yBorder =  1;
+        if(position.x == positionMin.x)
+          xBorder = -1;
+        else if(position.x + blockSize >= positionMax.x)
+          xBorder =  1;
+
+
+        if(yBorder == -1)
+          m_patchInfoUBO["PatchType"].Set(xBorder == -1 ? 4 : 1);
+        else if(xBorder == -1)
+          m_patchInfoUBO["PatchType"].Set(3);
+        else if(yBorder == 1)
+          m_patchInfoUBO["PatchType"].Set(0);
+        else if(xBorder == 1)
+          m_patchInfoUBO["PatchType"].Set(2);
+
+        if(xBorder == 0 && yBorder == 0)
+        {
+           glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_full);
+        }
+        else
+        {
+          if(xBorder == 0 || yBorder == 0)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_stitch1);
+          else
+          {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer_stitch2);
+          }
+        }
 
         // Draw.
         m_patchInfoUBO["PatchWorldPosition"].Set(position); // 2D Position in world

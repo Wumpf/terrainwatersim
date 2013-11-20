@@ -22,6 +22,8 @@ layout(binding = 6, shared) uniform TerrainPatchInfo
 	vec2 PatchWorldPosition;					// 2D Position in world
 	vec2 PatchHeightmapTexcoordPosition;		// 2D Position on heightmap
 
+	int PatchType; // 0: Y-, 1: Y+, 2: X-, 3: X+, 4: Special corner
+
 	float PatchWorldScale;					// Scale of the Patch
 	float PatchHeightmapTexcoordScale;		// Size of the patch on the heightmap.
 };
