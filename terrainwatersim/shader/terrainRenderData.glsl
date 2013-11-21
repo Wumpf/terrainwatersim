@@ -17,23 +17,15 @@ layout(binding = 5, shared) uniform GlobalTerrainInfo
 	float TextureRepeat; */
 };
 
-layout(binding = 6, shared) uniform TerrainPatchInfo
-{
-	vec2 PatchWorldPosition;					// 2D Position in world
-	vec2 PatchHeightmapTexcoordPosition;		// 2D Position on heightmap
-
-	int PatchType; // 0: Y-, 1: Y+, 2: X-, 3: X+, 4: Special corner
-
-	float PatchWorldScale;					// Scale of the Patch
-	float PatchHeightmapTexcoordScale;		// Size of the patch on the heightmap.
-};
-
 //layout(binding = 0) uniform sampler2D Heightmap;
 
 // Shader out/in
 struct VertInVertex
 {
 	vec2 PatchRelPosition;
+	vec2 PatchWorldPosition;
+	float PatchWorldScale;
+	uint PatchRotationType; // 0: Y-, 1: Y+, 2: X-, 3: X+, 4: Special corner
 };
 struct ContInVertex
 {
