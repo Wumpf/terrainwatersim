@@ -121,8 +121,9 @@ ezResult AntTweakBarInterface::Init()
   // terrain
   //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");
   ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=TerrainRendering");
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::g_Wireframe);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::g_UseAnisotropicFilter);  
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  
 
   // register eventhandler
   GlobalEvents::g_pWindowMessage->AddEventHandler(ezEvent<const GlobalEvents::Win32Message&>::Handler(&AntTweakBarInterface::WindowMessageEventHandler, this));

@@ -19,7 +19,13 @@
 
 namespace SceneConfig
 {
-  ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=TerrainRendering");
+  namespace TerrainRendering
+  {
+    ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=TerrainRendering");
+    ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=TerrainRendering min=3.0 max=200");
+      
+    ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=TerrainRendering");
+  }
 }
 
 GLuint vertexArray;
@@ -64,6 +70,11 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
 
   // user interface
   m_UserInterface->Init();
+
+  // Callbacks for CVars + initial set
+  m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
+  SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
+    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue()); }));
 }
 
 Scene::~Scene(void)
@@ -115,7 +126,7 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
   // render processed data
   m_DrawTimer->Start();
-  if(SceneConfig::g_Wireframe)
+  if(SceneConfig::TerrainRendering::g_Wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
   m_pTerrain->Draw(m_pCamera->GetPosition() );

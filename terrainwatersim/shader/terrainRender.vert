@@ -18,11 +18,10 @@ void main()
 			patchRelPosition.xy = patchRelPosition.yx;
 	}
 
-
-
     Out.WorldPos.xz = patchRelPosition * In.PatchWorldScale + In.PatchWorldPosition;
-	Out.HeightmapCoord = vec2(0.0f);//In.PatchRelPosition * PatchHeightmapTexcoordScale + PatchHeightmapTexcoordPosition;
+	Out.HeightmapCoord = Out.WorldPos.xz * HeightmapWorldTexelSize;
+	Out.WorldPos.xz += GridMinPosition;
 
 	// Todo: Using lower mipmaps could both improve quality and performance!
-	Out.WorldPos.y = 0.0f; //textureLod(Heightmap, Out.HeightmapCoord, 0).x * HeightmapHeightScale;
+	Out.WorldPos.y = textureLod(Heightmap, Out.HeightmapCoord, 0).x * HeightmapHeightScale;
 }

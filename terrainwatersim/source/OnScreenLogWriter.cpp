@@ -54,7 +54,8 @@ void OnScreenLogWriter::LogMessageHandler(const ezLoggingEventData& eventData)
       ezHybridArray<char, 128> linecpy;
       linecpy.SetCount(count);
       char* data = static_cast<ezArrayPtr<char>>(linecpy).GetPtr();
-      ezStringUtils::Copy(data, count, text);
+      if(data != NULL)
+        ezStringUtils::Copy(data, count, text);
       logtext.Append(data);
       text = nextLine+1;
     }

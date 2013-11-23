@@ -30,13 +30,17 @@ public:
 
 private:
   void UpdateInstanceData(const ezVec3& cameraPosition);
+  void CreateHeightmap();
 
   // Settings.
   float m_worldSize;
   float m_minPatchSizeWorld;
   float m_pixelPerTriangle;
+  float m_heightScale;
   static const float m_maxTesselationFactor;
   ezUInt32 m_maxNumRenderedPatchInstances;
+
+  ezUInt32 m_heightmapSize;
 
   static const ezUInt32 m_ringThinkness = 8;
   static const ezUInt32 m_numRings = 6;
@@ -49,6 +53,8 @@ private:
   };
 
   // Graphics resources.
+  gl::Texture2D* m_pHeightmap;
+
   gl::ShaderObject m_terrainRenderShader;
   gl::UniformBuffer m_terrainInfoUBO;
 

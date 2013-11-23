@@ -11,9 +11,11 @@ namespace GeneralConfig
 
 namespace SceneConfig
 {
-  // defined in Scene.cpp
-  extern ezCVarBool g_Wireframe;
+  namespace TerrainRendering
+  {
+    extern ezCVarBool g_Wireframe;
+    extern ezCVarFloat g_PixelPerTriangle;
+    extern ezCVarBool g_UseAnisotropicFilter;
+  }
 
-  // defined in VoxelTerrain.cpp
-  extern ezCVarBool g_UseAnisotropicFilter;
 }

@@ -1,23 +1,19 @@
 layout(binding = 5, shared) uniform GlobalTerrainInfo
 {
+	vec2 GridMinPosition;
 	float HeightmapHeightScale;
-	float HeightmapTexelSize;
-	float HeightmapTexelSizeWorld_doubled;	// size of a texel in worldcoordinates doubled
-	
+	float HeightmapWorldTexelSize;	// How big a tex is in world size.
+
 	float MaxTesselationFactor;
 
 	// Determines how many triangles per Clip Space unit the shader tries to generate
 	float TrianglesPerClipSpaceUnit;
 
-	/*float DetailHeightScale;
-	float DetailHeightmapTexcoordFactor;
-	float DetailHeightmapTexelSize;	
-	float DetailHeightmapTexelSizeWorld_doubled;	// size of a texel in worldcoordinates doubled
-
-	float TextureRepeat; */
+	// 1.0 / HeightmapSize
+	float HeightmapTexelSize; 
 };
 
-//layout(binding = 0) uniform sampler2D Heightmap;
+layout(binding = 0) uniform sampler2D Heightmap;
 
 // Shader out/in
 struct VertInVertex
