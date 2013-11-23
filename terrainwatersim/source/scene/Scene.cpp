@@ -61,9 +61,9 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_TimeUBO.Init(cameraUBOusingShader, "Time");
 */
   
-  m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3(1,-2.0f,1).GetNormalized());
+  m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3(1.5f, 1.0f, 1.5f).GetNormalized());
   m_GlobalSceneInfo["GlobalDirLightColor"].Set(ezVec3(0.98f, 0.98f, 0.8f));
-  m_GlobalSceneInfo["GlobalAmbient"].Set(ezVec3(0.3f, 0.3f, 0.3f));
+  m_GlobalSceneInfo["GlobalAmbient"].Set(ezVec3(0.38f, 0.38f, 0.4f));
   
   ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 5, m_pTerrain->GetTerrainWorldSize() / 2);
   m_pCamera->SetPosition(vCameraPos);
@@ -71,10 +71,15 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   // user interface
   m_UserInterface->Init();
 
-  // Callbacks for CVars + initial set
-  m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
+  // Callbacks for CVars
   SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
     [=](const ezCVar::CVarEvent&) { m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue()); }));
+  SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
+    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue()); }));
+
+  // Trigger initial values
+  m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
+  m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());
 }
 
 Scene::~Scene(void)
@@ -92,7 +97,7 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   ezMat4 inverseViewProjection = m_pCamera->GetViewProjectionMatrix();
   inverseViewProjection.Invert();
   m_CameraUBO["InverseViewProjection"].Set(inverseViewProjection);
-  //m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
+  m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
   
   // update stats vars
   ezStringBuilder statString; statString.Format("%.2f ms", m_DrawTimer->GetLastTimeElapsed().GetMilliSeconds());

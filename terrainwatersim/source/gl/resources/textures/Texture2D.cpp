@@ -25,7 +25,8 @@ namespace gl
       ezLog::Error("Couldn't find texture \"%s\".", sFilename.GetData());
       return ezUniquePtr<Texture2D>(); // return NULL
     }
-    stbi_uc* TextureData = stbi_load(sAbsolutePath.GetData(), &uiTexSizeX, &uiTexSizeY, NULL, 4);
+    int numComps = -1;
+    stbi_uc* TextureData = stbi_load(sAbsolutePath.GetData(), &uiTexSizeX, &uiTexSizeY, &numComps, 4);
     if(!TextureData)
     {
       ezLog::Error("Error loading texture \"%s\".", sAbsolutePath.GetData());

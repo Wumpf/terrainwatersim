@@ -28,6 +28,9 @@ public:
   float GetPixelPerTriangle() const;
   void SetPixelPerTriangle(float pixelPerTriangle);
 
+  bool GetAnisotropicFiltering() const { return m_anisotropicFiltering; }
+  void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
+
 private:
   void UpdateInstanceData(const ezVec3& cameraPosition);
   void CreateHeightmap();
@@ -39,11 +42,12 @@ private:
   float m_heightScale;
   static const float m_maxTesselationFactor;
   ezUInt32 m_maxNumRenderedPatchInstances;
-
   ezUInt32 m_heightmapSize;
 
   static const ezUInt32 m_ringThinkness = 8;
   static const ezUInt32 m_numRings = 6;
+
+  bool m_anisotropicFiltering;
 
   struct PatchInstanceData
   {
@@ -81,7 +85,9 @@ private:
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;
 
-  ezUniquePtr<gl::Texture2D> m_pTextureY;
-  ezUniquePtr<gl::Texture2D> m_pTextureXZ;
+  ezUniquePtr<gl::Texture2D> m_pTextureGrassDiffuseSpec;
+  ezUniquePtr<gl::Texture2D> m_pTextureStoneDiffuseSpec;
+  ezUniquePtr<gl::Texture2D> m_pTextureGrassNormalHeight;
+  ezUniquePtr<gl::Texture2D> m_pTextureStoneNormalHeight;
 };
 

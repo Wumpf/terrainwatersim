@@ -15,10 +15,11 @@ const float Terrain::m_maxTesselationFactor = 64.0f;
 
 Terrain::Terrain() :
   m_worldSize(1024.0f),
-  m_heightmapSize(1024),
+  m_heightmapSize(2048),
   m_minPatchSizeWorld(16.0f),
   m_pHeightmap(NULL),
-  m_heightScale(128.0f)
+  m_heightScale(150.0f),
+  m_anisotropicFiltering(false)
 {
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -32,15 +33,10 @@ Terrain::Terrain() :
   m_terrainInfoUBO.Init(m_terrainRenderShader, "GlobalTerrainInfo");
   m_terrainInfoUBO["GridMinPosition"].Set(ezVec2(0.0f));
   m_terrainInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
-  m_terrainInfoUBO["HeightmapWorldTexelSize"].Set((m_worldSize / m_heightmapSize) / m_heightmapSize);
+  m_terrainInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
   SetPixelPerTriangle(50.0f);
   m_terrainInfoUBO["HeightmapHeightScale"].Set(m_heightScale);
-
-  /*m_terrainInfoUBO["DetailHeightScale"].Set();
-  m_terrainInfoUBO["DetailHeightmapTexcoordFactor"].Set();
-  m_terrainInfoUBO["DetailHeightmapTexelSize"].Set();	
-  m_terrainInfoUBO["DetailHeightmapTexelSizeWorld_doubled"].Set();	// size of a texel in worldcoordinates doubled
-  m_terrainInfoUBO["TextureRepeat"].Set(); */
+  m_terrainInfoUBO["TextureRepeat"].Set(0.04f);
 
   // sampler
   glGenSamplers(1, &m_texturingSamplerObjectAnisotropic);
@@ -134,8 +130,10 @@ Terrain::Terrain() :
   CreateHeightmap();
 
   // load textures
-  m_pTextureY.Swap(gl::Texture2D::LoadFromFile("grass.png"));
-  m_pTextureXZ.Swap(gl::Texture2D::LoadFromFile("rock.png"));
+  m_pTextureGrassDiffuseSpec.Swap(gl::Texture2D::LoadFromFile("grass.tga"));
+  m_pTextureStoneDiffuseSpec.Swap(gl::Texture2D::LoadFromFile("rock.tga"));
+  m_pTextureGrassNormalHeight.Swap(gl::Texture2D::LoadFromFile("grass_normal.tga"));
+  m_pTextureStoneNormalHeight.Swap(gl::Texture2D::LoadFromFile("rock_normal.tga"));
 }
 
 Terrain::~Terrain()
@@ -265,6 +263,22 @@ void Terrain::Draw(const ezVec3& cameraPosition)
 
   glBindSampler(0, m_texturingSamplerObjectTrilinear);
   m_pHeightmap->Bind(0);
+
+  if(m_anisotropicFiltering)
+  {
+    glBindSampler(1, m_texturingSamplerObjectAnisotropic);
+    glBindSampler(2, m_texturingSamplerObjectAnisotropic);
+  }
+  else
+  {
+    glBindSampler(1, m_texturingSamplerObjectTrilinear);
+    glBindSampler(2, m_texturingSamplerObjectTrilinear);
+  }
+
+  m_pTextureGrassDiffuseSpec->Bind(1);
+  m_pTextureStoneDiffuseSpec->Bind(2);
+  m_pTextureGrassNormalHeight->Bind(3);
+  m_pTextureStoneNormalHeight->Bind(4);
 
   m_terrainRenderShader.Activate();
   m_terrainInfoUBO.BindBuffer(5);

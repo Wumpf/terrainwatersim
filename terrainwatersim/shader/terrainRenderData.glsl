@@ -9,11 +9,15 @@ layout(binding = 5, shared) uniform GlobalTerrainInfo
 	// Determines how many triangles per Clip Space unit the shader tries to generate
 	float TrianglesPerClipSpaceUnit;
 
-	// 1.0 / HeightmapSize
-	float HeightmapTexelSize; 
+	// (Diffuse) Texture repeat per World unit.
+	float TextureRepeat;
 };
 
 layout(binding = 0) uniform sampler2D Heightmap;
+layout(binding = 1) uniform sampler2D GrassDiffuse;
+layout(binding = 2) uniform sampler2D StoneDiffuse;
+layout(binding = 3) uniform sampler2D GrassNormal;
+layout(binding = 4) uniform sampler2D StoneNormal;
 
 // Shader out/in
 struct VertInVertex

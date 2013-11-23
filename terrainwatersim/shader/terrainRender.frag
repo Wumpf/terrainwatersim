@@ -15,39 +15,89 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 	h[2] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2( worldStep, 0)).r;
 	h[3] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0)).r;
 	h *= HeightmapHeightScale;
-	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);	// worldStep*2 would be correct? But this looks muuuuuch nicer!
+	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);
 	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0f);
-	return normalize(cross(vecdx, vecdz));
+	return normalize(cross(vecdz, vecdx));
+}
+
+vec3 textureBlend(vec3 diff0, float height0, float a0, vec3 diff1, float height1, float a1)
+{
+    float depth = 0.2f;
+    float ma = max(height0 + a0, height1 + a1) - depth;
+
+    float b0 = max(height0 + a0 - ma, 0);
+    float b1 = max(height1 + a1 - ma, 0);
+
+    return (diff0 * b0 + diff1 * b1) / (b0 + b1);
+}
+vec4 textureBlend(vec4 diff0, float height0, float a0, vec4 diff1, float height1, float a1)
+{
+    float depth = 0.2f;
+    float ma = max(height0 + a0, height1 + a1) - depth;
+
+    float b0 = max(height0 + a0 - ma, 0);
+    float b1 = max(height1 + a1 - ma, 0);
+
+    return (diff0 * b0 + diff1 * b1) / (b0 + b1);
 }
 
 void main()
 {
-	vec3 normal = ComputeNormal(In.HeightmapCoord);
-
-	float lighting = clamp(dot(normal, GlobalDirLightDirection), 0, 1);
-	
-	// good old backlighting hack!
-	vec3 backLightDir = GlobalDirLightDirection;
-	backLightDir.xz = -backLightDir.xz;
-	float ambientLightAmount = clamp(dot(normal, backLightDir), 0, 1);
-
+	// Normal
+	vec3 heightmapNormal = ComputeNormal(In.HeightmapCoord);
 
 	// texturing
-	/*vec3 texcoord3D = In.WorldPos*0.1f;
-	vec3 textureWeights = abs(normal);
-	textureWeights.y *= textureWeights.y;
-	textureWeights /= textureWeights.x + textureWeights.y + textureWeights.z;
+	vec2 texcoord = In.WorldPos.xz*TextureRepeat;
+	float textureSlopeFactor = heightmapNormal.y;
 	
-	vec3 textureY = texture(TextureY, texcoord3D.xz).xyz;
-	vec3 textureZ = texture(TextureXZ, texcoord3D.xy).xyz;
-	vec3 textureX = texture(TextureXZ, texcoord3D.zy).xyz;
+	vec4 grass_diffuse_spec = texture(GrassDiffuse, texcoord);
+	vec4 stone_diffuse_spec = texture(StoneDiffuse, texcoord);
 
-	vec3 diffuseColor = textureX * textureWeights.x + textureY * textureWeights.y + textureZ * textureWeights.z;
-	*/
-	vec3 diffuseColor = vec3(1.0f);
+	vec4 grass_normal_height = texture(GrassNormal, texcoord);
+	vec4 stone_normal_height = texture(StoneNormal, texcoord);
+
+	// cool height based blending
+	vec4 diffuseColor_spec = textureBlend(grass_diffuse_spec, grass_normal_height.a, textureSlopeFactor, 
+										 stone_diffuse_spec, stone_normal_height.a, 1.0f - textureSlopeFactor);
+	vec3 textureNormal = textureBlend(grass_normal_height.rgb, grass_normal_height.a, textureSlopeFactor, 
+									 stone_normal_height.rgb, stone_normal_height.a, 1.0f - textureSlopeFactor);
+
+	// old simple mix:
+	//diffuseColor_spec = mix(grass_diffuse_spec, stone_diffuse_spec, 1.0f - textureSlopeFactor);
+	//textureNormal = mix(stone_normal_height.xyz, stone_normal_height.xyz, 1.0f - textureSlopeFactor);
+
+	// Final normal
+	textureNormal = textureNormal.xzy * 2.0f - 1.0f;
+	textureNormal = normalize(textureNormal);
+	vec3 normal = normalize(textureNormal + heightmapNormal*2);
+
+	// Lighting
+	float nDotL = dot(normal, GlobalDirLightDirection);
+
+	// specular lighting
+	vec3 refl = normalize((2 * nDotL) * normal - GlobalDirLightDirection);
+	vec3 viewDir = normalize(CameraPosition - In.WorldPos);
+  	float specularAmount = pow(max(0.0f, dot(refl, viewDir)), 2.0f) * diffuseColor_spec.a;
+
+	// Schlick-Fresnel approx
+	vec3 halfVector_viewspace = normalize(GlobalDirLightDirection + viewDir);
+	float base = 1.0 - dot(GlobalDirLightDirection, halfVector_viewspace);
+	float exponential = pow(base, 5.0);
+	float fresnel = exponential + 0.2 * (1.0 - exponential);
+	specularAmount *= fresnel;
+	
+
+	// Diffuse Lighting
+	float lighting = clamp(nDotL, 0, 1);
+
+	// good old backlighting hack instead of plain ambient!
+	vec3 backLightDir = GlobalDirLightDirection;
+	backLightDir.xz = -backLightDir.xz;
+	float ambientLightAmount = clamp(dot(normal, backLightDir), 0, 1) ;
 
 
-	FragColor.xyz = diffuseColor * (GlobalDirLightColor * lighting + GlobalAmbient * ambientLightAmount);
+	// Color compositing.
+	FragColor.xyz = diffuseColor_spec.rgb * (GlobalDirLightColor * lighting + GlobalAmbient * ambientLightAmount) + specularAmount * GlobalDirLightColor;
 
 	// Normal debugging:
 	//FragColor.xyz = abs(vec3(normal.x, normal.y,normal.z));
