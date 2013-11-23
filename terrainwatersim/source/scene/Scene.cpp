@@ -116,9 +116,10 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_ExtractGeometryTimer->Start();
   m_ExtractGeometryTimer->End();
 
-  // disable depth test
+  // Gamma correct & DepthTest
   glEnable(GL_DEPTH_TEST);
-  
+  glEnable(GL_FRAMEBUFFER_SRGB);
+
   // render processed data
   m_DrawTimer->Start();
   if(SceneConfig::TerrainRendering::g_Wireframe)
@@ -129,10 +130,13 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_DrawTimer->End();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+
   // render nice background
   m_pBackground->Draw();
 
-  // disable depth test
+
+  // disable depth test, give up gamma correctness
+  glDisable(GL_FRAMEBUFFER_SRGB);
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
 

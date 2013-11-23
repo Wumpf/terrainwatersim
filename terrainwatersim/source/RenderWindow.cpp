@@ -25,7 +25,7 @@ RenderWindowGL::RenderWindowGL() :
   ezWindow(),
   m_hDeviceContext(NULL), m_hRC(NULL)
 {
-  m_CreationDescription.m_Title = "voxelsurfacerealtimeexp";
+  m_CreationDescription.m_Title = "terrainwatersim";
   m_CreationDescription.m_ClientAreaSize.width = GeneralConfig::g_ResolutionWidth.GetValue();
   m_CreationDescription.m_ClientAreaSize.height = GeneralConfig::g_ResolutionHeight.GetValue();
   m_CreationDescription.m_bFullscreenWindow = false;

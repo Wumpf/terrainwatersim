@@ -77,13 +77,13 @@ void main()
 	// specular lighting
 	vec3 refl = normalize((2 * nDotL) * normal - GlobalDirLightDirection);
 	vec3 viewDir = normalize(CameraPosition - In.WorldPos);
-  	float specularAmount = pow(max(0.0f, dot(refl, viewDir)), 2.0f) * diffuseColor_spec.a;
+  	float specularAmount = pow(max(0.0f, dot(refl, viewDir)), 4.0f) * diffuseColor_spec.a;
 
 	// Schlick-Fresnel approx
 	vec3 halfVector_viewspace = normalize(GlobalDirLightDirection + viewDir);
 	float base = 1.0 - dot(GlobalDirLightDirection, halfVector_viewspace);
-	float exponential = pow(base, 5.0);
-	float fresnel = exponential + 0.2 * (1.0 - exponential);
+	float exponential = pow(base, 5.0f);
+	float fresnel = exponential + 0.2f * (1.0f - exponential);
 	specularAmount *= fresnel;
 	
 
@@ -93,7 +93,7 @@ void main()
 	// good old backlighting hack instead of plain ambient!
 	vec3 backLightDir = GlobalDirLightDirection;
 	backLightDir.xz = -backLightDir.xz;
-	float ambientLightAmount = clamp(dot(normal, backLightDir), 0, 1) ;
+	float ambientLightAmount = clamp(dot(normal, backLightDir) - 0.2f, 0, 1);
 
 
 	// Color compositing.
