@@ -16,6 +16,8 @@ namespace gl
     void SetData(ezUInt32 uiMipLevel, const ezColor* pData) EZ_OVERRIDE;
     void SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData) EZ_OVERRIDE;
 
+    void GenMipMaps();
+
     void Bind(GLuint slotIndex) EZ_OVERRIDE;
     void BindImage(GLuint slotIndex, Texture::ImageAccess access, GLenum format);
   };

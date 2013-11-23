@@ -52,19 +52,19 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   cameraUBOusingShader.PushBack(&m_pTerrain->GetTerrainShader());
   m_CameraUBO.Init(cameraUBOusingShader, "Camera");
 
- /* ezDynamicArray<const gl::ShaderObject*> globalSceneInfoUBOusingShader;
-  globalSceneInfoUBOusingShader.PushBack(&m_pTerrain->GetShaderTerrainRenderShader());
+  ezDynamicArray<const gl::ShaderObject*> globalSceneInfoUBOusingShader;
+  globalSceneInfoUBOusingShader.PushBack(&m_pTerrain->GetTerrainShader());
   m_GlobalSceneInfo.Init(globalSceneInfoUBOusingShader, "GlobalSceneInfo");
-  */
+  
 /*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
   cameraUBOusingShader.PushBack(&m_DirectVolVisShader);
   m_TimeUBO.Init(cameraUBOusingShader, "Time");
 */
-  /*
+  
   m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3(1,-2.0f,1).GetNormalized());
   m_GlobalSceneInfo["GlobalDirLightColor"].Set(ezVec3(0.98f, 0.98f, 0.8f));
   m_GlobalSceneInfo["GlobalAmbient"].Set(ezVec3(0.3f, 0.3f, 0.3f));
-  */
+  
   ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 5, m_pTerrain->GetTerrainWorldSize() / 2);
   m_pCamera->SetPosition(vCameraPos);
 

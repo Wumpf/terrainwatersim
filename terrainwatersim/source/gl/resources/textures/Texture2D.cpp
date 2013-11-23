@@ -55,6 +55,12 @@ namespace gl
                     GL_RGBA, GL_FLOAT, pData);
   }
 
+  void Texture2D::GenMipMaps()
+  {
+    Bind(0);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
+
   void Texture2D::SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData)
   {
     EZ_ASSERT(uiMipLevel < m_uiNumMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_uiNumMipLevels);

@@ -11,14 +11,14 @@
 #include "..\config\GlobalCVar.h"
 #include <Foundation\Math\Rect.h>
 
-const float Terrain::m_maxTesselationFactor = 32.0f;
+const float Terrain::m_maxTesselationFactor = 64.0f;
 
 Terrain::Terrain() :
   m_worldSize(1024.0f),
   m_heightmapSize(1024),
-  m_minPatchSizeWorld(8.0f),
+  m_minPatchSizeWorld(16.0f),
   m_pHeightmap(NULL),
-  m_heightScale(32.0f)
+  m_heightScale(128.0f)
 {
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -56,7 +56,6 @@ Terrain::Terrain() :
   glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);  
   glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
   glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
-  
 
   // Patch vertex buffer
   ezVec2 patchVertices[9];
@@ -72,7 +71,7 @@ Terrain::Terrain() :
 
   // Instance buffers
     // Try to guess max number of patches:
-  m_maxPatchInstances[(ezUInt32)PatchType::FULL] = static_cast<ezUInt32>(ezMath::Pow(m_worldSize / m_minPatchSizeWorld / 4, 2.0f));
+  m_maxPatchInstances[(ezUInt32)PatchType::FULL] = static_cast<ezUInt32>(ezMath::Pow(m_worldSize / m_minPatchSizeWorld / 2, 2.0f));
   m_maxPatchInstances[(ezUInt32)PatchType::STITCH1] = static_cast<ezUInt32>(m_maxPatchInstances[(ezUInt32)PatchType::FULL] * (static_cast<float>(4 * 2*m_ringThinkness) / (2*m_ringThinkness * 2*m_ringThinkness)));
   m_maxPatchInstances[(ezUInt32)PatchType::STITCH2] = m_maxPatchInstances[(ezUInt32)PatchType::STITCH1] / 4; 
 
@@ -229,6 +228,7 @@ void Terrain::UpdateInstanceData(const ezVec3& cameraPosition)
   // upload to gpu.
   for(int i=0; i<(ezUInt32)PatchType::NUM_TYPES; ++i)
   {
+    EZ_ASSERT(m_currentInstanceData[i].GetCount() <= m_maxPatchInstances[i], "Too many patch instances!");
     glBindBuffer(GL_ARRAY_BUFFER, m_patchInstanceBuffer[i]);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(PatchInstanceData) * m_currentInstanceData[i].GetCount(),
                  static_cast<ezArrayPtr<PatchInstanceData>>(m_currentInstanceData[i]).GetPtr());
@@ -238,7 +238,7 @@ void Terrain::UpdateInstanceData(const ezVec3& cameraPosition)
 
 void Terrain::CreateHeightmap()
 {
-  m_pHeightmap = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_R32F, 1);
+  m_pHeightmap = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_R32F, -1);
   ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_heightmapSize*m_heightmapSize);
 
   NoiseGenerator noiseGen;
@@ -249,11 +249,12 @@ void Terrain::CreateHeightmap()
   {
     for(ezUInt32 x=0; x<m_heightmapSize; ++x)
     {
-      volumeData[x + y * m_heightmapSize].r = noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 5, 5, 0.5f, false, NULL);
+      volumeData[x + y * m_heightmapSize].r = noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL);
     }
   }
 
   m_pHeightmap->SetData(0, volumeData);
+  m_pHeightmap->GenMipMaps();
 
   EZ_DEFAULT_DELETE_RAW_BUFFER(volumeData);
 }
