@@ -200,7 +200,7 @@ void Terrain::UpdateInstanceData(const ezVec3& cameraPosition)
           xBorder =  1;
 
         if(yBorder == -1)
-          currentPatch.rotationType = (xBorder == -1) ? 4 : 1;
+          currentPatch.rotationType = xBorder == 1 ? 4 : 1;
         else if(xBorder == -1)
           currentPatch.rotationType = 3;
         else if(yBorder == 1)

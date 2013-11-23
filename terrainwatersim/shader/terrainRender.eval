@@ -3,7 +3,7 @@
 #include "constantbuffers.glsl"
 #include "terrainRenderData.glsl"
 
-layout(triangles, fractional_even_spacing, cw) in;
+layout(triangles, fractional_even_spacing, ccw) in;
 
 layout(location = 0) in EvalInVertex In[];
 layout(location = 0) out FragInVertex Out;

@@ -111,19 +111,9 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_ExtractGeometryTimer->Start();
   m_ExtractGeometryTimer->End();
 
-  // no depth test needed so far
-  glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-
-  // render nice background
-  //m_pBackground->Draw();
-
-  // activate depth test
+  // disable depth test
   glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
-
-  glDisable(GL_CULL_FACE);
-
+  
   // render processed data
   m_DrawTimer->Start();
   if(SceneConfig::TerrainRendering::g_Wireframe)
@@ -133,6 +123,9 @@ ezResult Scene::Render(ezTime lastFrameDuration)
    
   m_DrawTimer->End();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  // render nice background
+  m_pBackground->Draw();
 
   // disable depth test
   glDisable(GL_DEPTH_TEST);

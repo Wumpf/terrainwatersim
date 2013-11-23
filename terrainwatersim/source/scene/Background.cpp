@@ -18,6 +18,9 @@ Background::~Background(void)
 
 void Background::Draw()
 {
+  glDepthFunc(GL_EQUAL);
+  glDepthMask(GL_FALSE);
   m_BackgroundShader.Activate();
   m_pScreenAlignedTriangle->Draw();
+  glDepthFunc(GL_LESS);
 }

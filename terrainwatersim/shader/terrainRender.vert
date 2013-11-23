@@ -8,14 +8,19 @@ layout(location = 0) out ContInVertex Out;
 void main()
 {	
 	vec2 patchRelPosition = In.PatchRelPosition;
-	if(In.PatchRotationType == 4)
-		patchRelPosition.xy = 1.0f - patchRelPosition.xy;
-	else
-	{ 	
-		if(In.PatchRotationType % 2 != 0)
-			patchRelPosition.y = 1.0f - patchRelPosition.y;
-		if(In.PatchRotationType > 1)
-			patchRelPosition.xy = patchRelPosition.yx;
+
+	// Real rotations are needed - do not break the vertex order, otherwise culling will fail.
+	if(In.PatchRotationType % 2 != 0)
+	{
+		// Rotate 180°
+		patchRelPosition = vec2(1.0) - patchRelPosition;
+	}
+	if(In.PatchRotationType > 1)
+	{
+		// Rotate 90°
+		patchRelPosition -= vec2(0.5);
+		patchRelPosition = vec2(patchRelPosition.y, -patchRelPosition.x);
+		patchRelPosition += vec2(0.5);
 	}
 
     Out.WorldPos.xz = patchRelPosition * In.PatchWorldScale + In.PatchWorldPosition;

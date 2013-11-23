@@ -15,7 +15,7 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 	h[2] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2( worldStep, 0)).r;
 	h[3] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0)).r;
 	h *= HeightmapHeightScale;
-	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);
+	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);	// worldStep*2 would be correct? But this looks muuuuuch nicer!
 	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0f);
 	return normalize(cross(vecdx, vecdz));
 }
