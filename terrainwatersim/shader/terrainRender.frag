@@ -20,10 +20,11 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 	return normalize(cross(vecdz, vecdx));
 }
 
+const float TextureDepthBlend = 0.2f;
+
 vec3 textureBlend(vec3 diff0, float height0, float a0, vec3 diff1, float height1, float a1)
 {
-    float depth = 0.2f;
-    float ma = max(height0 + a0, height1 + a1) - depth;
+    float ma = max(height0 + a0, height1 + a1) - TextureDepthBlend;
 
     float b0 = max(height0 + a0 - ma, 0);
     float b1 = max(height1 + a1 - ma, 0);
@@ -32,8 +33,7 @@ vec3 textureBlend(vec3 diff0, float height0, float a0, vec3 diff1, float height1
 }
 vec4 textureBlend(vec4 diff0, float height0, float a0, vec4 diff1, float height1, float a1)
 {
-    float depth = 0.2f;
-    float ma = max(height0 + a0, height1 + a1) - depth;
+    float ma = max(height0 + a0, height1 + a1) - TextureDepthBlend;
 
     float b0 = max(height0 + a0 - ma, 0);
     float b1 = max(height1 + a1 - ma, 0);
@@ -47,7 +47,7 @@ void main()
 	vec3 heightmapNormal = ComputeNormal(In.HeightmapCoord);
 
 	// texturing
-	vec2 texcoord = In.WorldPos.xz*TextureRepeat;
+	vec2 texcoord = In.WorldPos.xz*TextureRepeat*1.5f;
 	float textureSlopeFactor = heightmapNormal.y;
 	
 	vec4 grass_diffuse_spec = texture(GrassDiffuse, texcoord);
@@ -69,18 +69,20 @@ void main()
 	// Final normal
 	textureNormal = textureNormal.xzy * 2.0f - 1.0f;
 	textureNormal = normalize(textureNormal);
-	vec3 normal = normalize(textureNormal + heightmapNormal*2);
+	vec3 normal = normalize(textureNormal + heightmapNormal);
 
 	// Lighting
 	float nDotL = dot(normal, GlobalDirLightDirection);
 
 	// specular lighting
 	vec3 refl = normalize((2 * nDotL) * normal - GlobalDirLightDirection);
-	vec3 viewDir = normalize(CameraPosition - In.WorldPos);
-  	float specularAmount = pow(max(0.0f, dot(refl, viewDir)), 4.0f) * diffuseColor_spec.a;
+	vec3 toCamera = CameraPosition - In.WorldPos;
+	float cameraDistance = length(toCamera);
+	toCamera /= cameraDistance;
+  	float specularAmount = pow(max(0.0f, dot(refl, toCamera)), 4.0f) * diffuseColor_spec.a;
 
 	// Schlick-Fresnel approx
-	vec3 halfVector_viewspace = normalize(GlobalDirLightDirection + viewDir);
+	vec3 halfVector_viewspace = normalize(GlobalDirLightDirection + toCamera);
 	float base = 1.0 - dot(GlobalDirLightDirection, halfVector_viewspace);
 	float exponential = pow(base, 5.0f);
 	float fresnel = exponential + 0.2f * (1.0f - exponential);
@@ -98,6 +100,13 @@ void main()
 
 	// Color compositing.
 	FragColor.xyz = diffuseColor_spec.rgb * (GlobalDirLightColor * lighting + GlobalAmbient * ambientLightAmount) + specularAmount * GlobalDirLightColor;
+
+	// clever fog http://www.iquilezles.org/www/articles/fog/fog.htm
+	const float fogDensity = 0.001f;
+	const float fogIntensity = 0.6f;
+	float fogAmount = clamp( - fogIntensity * exp(-CameraPosition.y * fogDensity) * (1.0 - exp( cameraDistance * toCamera.y * fogDensity)) / toCamera.y, 0, 1);
+	vec3 fogColor = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131); // air color
+	FragColor.xyz = mix(FragColor.xyz, fogColor, fogAmount);
 
 	// Normal debugging:
 	//FragColor.xyz = abs(vec3(normal.x, normal.y,normal.z));

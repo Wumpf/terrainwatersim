@@ -159,7 +159,7 @@ void Application::SetupFileSystem()
   m_pShaderChangesWatcher = EZ_DEFAULT_NEW(FolderChangeWatcher)(shaderDir.GetData());
 
   ezStringBuilder textureDir(applicationDir);
-  textureDir.AppendPath("textures");
+  textureDir.AppendPath("..", "..", "terrainwatersim", "textures"); // dev only! otherwise manual copies must be made
   ezFileSystem::AddDataDirectory(textureDir.GetData(), ezFileSystem::ReadOnly, "graphics", "");
   // optionally a texture change watcher could be established here ;)
 }

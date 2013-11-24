@@ -36,7 +36,7 @@ Terrain::Terrain() :
   m_terrainInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
   SetPixelPerTriangle(50.0f);
   m_terrainInfoUBO["HeightmapHeightScale"].Set(m_heightScale);
-  m_terrainInfoUBO["TextureRepeat"].Set(0.04f);
+  m_terrainInfoUBO["TextureRepeat"].Set(0.05f);
 
   // sampler
   glGenSamplers(1, &m_texturingSamplerObjectAnisotropic);

@@ -118,7 +118,7 @@
       <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezInputWindows.lib;ezInputXBox360.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\Debug64" $(TargetDir) /Y</Command>
+      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\Debug64" $(TargetDir) /Y /C</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
