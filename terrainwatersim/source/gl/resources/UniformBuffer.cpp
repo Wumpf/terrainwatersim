@@ -53,22 +53,23 @@ namespace gl
     return Init(uniformBufferInfoIterator.Value().iBufferDataSizeByte, sBufferName);
   }
 
-  ezResult UniformBuffer::Init(const ezDynamicArray<const gl::ShaderObject*>& metaInfos, const ezString& sBufferName)
+  ezResult UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const ezString& sBufferName)
   {
-    EZ_ASSERT(!metaInfos.IsEmpty(), "Meta info list is empty!");
-    EZ_ASSERT(metaInfos[0] != NULL, "Shader is NULL");
-    ezResult result = Init(*metaInfos[0], sBufferName);
+    EZ_ASSERT(metaInfos.size() != 0, "Meta info list is empty!");
+    EZ_ASSERT(*metaInfos.begin() != NULL, "First shader is NULL");
+    ezResult result = Init(**metaInfos.begin(), sBufferName);
     if(result == EZ_FAILURE)
       return result;
 
-    for(ezUInt32 i=1; i<metaInfos.GetCount(); ++i)
+    int i = 0;
+    for(auto shaderObjectIt = metaInfos.begin(); shaderObjectIt != metaInfos.end(); ++shaderObjectIt, ++i)
     {
-      if(metaInfos[i] == NULL) // the first was fatal, this one is skippable
+      if(*shaderObjectIt == NULL) // the first was fatal, this one is skippable
       {
         ezLog::SeriousWarning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());
         continue;
       }
-      auto uniformBufferInfoIterator = metaInfos[i]->GetUniformBufferInfo().Find(sBufferName);
+      auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().Find(sBufferName);
       if(!uniformBufferInfoIterator.IsValid()) // the first was fatal, this one is skippable
       {
         ezLog::SeriousWarning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());

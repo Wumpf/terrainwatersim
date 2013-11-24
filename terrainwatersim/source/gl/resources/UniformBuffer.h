@@ -10,10 +10,11 @@ namespace gl
     UniformBuffer();
     ~UniformBuffer();
 
-    ezResult Init(ezUInt32 uiBufferSizeBytes, const ezString& sBufferName);
-    ezResult Init(const gl::ShaderObject& shader, const ezString& sBufferName);
     /// will try to create a uniform buffer that matches all the given meta infos. Performs sanity checks if there's something contradictory
-    ezResult Init(const ezDynamicArray<const gl::ShaderObject*>& shaders, const ezString& sBufferName);
+    ezResult Init(std::initializer_list<const gl::ShaderObject*> shaders, const ezString& sBufferName);
+
+    ezResult Init(const gl::ShaderObject& shader, const ezString& sBufferName);
+    ezResult Init(ezUInt32 uiBufferSizeBytes, const ezString& sBufferName);
 
     class Variable : public gl::ShaderVariable<UniformVariableInfo>
     {

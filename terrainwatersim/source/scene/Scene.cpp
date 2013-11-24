@@ -28,33 +28,25 @@ namespace SceneConfig
   }
 }
 
-GLuint vertexArray;
-
 Scene::Scene(const RenderWindowGL& renderWindow) :
-  m_pScreenAlignedTriangle(std::make_shared<gl::ScreenAlignedTriangle>()),
-  
-  m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
-  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
+m_pScreenAlignedTriangle(std::make_shared<gl::ScreenAlignedTriangle>()),
 
-  m_ExtractGeometryTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
-  m_DrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
+m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
 
-  m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
+m_ExtractGeometryTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+m_DrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+
+m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
 {
   EZ_LOG_BLOCK("Scene init");
 
   m_pTerrain = EZ_DEFAULT_NEW(Terrain)();
   m_pBackground = EZ_DEFAULT_NEW(Background)(m_pScreenAlignedTriangle);
 
-  // global ubo init
-  ezDynamicArray<const gl::ShaderObject*> cameraUBOusingShader;
-  cameraUBOusingShader.PushBack(&m_pBackground->GetShader());
-  cameraUBOusingShader.PushBack(&m_pTerrain->GetTerrainShader());
-  m_CameraUBO.Init(cameraUBOusingShader, "Camera");
-
-  ezDynamicArray<const gl::ShaderObject*> globalSceneInfoUBOusingShader;
-  globalSceneInfoUBOusingShader.PushBack(&m_pTerrain->GetTerrainShader());
-  m_GlobalSceneInfo.Init(globalSceneInfoUBOusingShader, "GlobalSceneInfo");
+  // global ubo inits
+  m_CameraUBO.Init({ &m_pBackground->GetShader(), &m_pTerrain->GetTerrainShader() }, "Camera");
+  m_GlobalSceneInfo.Init({ &m_pTerrain->GetTerrainShader() }, "GlobalSceneInfo");
   
 /*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
   cameraUBOusingShader.PushBack(&m_DirectVolVisShader);
