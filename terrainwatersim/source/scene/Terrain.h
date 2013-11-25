@@ -32,9 +32,8 @@ public:
   void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
 private:
-  void UpdateInstanceData(const ezVec3& cameraPosition);
+  
   void CreateHeightmap();
-  void DrawGeometry();
 
   // Settings.
   float m_worldSize;
@@ -42,22 +41,14 @@ private:
   float m_pixelPerTriangle;
   float m_heightScale;
   static const float m_maxTesselationFactor;
-  ezUInt32 m_maxNumRenderedPatchInstances;
-  ezUInt32 m_heightmapSize;
 
-  static const ezUInt32 m_ringThinkness = 8;
-  static const ezUInt32 m_numRings = 6;
+  ezUInt32 m_heightmapSize;
 
   bool m_anisotropicFiltering;
 
-  struct PatchInstanceData
-  {
-    ezVec2 worldPosition;
-    float worldScale;
-    ezUInt32 rotationType;
-  };
 
   // Graphics resources.
+  class InstancedGeomClipMapping* m_pGeomClipMaps;
   gl::Texture2D* m_pHeightmap;
 
   gl::ShaderObject m_waterRenderShader;
@@ -65,25 +56,7 @@ private:
 
   gl::UniformBuffer m_landscapeInfoUBO;
 
-  // Contains immutable relative patch positions.
-  gl::BufferId m_patchVertexBuffer;
-  
-  enum class PatchType : ezUInt32
-  {
-    FULL,
-    STITCH1,
-    STITCH2,
 
-    NUM_TYPES
-  };
-
-  gl::IndexBufferId m_patchIndexBuffer[PatchType::NUM_TYPES];
-  gl::BufferId m_patchInstanceBuffer[PatchType::NUM_TYPES];
-  ezUInt32 m_maxPatchInstances[PatchType::NUM_TYPES];
-  gl::VertexArrayObjectId m_patchVertexArray[PatchType::NUM_TYPES];
-
-  // Serves as CPU buffer for instance data. The element counter will be used to determine how many instances are active at the moment.
-  ezDynamicArray<PatchInstanceData> m_currentInstanceData[PatchType::NUM_TYPES];
 
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;

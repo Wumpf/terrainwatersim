@@ -88,6 +88,9 @@
     <ClInclude Include="source\gl\gl.h">
       <Filter>source\gl</Filter>
     </ClInclude>
+    <ClInclude Include="source\scene\InstancedGeomClipMapping.h">
+      <Filter>source\scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -245,6 +248,9 @@
       <Filter>stb_image</Filter>
     </ClCompile>
     <ClCompile Include="source\scene\Terrain.cpp">
+      <Filter>source\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\scene\InstancedGeomClipMapping.cpp">
       <Filter>source\scene</Filter>
     </ClCompile>
   </ItemGroup>
