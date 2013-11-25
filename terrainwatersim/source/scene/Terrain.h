@@ -59,8 +59,10 @@ private:
   // Graphics resources.
   gl::Texture2D* m_pHeightmap;
 
+  gl::ShaderObject m_waterRenderShader;
   gl::ShaderObject m_terrainRenderShader;
-  gl::UniformBuffer m_terrainInfoUBO;
+
+  gl::UniformBuffer m_landscapeInfoUBO;
 
   // Contains immutable relative patch positions.
   gl::BufferId m_patchVertexBuffer;

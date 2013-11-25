@@ -1,4 +1,4 @@
-layout(binding = 5, shared) uniform GlobalTerrainInfo
+layout(binding = 5, shared) uniform GlobalLandscapeInfo
 {
 	vec2 GridMinPosition;
 	float HeightmapHeightScale;

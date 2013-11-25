@@ -128,11 +128,16 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\background.frag" />
     <None Include="shader\constantbuffers.glsl" />
     <None Include="shader\helper.glsl" />
+    <None Include="shader\landscapeRenderFunctions.glsl" />
     <None Include="shader\screenTri.vert" />
     <None Include="shader\terrainRender.cont" />
     <None Include="shader\terrainRender.eval" />
     <None Include="shader\terrainRender.frag" />
     <None Include="shader\terrainRender.vert" />
+    <None Include="shader\landscapeRenderData.glsl" />
+    <None Include="shader\waterRender.cont" />
+    <None Include="shader\waterRender.eval" />
+    <None Include="shader\waterRender.frag" />
     <None Include="source\gl\resources\UniformBuffer.inl" />
     <None Include="source\gl\ShaderDataMetaInfo.inl" />
   </ItemGroup>

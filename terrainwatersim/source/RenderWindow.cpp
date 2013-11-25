@@ -120,7 +120,9 @@ void RenderWindowGL::CreateGraphicsContext()
   EZ_ASSERT_ALWAYS(err == GLEW_OK, "glewInit failed!");
 
   // enable debug output
+#if defined(_DEBUG)
   gl::Utils::ActivateDebugOutput();
+#endif
 
   // some default gl settings
   glViewport(0,1, GeneralConfig::g_ResolutionWidth, GeneralConfig::g_ResolutionHeight);

@@ -137,8 +137,8 @@ namespace gl
       ezString includeFileString(includeFile.GetData());
       if(includingFiles.Find(includeFileString).IsValid())
       {
-        sourceCode.ReplaceSubString(pQuotMarksFirst, pQuotMarksSecond+1, "");
-        ezLog::Warning("Shader include file \"%s\" was already included! File will be ignored.", includeFileString.GetData());
+        sourceCode.ReplaceSubString(pIncludePosition, pQuotMarksSecond + 1, "");
+     //   ezLog::Warning("Shader include file \"%s\" was already included! File will be ignored.", includeFileString.GetData());
       }
       else
       {

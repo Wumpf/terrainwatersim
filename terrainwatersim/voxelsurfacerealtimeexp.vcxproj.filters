@@ -155,6 +155,21 @@
     <None Include="shader\terrainRender.vert">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\waterRender.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\landscapeRenderFunctions.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\landscapeRenderData.glsl">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\waterRender.eval">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\waterRender.cont">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gl\ScreenAlignedTriangle.cpp">

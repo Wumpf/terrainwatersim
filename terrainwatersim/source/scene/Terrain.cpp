@@ -25,18 +25,25 @@ Terrain::Terrain() :
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::CONTROL, "terrainRender.cont");
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::EVALUATION, "terrainRender.eval");
-  //m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::GEOMETRY, "terrainRender.geom");
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "terrainRender.frag");
   m_terrainRenderShader.CreateProgram();
 
+  /*
+  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
+  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::CONTROL, "waterRender.cont");
+  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::EVALUATION, "waterRender.eval");
+  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "waterRender.frag");
+  m_waterRenderShader.CreateProgram();
+  */
+
   // UBO init
-  m_terrainInfoUBO.Init(m_terrainRenderShader, "GlobalTerrainInfo");
-  m_terrainInfoUBO["GridMinPosition"].Set(ezVec2(0.0f));
-  m_terrainInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
-  m_terrainInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
+  m_landscapeInfoUBO.Init(m_terrainRenderShader, "GlobalLandscapeInfo");
+  m_landscapeInfoUBO["GridMinPosition"].Set(ezVec2(0.0f));
+  m_landscapeInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
+  m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
   SetPixelPerTriangle(50.0f);
-  m_terrainInfoUBO["HeightmapHeightScale"].Set(m_heightScale);
-  m_terrainInfoUBO["TextureRepeat"].Set(0.05f);
+  m_landscapeInfoUBO["HeightmapHeightScale"].Set(m_heightScale);
+  m_landscapeInfoUBO["TextureRepeat"].Set(0.05f);
 
   // sampler
   glGenSamplers(1, &m_texturingSamplerObjectAnisotropic);
@@ -149,7 +156,7 @@ Terrain::~Terrain()
 
 void Terrain::SetPixelPerTriangle(float pixelPerTriangle)
 {
-  m_terrainInfoUBO["TrianglesPerClipSpaceUnit"].Set((static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / pixelPerTriangle) / 2.0f);
+  m_landscapeInfoUBO["TrianglesPerClipSpaceUnit"].Set((static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / pixelPerTriangle) / 2.0f);
 }
 
 void Terrain::UpdateInstanceData(const ezVec3& cameraPosition)
@@ -236,7 +243,7 @@ void Terrain::UpdateInstanceData(const ezVec3& cameraPosition)
 
 void Terrain::CreateHeightmap()
 {
-  m_pHeightmap = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_R32F, -1);
+  m_pHeightmap = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_RGBA32F, -1);
   ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_heightmapSize*m_heightmapSize);
 
   NoiseGenerator noiseGen;
@@ -281,7 +288,7 @@ void Terrain::Draw(const ezVec3& cameraPosition)
   m_pTextureStoneNormalHeight->Bind(4);
 
   m_terrainRenderShader.Activate();
-  m_terrainInfoUBO.BindBuffer(5);
+  m_landscapeInfoUBO.BindBuffer(5);
 
 
   glPatchParameteri(GL_PATCH_VERTICES, 3);
