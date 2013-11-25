@@ -12,7 +12,7 @@ namespace gl
   {
     Bind(0);
     glTexStorage2D(GL_TEXTURE_2D, m_uiNumMipLevels, format, m_uiWidth, m_uiHeight);
-    gl::Utils::CheckError("glTexStorage3D");
+    gl::Utils::CheckError("glTexStorage2D");
   }
 
   ezUniquePtr<Texture2D> Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps)

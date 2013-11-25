@@ -18,7 +18,7 @@ Terrain::Terrain() :
   m_heightmapSize(2048),
   m_minPatchSizeWorld(16.0f),
   m_pHeightmap(NULL),
-  m_heightScale(150.0f),
+  m_heightScale(300.0f),
   m_anisotropicFiltering(false)
 {
   // shader init
@@ -28,13 +28,12 @@ Terrain::Terrain() :
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "terrainRender.frag");
   m_terrainRenderShader.CreateProgram();
 
-  /*
-  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
+  m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "waterRender.vert");
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::CONTROL, "waterRender.cont");
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::EVALUATION, "waterRender.eval");
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "waterRender.frag");
   m_waterRenderShader.CreateProgram();
-  */
+  
 
   // UBO init
   m_landscapeInfoUBO.Init(m_terrainRenderShader, "GlobalLandscapeInfo");
@@ -254,7 +253,10 @@ void Terrain::CreateHeightmap()
   {
     for(ezUInt32 x=0; x<m_heightmapSize; ++x)
     {
-      volumeData[x + y * m_heightmapSize].r = noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL);
+      volumeData[x + y * m_heightmapSize].r = noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL) * 0.5f + 0.5f;
+      volumeData[x + y * m_heightmapSize].g = 0.3f;
+      volumeData[x + y * m_heightmapSize].b = 0.3f;
+      volumeData[x + y * m_heightmapSize].a = 0.3f;
     }
   }
 
@@ -287,21 +289,30 @@ void Terrain::Draw(const ezVec3& cameraPosition)
   m_pTextureGrassNormalHeight->Bind(3);
   m_pTextureStoneNormalHeight->Bind(4);
 
-  m_terrainRenderShader.Activate();
+
   m_landscapeInfoUBO.BindBuffer(5);
 
+  // Terrain
+  m_terrainRenderShader.Activate();
+  DrawGeometry();
+  // Water
+  m_waterRenderShader.Activate();
+  DrawGeometry();
 
+
+  glBindSampler(0, 0);
+//  glPatchParameteri(GL_PATCH_VERTICES, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Terrain::DrawGeometry()
+{
   glPatchParameteri(GL_PATCH_VERTICES, 3);
 
-  for(int i=0; i<(ezUInt32)PatchType::NUM_TYPES; ++i)
+  for(int i = 0; i < (ezUInt32)PatchType::NUM_TYPES; ++i)
   {
     glBindVertexArray(m_patchVertexArray[i]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer[i]);
     glDrawElementsInstanced(GL_PATCHES, 8 * 3, GL_UNSIGNED_BYTE, NULL, m_currentInstanceData[i].GetCount());
   }
-  
-
-  glBindSampler(0, 0);
-//  glPatchParameteri(GL_PATCH_VERTICES, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

@@ -34,6 +34,7 @@ public:
 private:
   void UpdateInstanceData(const ezVec3& cameraPosition);
   void CreateHeightmap();
+  void DrawGeometry();
 
   // Settings.
   float m_worldSize;

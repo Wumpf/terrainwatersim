@@ -1,0 +1,31 @@
+#version 430
+
+#include "constantbuffers.glsl"
+#include "landscapeRenderData.glsl"
+
+layout(triangles, fractional_even_spacing, ccw) in;
+
+layout(location = 0) in EvalInVertex In[];
+layout(location = 0) out FragInVertex Out;
+
+in gl_PerVertex
+{
+	vec4 gl_Position;
+} gl_in[];
+
+
+void main()
+{	
+	Out.HeightmapCoord = gl_TessCoord.x * In[0].HeightmapCoord + 
+							gl_TessCoord.y * In[1].HeightmapCoord + 
+							gl_TessCoord.z * In[2].HeightmapCoord;
+
+	Out.WorldPos.xz = gl_TessCoord.x * In[0].WorldPos2D +
+						gl_TessCoord.y * In[1].WorldPos2D +
+						gl_TessCoord.z * In[2].WorldPos2D;
+	
+	// Todo: Using lower mipmaps could both improve quality and performance!
+	Out.WorldPos.y = textureLod(Heightmap, Out.HeightmapCoord, 0).a * HeightmapHeightScale;
+
+	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
+}
