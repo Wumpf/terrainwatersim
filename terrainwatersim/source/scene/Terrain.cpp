@@ -19,7 +19,7 @@ Terrain::Terrain() :
   m_worldSize(1024.0f),
   m_heightmapSize(2048),
   m_minPatchSizeWorld(16.0f),
-  m_pHeightmap(NULL),
+  m_renderBufferIdx(0),
   m_heightScale(300.0f),
   m_anisotropicFiltering(false)
 {
@@ -37,7 +37,9 @@ Terrain::Terrain() :
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::EVALUATION, "waterRender.eval");
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "waterRender.frag");
   m_waterRenderShader.CreateProgram();
-  
+
+  m_simulationShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "simulation.comp");
+  m_simulationShader.CreateProgram();
 
   // UBO init
   m_landscapeInfoUBO.Init(m_terrainRenderShader, "GlobalLandscapeInfo");
@@ -45,7 +47,6 @@ Terrain::Terrain() :
   m_landscapeInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
   m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
   SetPixelPerTriangle(50.0f);
-  m_landscapeInfoUBO["HeightmapHeightScale"].Set(m_heightScale);
   m_landscapeInfoUBO["TextureRepeat"].Set(0.05f);
 
   // sampler
@@ -67,6 +68,12 @@ Terrain::Terrain() :
   // Create heightmap
   CreateHeightmap();
 
+  // Create flow textures
+  m_pWaterFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_R32F, 1);
+  ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_heightmapSize*m_heightmapSize);
+  m_pWaterFlow->SetData(0, pEmptyBuffer.GetPtr());
+  EZ_DEFAULT_DELETE_ARRAY(pEmptyBuffer);
+
   // load textures
   m_pTextureGrassDiffuseSpec.Swap(gl::Texture2D::LoadFromFile("grass.tga", true));
   m_pTextureStoneDiffuseSpec.Swap(gl::Texture2D::LoadFromFile("rock.tga", true));
@@ -76,7 +83,9 @@ Terrain::Terrain() :
 
 Terrain::~Terrain()
 {
-  EZ_DEFAULT_DELETE(m_pHeightmap);
+  EZ_DEFAULT_DELETE(m_pTerrainData[0]);
+  EZ_DEFAULT_DELETE(m_pTerrainData[1]);
+  EZ_DEFAULT_DELETE(m_pWaterFlow);
   EZ_DEFAULT_DELETE(m_pGeomClipMaps);
 
   glDeleteSamplers(1, &m_texturingSamplerObjectAnisotropic);
@@ -91,7 +100,8 @@ void Terrain::SetPixelPerTriangle(float pixelPerTriangle)
 
 void Terrain::CreateHeightmap()
 {
-  m_pHeightmap = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_RGBA32F, -1);
+  m_pTerrainData[0] = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_RGBA32F, -1);
+  m_pTerrainData[1] = EZ_DEFAULT_NEW(gl::Texture2D)(m_heightmapSize, m_heightmapSize, GL_RGBA32F, -1);
   ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_heightmapSize*m_heightmapSize);
 
   NoiseGenerator noiseGen;
@@ -102,17 +112,40 @@ void Terrain::CreateHeightmap()
   {
     for(ezUInt32 x=0; x<m_heightmapSize; ++x)
     {
-      volumeData[x + y * m_heightmapSize].r = noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL) * 0.5f + 0.5f;
+      volumeData[x + y * m_heightmapSize].r = (noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL) * 0.5f + 0.5f) * m_heightScale;
       volumeData[x + y * m_heightmapSize].g = 0.3f;
       volumeData[x + y * m_heightmapSize].b = 0.3f;
-      volumeData[x + y * m_heightmapSize].a = 0.3f;
+      volumeData[x + y * m_heightmapSize].a = std::max(0.0f, (0.45f - pow(ezVec2(x * mulitplier - 0.5f, y * mulitplier - 0.5f).GetLengthSquared(), 2.0f)*800.0f) *m_heightScale
+                                      - volumeData[x + y * m_heightmapSize].r);
     }
   }
 
-  m_pHeightmap->SetData(0, volumeData);
-  m_pHeightmap->GenMipMaps();
+  GetTerrainData_Read()->SetData(0, volumeData);
+  GetTerrainData_Read()->GenMipMaps();
 
   EZ_DEFAULT_DELETE_RAW_BUFFER(volumeData);
+}
+
+void Terrain::PerformSimulationStep()
+{
+  for(int i = 0; i < 2; ++i)
+  {
+
+    GetTerrainData_Read()->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
+    GetTerrainData_Write()->BindImage(1, gl::Texture::ImageAccess::WRITE, GL_RGBA32F);
+
+    m_pWaterFlow->BindImage(2, gl::Texture::ImageAccess::READ_WRITE, GL_R32F);
+
+    m_simulationShader.Activate();
+
+    glDispatchCompute(m_heightmapSize / 32, m_heightmapSize / 32, 1);
+
+
+    m_renderBufferIdx = 1 - m_renderBufferIdx;
+  }
+
+  // Todo: Is this very slow?
+  GetTerrainData_Read()->GenMipMaps();
 }
 
 void Terrain::Draw(const ezVec3& cameraPosition)
@@ -120,7 +153,7 @@ void Terrain::Draw(const ezVec3& cameraPosition)
   m_pGeomClipMaps->UpdateInstanceData(cameraPosition);
 
   glBindSampler(0, m_texturingSamplerObjectTrilinear);
-  m_pHeightmap->Bind(0);
+  GetTerrainData_Read()->Bind(0);
 
   if(m_anisotropicFiltering)
   {

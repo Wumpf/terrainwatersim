@@ -15,6 +15,7 @@ public:
   Terrain();
   ~Terrain();
   
+  void PerformSimulationStep();
   void Draw(const ezVec3& cameraPosition);
  
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
@@ -32,7 +33,9 @@ public:
   void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
 private:
-  
+  gl::Texture2D* GetTerrainData_Read()  { return m_pTerrainData[m_renderBufferIdx]; }
+  gl::Texture2D* GetTerrainData_Write() { return m_pTerrainData[1-m_renderBufferIdx]; }
+
   void CreateHeightmap();
 
   // Settings.
@@ -49,14 +52,18 @@ private:
 
   // Graphics resources.
   class InstancedGeomClipMapping* m_pGeomClipMaps;
-  gl::Texture2D* m_pHeightmap;
 
+    // Doublebuffered terraindata
+  ezUInt32 m_renderBufferIdx;
+  gl::Texture2D* m_pTerrainData[2];
+  gl::Texture2D* m_pWaterFlow;
+
+    // Shader
+  gl::ShaderObject m_simulationShader;
   gl::ShaderObject m_waterRenderShader;
   gl::ShaderObject m_terrainRenderShader;
 
   gl::UniformBuffer m_landscapeInfoUBO;
-
-
 
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;

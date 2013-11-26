@@ -25,7 +25,7 @@ void main()
 						gl_TessCoord.z * In[2].WorldPos2D;
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
-	Out.WorldPos.y = textureLod(Heightmap, Out.HeightmapCoord, 0).x * HeightmapHeightScale;
+	Out.WorldPos.y = textureLod(Heightmap, Out.HeightmapCoord, 0).x;
 
 	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
 }

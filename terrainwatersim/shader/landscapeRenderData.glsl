@@ -1,7 +1,6 @@
 layout(binding = 5, shared) uniform GlobalLandscapeInfo
 {
 	vec2 GridMinPosition;
-	float HeightmapHeightScale;
 	float HeightmapWorldTexelSize;	// How big a tex is in world size.
 
 	float MaxTesselationFactor;

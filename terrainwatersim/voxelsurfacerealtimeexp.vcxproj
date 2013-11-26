@@ -127,6 +127,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\background.frag" />
+    <None Include="shader\simulation.comp" />
     <None Include="shader\constantbuffers.glsl" />
     <None Include="shader\helper.glsl" />
     <None Include="shader\landscapeRenderFunctions.glsl" />

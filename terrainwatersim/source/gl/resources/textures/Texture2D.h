@@ -19,7 +19,6 @@ namespace gl
     void GenMipMaps();
 
     void Bind(GLuint slotIndex) EZ_OVERRIDE;
-    void BindImage(GLuint slotIndex, Texture::ImageAccess access, GLenum format);
   };
 
 }

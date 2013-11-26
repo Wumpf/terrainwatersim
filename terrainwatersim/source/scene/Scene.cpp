@@ -108,6 +108,9 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_ExtractGeometryTimer->Start();
   m_ExtractGeometryTimer->End();
 
+  // simulate
+  m_pTerrain->PerformSimulationStep();
+  
   // Gamma correct & DepthTest
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_FRAMEBUFFER_SRGB);
