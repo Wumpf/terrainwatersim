@@ -19,7 +19,7 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 	h[2] = terrainInfo.a + terrainInfo.r;
 	terrainInfo = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0));
 	h[3] = terrainInfo.a + terrainInfo.r;
-	h *= 20.0f;
+	//	h *= 20.0f;
 	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);
 	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0f);
 	return normalize(cross(vecdz, vecdx));

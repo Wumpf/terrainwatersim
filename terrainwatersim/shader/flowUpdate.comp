@@ -1,0 +1,49 @@
+#version 430
+
+#include "simulationCommon.glsl"
+
+layout(binding = 0, rgba32f) restrict readonly uniform image2D TerrainData;
+layout(binding = 1, rgba32f) restrict uniform image2D Flow;
+
+// compute shader size
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+
+	// Read own outgoing flow
+	vec4 flowOut = imageLoad(Flow, gridPosition);
+
+	// Todo: Shared memory optimizations
+	// Read terrain
+	vec4 terrainInfo = imageLoad(TerrainData, gridPosition);
+	vec4 terrainInfoX1 = imageLoad(TerrainData, gridPosition + ivec2(1, 0));
+	vec4 terrainInfoX0 = imageLoad(TerrainData, gridPosition + ivec2(-1, 0));
+	vec4 terrainInfoY1 = imageLoad(TerrainData, gridPosition + ivec2(0, 1));
+	vec4 terrainInfoY0 = imageLoad(TerrainData, gridPosition + ivec2(0, -1));
+	
+	float ownWaterHeight = terrainInfo.a + terrainInfo.r;
+
+	// Need to clamp water heights under the terrain level
+	float waterHeightX1 = terrainInfoX1.a + terrainInfoX1.r;
+	float waterHeightX0 = terrainInfoX0.a + terrainInfoX0.r;
+	float waterHeightY1 = terrainInfoY1.a + terrainInfoY1.r;
+	float waterHeightY0 = terrainInfoY0.a + terrainInfoY0.r;
+
+	// acceleration of outgoing flow
+	vec4 newFlowOut;
+	newFlowOut.x = ownWaterHeight - waterHeightX1;
+	newFlowOut.y = ownWaterHeight - waterHeightX0;
+	newFlowOut.z = ownWaterHeight - waterHeightY1;
+	newFlowOut.w = ownWaterHeight - waterHeightY0;
+	newFlowOut = flowOut * FlowFriction_perStep + newFlowOut * WaterAccelerationSquare_DivByArea_perStep;
+	newFlowOut = max(vec4(0), newFlowOut);
+
+	// scale newFlowOut down, so that water height won't be below zero in the next step!
+	float totalOutgoingFlow = (newFlowOut.x + newFlowOut.y + newFlowOut.z + newFlowOut.w) * TimeStep;
+	if(totalOutgoingFlow > terrainInfo.a)
+		newFlowOut *= terrainInfo.a / totalOutgoingFlow;
+
+	// Store stuff.
+	imageStore(Flow, gridPosition, newFlowOut);
+}

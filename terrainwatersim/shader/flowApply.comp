@@ -1,0 +1,34 @@
+#version 430
+
+#include "simulationCommon.glsl"
+
+layout(binding = 0, rgba32f) restrict uniform image2D TerrainData;
+layout(binding = 1, rgba32f) restrict readonly uniform image2D Flow;
+
+// compute shader size
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+void main()
+{
+	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+
+	// Read own terrain height
+	vec4 terrainInfo = imageLoad(TerrainData, gridPosition);
+	
+	// Todo: Shared memory optimizations
+	// Read outgoing flow
+	vec4 flowOut = imageLoad(Flow, gridPosition);
+	vec4 flowOutX1 = imageLoad(Flow, gridPosition + ivec2(1, 0));
+	vec4 flowOutX0 = imageLoad(Flow, gridPosition + ivec2(-1, 0));
+	vec4 flowOutY1 = imageLoad(Flow, gridPosition + ivec2(0, 1));
+	vec4 flowOutY0 = imageLoad(Flow, gridPosition + ivec2(0, -1));
+
+	// Compute new water height.
+	float ingoingFlow = flowOutX1.y + flowOutX0.x + flowOutY1.w + flowOutY0.z;
+	float outgoingFlow = flowOut.x + flowOut.y + flowOut.z + flowOut.w;
+	float newWaterAmount = max(0, terrainInfo.a + (ingoingFlow - outgoingFlow) * TimeStep);
+
+
+	// Store stuff.
+	terrainInfo.a = newWaterAmount;
+	imageStore(TerrainData, gridPosition, terrainInfo);
+}

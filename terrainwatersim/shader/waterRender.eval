@@ -28,7 +28,7 @@ void main()
 	vec4 terrainInfo = textureLod(Heightmap, Out.HeightmapCoord, 0);
 	Out.WorldPos.y = terrainInfo.a + terrainInfo.r;
 	if(terrainInfo.a < 0.1f)
-		Out.WorldPos.y -= 1.0f;
+		Out.WorldPos.y -= (0.1 - terrainInfo.a) * 50f;
 
 	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
 }

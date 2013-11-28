@@ -33,9 +33,6 @@ public:
   void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
 private:
-  gl::Texture2D* GetTerrainData_Read()  { return m_pTerrainData[m_renderBufferIdx]; }
-  gl::Texture2D* GetTerrainData_Write() { return m_pTerrainData[1-m_renderBufferIdx]; }
-
   void CreateHeightmap();
 
   // Settings.
@@ -53,13 +50,13 @@ private:
   // Graphics resources.
   class InstancedGeomClipMapping* m_pGeomClipMaps;
 
-    // Doublebuffered terraindata
-  ezUInt32 m_renderBufferIdx;
-  gl::Texture2D* m_pTerrainData[2];
+  gl::Texture2D* m_pTerrainData;
   gl::Texture2D* m_pWaterFlow;
 
     // Shader
-  gl::ShaderObject m_simulationShader;
+  gl::ShaderObject m_updateFlowShader;
+  gl::ShaderObject m_applyFlowShader;
+
   gl::ShaderObject m_waterRenderShader;
   gl::ShaderObject m_terrainRenderShader;
 
