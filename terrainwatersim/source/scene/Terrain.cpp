@@ -16,11 +16,11 @@
 const float Terrain::m_maxTesselationFactor = 64.0f;
 
 Terrain::Terrain() :
-m_worldSize(1024.0f),
-m_heightmapSize(1024),
-m_minPatchSizeWorld(16.0f),
-m_heightScale(300.0f),
-m_anisotropicFiltering(false)
+  m_worldSize(1024.0f),
+  m_heightmapSize(1024),
+  m_minPatchSizeWorld(16.0f),
+  m_heightScale(300.0f),
+  m_anisotropicFiltering(false)
 {
   m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_worldSize, m_minPatchSizeWorld);
 

@@ -29,15 +29,15 @@ namespace SceneConfig
 }
 
 Scene::Scene(const RenderWindowGL& renderWindow) :
-m_pScreenAlignedTriangle(std::make_shared<gl::ScreenAlignedTriangle>()),
+  m_pScreenAlignedTriangle(std::make_shared<gl::ScreenAlignedTriangle>()),
 
-m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
-m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
+  m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
+  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
 
-m_ExtractGeometryTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
-m_DrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+  m_ExtractGeometryTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+  m_DrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
 
-m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
+  m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
 {
   EZ_LOG_BLOCK("Scene init");
 
@@ -64,10 +64,16 @@ m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
   m_UserInterface->Init();
 
   // Callbacks for CVars
+  ezEvent<const ezCVar::CVarEvent&>::Handler onResolutionChange = [=](const ezCVar::CVarEvent&)
+  { m_pCamera->ChangeAspectRatio(static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue()); };
+  GeneralConfig::g_ResolutionWidth.m_CVarEvents.AddEventHandler(onResolutionChange);
+  GeneralConfig::g_ResolutionHeight.m_CVarEvents.AddEventHandler(onResolutionChange);
+
   SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
     [=](const ezCVar::CVarEvent&) { m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue()); }));
   SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
     [=](const ezCVar::CVarEvent&) { m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue()); }));
+
 
   // Trigger initial values
   m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());

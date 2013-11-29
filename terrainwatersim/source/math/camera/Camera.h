@@ -3,8 +3,10 @@
 class Camera
 {
 public:
-  Camera(ezAngle fov, float fAspectRatio);
+  Camera(ezAngle fov, float fAspectRatio, float nearPlane = 0.1f, float farPlane = 2000.0f);
   virtual ~Camera();
+
+  void ChangeAspectRatio(float aspectRatio);
 
   virtual void Update(ezTime lastFrameDuration)=0;
 
@@ -29,4 +31,9 @@ private:
   ezMat4 m_ViewProjectionMatrix;
   ezMat4 m_ProjectionMatrix;
   ezMat4 m_ViewMatrix;
+
+  float m_nearPlane;
+  float m_farPlane;
+  ezAngle m_fov;
+  float m_aspectRatio;
 };

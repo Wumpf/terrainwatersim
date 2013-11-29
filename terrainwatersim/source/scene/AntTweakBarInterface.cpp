@@ -113,14 +113,18 @@ ezResult AntTweakBarInterface::Init()
   TwDefine(stringBuilder.GetData());
 
   TwDefine(" TweakBar refresh=0.2 ");
+  TwDefine(" TweakBar contained=true "); // TweakBar must be inside the window.
   //TwDefine(" TweakBar alpha=200 ");
 
+  // General
   ADD_STAT_TO_TWEAKBAR("Frame time", "group=General");
   ADD_STAT_TO_TWEAKBAR("Frames per second", "group=General");
+  
 
   // terrain
   //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");
   ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=TerrainRendering");
+
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  

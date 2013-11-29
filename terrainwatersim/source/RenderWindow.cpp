@@ -8,8 +8,8 @@
 
 namespace GeneralConfig
 {
-  ezCVarInt g_ResolutionWidth("ResolutionWidth", 1280, ezCVarFlags::Save | ezCVarFlags::RequiresRestart, "Backbuffer resolution in x direction");
-  ezCVarInt g_ResolutionHeight("ResolutionHeight", 768, ezCVarFlags::Save | ezCVarFlags::RequiresRestart, "Backbuffer resolution in y direction");
+  ezCVarInt g_ResolutionWidth("ResolutionWidth", 1280, ezCVarFlags::Save, "Backbuffer resolution in x direction");
+  ezCVarInt g_ResolutionHeight("ResolutionHeight", 768, ezCVarFlags::Save, "Backbuffer resolution in y direction");
 
   ezSizeU32 GetScreenResolution()
   {
@@ -20,7 +20,7 @@ namespace GeneralConfig
     return ezVec2(static_cast<float>(g_ResolutionWidth.GetValue()), static_cast<float>(g_ResolutionHeight.GetValue()));
   }
 }
-
+ 
 RenderWindowGL::RenderWindowGL() :
   ezWindow(),
   m_hDeviceContext(NULL), m_hRC(NULL)
@@ -29,11 +29,11 @@ RenderWindowGL::RenderWindowGL() :
   m_CreationDescription.m_ClientAreaSize.width = GeneralConfig::g_ResolutionWidth.GetValue();
   m_CreationDescription.m_ClientAreaSize.height = GeneralConfig::g_ResolutionHeight.GetValue();
   m_CreationDescription.m_bFullscreenWindow = false;
+  m_CreationDescription.m_bResizable = true;
 
   Initialize();
   CreateGraphicsContext();
 }
-
 
 RenderWindowGL::~RenderWindowGL()
 {
@@ -51,6 +51,16 @@ void RenderWindowGL::OnWindowMessage(HWND hWnd, UINT Msg, WPARAM WParam, LPARAM 
   message.lParam = LParam;
   message.wParam = WParam;
   GlobalEvents::g_pWindowMessage->Broadcast(message);
+}
+
+void RenderWindowGL::OnResizeMessage(const ezSizeU32& newWindowSize)
+{
+  GeneralConfig::g_ResolutionWidth = newWindowSize.width;
+  GeneralConfig::g_ResolutionHeight = newWindowSize.height;
+
+  glViewport(0, 0, GeneralConfig::g_ResolutionWidth, GeneralConfig::g_ResolutionHeight);
+
+  ezWindow::OnResizeMessage(newWindowSize);
 }
 
 void RenderWindowGL::DestroyGraphicsContext()
@@ -125,10 +135,9 @@ void RenderWindowGL::CreateGraphicsContext()
 #endif
 
   // some default gl settings
-  glViewport(0,1, GeneralConfig::g_ResolutionWidth, GeneralConfig::g_ResolutionHeight);
+  glViewport(0, 0, GeneralConfig::g_ResolutionWidth, GeneralConfig::g_ResolutionHeight);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_CULL_FACE);
-    
 }
 
 void RenderWindowGL::SwapBuffers()
