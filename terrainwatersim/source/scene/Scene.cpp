@@ -21,10 +21,16 @@ namespace SceneConfig
 {
   namespace TerrainRendering
   {
-    ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=TerrainRendering");
-    ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=TerrainRendering min=3.0 max=200");
-      
-    ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=TerrainRendering");
+    ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
+    ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=3.0 max=200");
+
+    ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
+  }
+  namespace Simulation
+  {
+    ezCVarFloat g_SimulationStepsPerSecond("Simulation steps per second", 60, ezCVarFlags::Save, "group='Simulation' min=30 max=300");
+    ezCVarFloat g_FlowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group=Simulation min=0.2 max=1.0 step=0.01");
+    ezCVarFloat g_FlowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group=Simulation min=0.5 max=100.0 step=0.1");
   }
 }
 
@@ -74,10 +80,21 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
     [=](const ezCVar::CVarEvent&) { m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue()); }));
 
+  SceneConfig::Simulation::g_SimulationStepsPerSecond.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
+    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue()); }));
+  SceneConfig::Simulation::g_FlowDamping.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
+    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue()); }));
+  SceneConfig::Simulation::g_FlowAcceleration.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
+    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue()); }));
 
-  // Trigger initial values
+
+  // Trigger initial values that may be saved
   m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
   m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());
+
+  m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());
+  m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());
+  m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());
 }
 
 Scene::~Scene(void)
@@ -98,8 +115,11 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
   
   // update stats vars
-  ezStringBuilder statString; statString.Format("%.2f ms", m_DrawTimer->GetLastTimeElapsed().GetMilliSeconds());
+  ezStringBuilder statString; statString.Format("%.2f ms", m_DrawTimer->GetLastTimeElapsed().GetMilliseconds());
   ezStats::SetStat("Terrain Draw Time", statString.GetData());
+
+  // simulate
+  m_pTerrain->PerformSimulationStep(lastFrameDuration);
 
   return EZ_SUCCESS;
 }
@@ -113,9 +133,6 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
   m_ExtractGeometryTimer->Start();
   m_ExtractGeometryTimer->End();
-
-  // simulate
-  m_pTerrain->PerformSimulationStep();
   
   // Gamma correct & DepthTest
   glEnable(GL_DEPTH_TEST);

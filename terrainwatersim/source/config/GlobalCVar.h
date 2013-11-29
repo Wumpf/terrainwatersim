@@ -18,4 +18,10 @@ namespace SceneConfig
     extern ezCVarBool g_UseAnisotropicFilter;
   }
 
+  namespace Simulation
+  {
+    extern ezCVarFloat g_SimulationStepsPerSecond;
+    extern ezCVarFloat g_FlowDamping;
+    extern ezCVarFloat g_FlowAcceleration;
+  }
 }

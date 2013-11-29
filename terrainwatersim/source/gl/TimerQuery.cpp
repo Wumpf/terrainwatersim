@@ -33,7 +33,7 @@ namespace gl
       GLuint time = 0;
       glGetQueryObjectuiv(m_Query, GL_QUERY_RESULT, &time);
 
-      return ezTime::NanoSeconds(time);
+      return ezTime::Nanoseconds(time);
     }
     else
       return ezTime::Seconds(0);

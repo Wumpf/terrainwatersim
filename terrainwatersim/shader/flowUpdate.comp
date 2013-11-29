@@ -36,11 +36,11 @@ void main()
 	newFlowOut.y = ownWaterHeight - waterHeightX0;
 	newFlowOut.z = ownWaterHeight - waterHeightY1;
 	newFlowOut.w = ownWaterHeight - waterHeightY0;
-	newFlowOut = flowOut * FlowFriction_perStep + newFlowOut * WaterAccelerationSquare_DivByArea_perStep;
+	newFlowOut = flowOut * FlowFriction_perStep + newFlowOut * WaterAcceleration_perStep;
 	newFlowOut = max(vec4(0), newFlowOut);
 
 	// scale newFlowOut down, so that water height won't be below zero in the next step!
-	float totalOutgoingFlow = (newFlowOut.x + newFlowOut.y + newFlowOut.z + newFlowOut.w) * TimeStep;
+	float totalOutgoingFlow = (newFlowOut.x + newFlowOut.y + newFlowOut.z + newFlowOut.w) * CellAreaInv_timeScaled;
 	if(totalOutgoingFlow > terrainInfo.a)
 		newFlowOut *= terrainInfo.a / totalOutgoingFlow;
 

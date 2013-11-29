@@ -15,11 +15,13 @@ public:
   Terrain();
   ~Terrain();
   
-  void PerformSimulationStep();
+  void PerformSimulationStep(ezTime lastFrameDuration);
   void Draw(const ezVec3& cameraPosition);
  
+  // Getter & Setter
+
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
-  
+
   float GetTerrainWorldSize() const             { return m_worldSize; }
   //void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; }    // Expected patch count changes!
 
@@ -32,19 +34,40 @@ public:
   bool GetAnisotropicFiltering() const { return m_anisotropicFiltering; }
   void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
+  float GetSimulationStepsPerSecond() const { return static_cast<float>(1.0f / m_simulationStepLength.GetSeconds() + 0.5f); }
+  void SetSimulationStepsPerSecond(float simulationStepsPerSecond);
+
+  float GetFlowDamping() const { return m_flowDamping; }
+  void SetFlowDamping(float flowDamping);
+
+  float GetFlowAcceleration() const { return m_flowAcceleration; }
+  void SetFlowAcceleration(float flowAcceleration);
+
 private:
   void CreateHeightmap();
 
-  // Settings.
+  void UpdateSimulationParameters();
+
+  // Settings
+
+  // general
   float m_worldSize;
   float m_minPatchSizeWorld;
-  float m_pixelPerTriangle;
   float m_heightScale;
+  ezUInt32 m_gridSize;
+
+  // simulation
+  ezTime m_simulationStepLength;
+  float m_flowDamping;
+  float m_flowAcceleration;
+
+  // rendering
+  float m_pixelPerTriangle;
   static const float m_maxTesselationFactor;
-
-  ezUInt32 m_heightmapSize;
-
   bool m_anisotropicFiltering;
+
+  // State
+  ezTime m_timeSinceLastSimulationStep;
 
 
   // Graphics resources.
@@ -61,6 +84,7 @@ private:
   gl::ShaderObject m_terrainRenderShader;
 
   gl::UniformBuffer m_landscapeInfoUBO;
+  gl::UniformBuffer m_simulationParametersUBO;
 
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;

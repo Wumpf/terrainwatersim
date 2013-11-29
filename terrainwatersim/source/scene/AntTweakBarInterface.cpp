@@ -109,7 +109,7 @@ ezResult AntTweakBarInterface::Init()
   ezStringBuilder stringBuilder;
   stringBuilder.Format(" TweakBar size='%i %i' ", tweakBarSize.width, tweakBarSize.height);
   TwDefine(stringBuilder.GetData());
-  stringBuilder.Format(" TweakBar position='%i %i' ", GeneralConfig::g_ResolutionWidth - tweakBarSize.width - 10, 10);
+  stringBuilder.Format(" TweakBar position='%i %i' ", GeneralConfig::g_ResolutionWidth - tweakBarSize.width - 20, 20);
   TwDefine(stringBuilder.GetData());
 
   TwDefine(" TweakBar refresh=0.2 ");
@@ -123,11 +123,14 @@ ezResult AntTweakBarInterface::Init()
 
   // terrain
   //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");
-  ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=TerrainRendering");
-
+  ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=\'Terrain Rendering\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  
+
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowDamping);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowAcceleration);
 
   // register eventhandler
   GlobalEvents::g_pWindowMessage->AddEventHandler(ezEvent<const GlobalEvents::Win32Message&>::Handler(&AntTweakBarInterface::WindowMessageEventHandler, this));

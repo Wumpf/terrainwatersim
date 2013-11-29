@@ -25,7 +25,7 @@ void main()
 	// Compute new water height.
 	float ingoingFlow = flowOutX1.y + flowOutX0.x + flowOutY1.w + flowOutY0.z;
 	float outgoingFlow = flowOut.x + flowOut.y + flowOut.z + flowOut.w;
-	float newWaterAmount = max(0, terrainInfo.a + (ingoingFlow - outgoingFlow) * TimeStep);
+	float newWaterAmount = max(0, terrainInfo.a + (ingoingFlow - outgoingFlow) * CellAreaInv_timeScaled);
 
 
 	// Store stuff.
