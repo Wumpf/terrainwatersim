@@ -91,6 +91,9 @@
     <ClInclude Include="source\scene\InstancedGeomClipMapping.h">
       <Filter>source\scene</Filter>
     </ClInclude>
+    <ClInclude Include="source\gl\resources\FramebufferObject.h">
+      <Filter>source\gl\resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -176,6 +179,9 @@
     <None Include="shader\simulation.comp">
       <Filter>shader</Filter>
     </None>
+    <None Include="shader\textureOutput.frag">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\gl\ScreenAlignedTriangle.cpp">
@@ -255,6 +261,9 @@
     </ClCompile>
     <ClCompile Include="source\scene\InstancedGeomClipMapping.cpp">
       <Filter>source\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\FramebufferObject.cpp">
+      <Filter>source\gl\resources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

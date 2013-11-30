@@ -14,4 +14,5 @@ namespace gl
   typedef GLuint TextureId;
   typedef GLuint SamplerId;
   typedef GLuint QueryId;
+  typedef GLuint Framebuffer;
 }

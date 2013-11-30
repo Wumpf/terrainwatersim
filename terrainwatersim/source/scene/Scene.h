@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gl/resources/UniformBuffer.h"
-#include "gl/ShaderObject.h"
 
 // declarations
 namespace gl
@@ -10,6 +9,9 @@ namespace gl
   class UniformBuffer;
   class ScreenAlignedTriangle;
   class TimerQuery;
+  class Texture2D;
+  class FramebufferObject;
+  class ShaderObject;
 };
 class FreeCamera;
 
@@ -26,7 +28,14 @@ public:
   void RenderUI();
 
 private:
-  void CreateVolumeTexture();
+  void InitConfig();
+  void RecreateScreenBuffers();
+
+  ezUniquePtr<gl::FramebufferObject> m_pLinearHDRFramebuffer;
+  ezUniquePtr<gl::Texture2D> m_pLinearHDRBuffer;
+  ezUniquePtr<gl::Texture2D> m_pDepthBuffer;
+
+  ezUniquePtr<gl::ShaderObject> m_pCopyShader;
 
   gl::UniformBuffer m_CameraUBO;
   gl::UniformBuffer m_TimeUBO;

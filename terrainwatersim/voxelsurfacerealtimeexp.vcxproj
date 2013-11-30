@@ -103,6 +103,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\gl\Font.h" />
     <ClInclude Include="source\gl\gl.h" />
     <ClInclude Include="source\gl\GLUtils.h" />
+    <ClInclude Include="source\gl\resources\FramebufferObject.h" />
     <ClInclude Include="source\gl\resources\textures\Texture.h" />
     <ClInclude Include="source\gl\resources\textures\Texture2D.h" />
     <ClInclude Include="source\gl\resources\textures\Texture3D.h" />
@@ -137,6 +138,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\terrainRender.frag" />
     <None Include="shader\terrainRender.vert" />
     <None Include="shader\landscapeRenderData.glsl" />
+    <None Include="shader\textureOutput.frag" />
     <None Include="shader\waterRender.cont" />
     <None Include="shader\waterRender.eval" />
     <None Include="shader\waterRender.frag" />
@@ -153,6 +155,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClCompile Include="source\GlobalEvents.cpp" />
     <ClCompile Include="source\gl\Font.cpp" />
     <ClCompile Include="source\gl\GLUtils.cpp" />
+    <ClCompile Include="source\gl\resources\FramebufferObject.cpp" />
     <ClCompile Include="source\gl\resources\textures\Texture.cpp" />
     <ClCompile Include="source\gl\resources\textures\Texture2D.cpp" />
     <ClCompile Include="source\gl\resources\textures\Texture3D.cpp" />

@@ -134,9 +134,6 @@ void Application::Update(ezTime lastFrameDuration)
 
 void Application::RenderFrame(ezTime lastFrameDuration)
 {
-  glDepthMask(GL_TRUE);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
   m_pScene->Render(lastFrameDuration);
   m_pOnScreenLogWriter->Render();
   m_pScene->RenderUI();

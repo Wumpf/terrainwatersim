@@ -1,10 +1,10 @@
-#version 330
+#version 430
 
 // input
 layout(location = 0) in vec2 vs_in_position;
 
 // output
-out vec2 vs_out_texcoord;
+layout(location = 0) out vec2 vs_out_texcoord;
 
 void main()
 {	

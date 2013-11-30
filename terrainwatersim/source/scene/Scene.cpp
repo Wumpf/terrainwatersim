@@ -17,6 +17,9 @@
 #include "AntTweakBarInterface.h"
 #include <Foundation/Utilities/Stats.h>
 
+#include "gl/resources/FramebufferObject.h"
+#include "gl/resources/textures/Texture2D.h"
+
 namespace SceneConfig
 {
   namespace TerrainRendering
@@ -36,6 +39,8 @@ namespace SceneConfig
 
 Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pScreenAlignedTriangle(std::make_shared<gl::ScreenAlignedTriangle>()),
+
+  m_pCopyShader(EZ_DEFAULT_NEW_UNIQUE(gl::ShaderObject)),
 
   m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
   m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
@@ -66,12 +71,27 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 100, m_pTerrain->GetTerrainWorldSize() / 2);
   m_pCamera->SetPosition(vCameraPos);
 
+  // Shader for buffer copy operations
+  m_pCopyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
+  m_pCopyShader->AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "textureOutput.frag");
+  m_pCopyShader->CreateProgram();
+
+  // Buffer setup
+  RecreateScreenBuffers();
+
   // user interface
   m_UserInterface->Init();
+  InitConfig();
+}
 
+void Scene::InitConfig()
+{
   // Callbacks for CVars
   ezEvent<const ezCVar::CVarEvent&>::Handler onResolutionChange = [=](const ezCVar::CVarEvent&)
-  { m_pCamera->ChangeAspectRatio(static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue()); };
+  {
+    m_pCamera->ChangeAspectRatio(static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue());
+    RecreateScreenBuffers();
+  };
   GeneralConfig::g_ResolutionWidth.m_CVarEvents.AddEventHandler(onResolutionChange);
   GeneralConfig::g_ResolutionHeight.m_CVarEvents.AddEventHandler(onResolutionChange);
 
@@ -97,6 +117,13 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());
 }
 
+void Scene::RecreateScreenBuffers()
+{
+  m_pLinearHDRBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), GL_RGBA16F, 1));
+  m_pDepthBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), GL_DEPTH_COMPONENT32, 1));
+  m_pLinearHDRFramebuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::FramebufferObject, { gl::FramebufferObject::Attachment(m_pLinearHDRBuffer.Get()) }, gl::FramebufferObject::Attachment(m_pDepthBuffer.Get())));
+}
+
 Scene::~Scene(void)
 {
   EZ_DEFAULT_DELETE(m_pTerrain);
@@ -116,7 +143,8 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   
   // update stats vars
   ezStringBuilder statString; statString.Format("%.2f ms", m_DrawTimer->GetLastTimeElapsed().GetMilliseconds());
-  ezStats::SetStat("Terrain Draw Time", statString.GetData());
+  ezStats::SetStat(
+    "Terrain Draw Time", statString.GetData());
 
   // simulate
   m_pTerrain->PerformSimulationStep(lastFrameDuration);
@@ -134,11 +162,14 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_ExtractGeometryTimer->Start();
   m_ExtractGeometryTimer->End();
   
-  // Gamma correct & DepthTest
+  // DepthTest on.
   glEnable(GL_DEPTH_TEST);
-  glEnable(GL_FRAMEBUFFER_SRGB);
+  glDepthMask(GL_TRUE);
+  // HDR on.
+  m_pLinearHDRFramebuffer->Bind();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // render processed data
+  // render terrain
   m_DrawTimer->Start();
   if(SceneConfig::TerrainRendering::g_Wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -153,12 +184,20 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_pBackground->Draw();
 
 
-  // disable depth test, give up gamma correctness
-  glDisable(GL_FRAMEBUFFER_SRGB);
-  glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
 
-  // and ui
+  // Resolve rendertarget to backbuffer (blit is slow according to this http://stackoverflow.com/questions/9209936/copy-texture-to-screen-buffer-without-drawing-quad-opengl)
+  glEnable(GL_FRAMEBUFFER_SRGB);
+  glDisable(GL_DEPTH_TEST); // no more depth needed
+  glDepthMask(GL_FALSE);
+  gl::FramebufferObject::BindBackBuffer();
+  m_pLinearHDRBuffer->Bind(0);
+  m_pCopyShader->Activate();
+  m_pScreenAlignedTriangle->Draw();
+
+
+
+  // Render ui directly to backbuffer
+  glDisable(GL_FRAMEBUFFER_SRGB);
   RenderUI();
 
   return EZ_SUCCESS;
