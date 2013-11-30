@@ -38,8 +38,13 @@ namespace gl
 
   void Texture3D::Bind(GLuint slotIndex)
   {
-    glActiveTexture(GL_TEXTURE0 + slotIndex);
-    glBindTexture(GL_TEXTURE_3D, m_TextureHandle);
-    gl::Utils::CheckError("glBindTexture");
+    EZ_ASSERT(slotIndex < sizeof(s_pBoundTextures) / sizeof(Texture*), "Can't bind texture to slot %i. Maximum number of slots is %i", slotIndex, sizeof(s_pBoundTextures) / sizeof(Texture*));
+    if(s_pBoundTextures[slotIndex] != this)
+    {
+      glActiveTexture(GL_TEXTURE0 + slotIndex);
+      glBindTexture(GL_TEXTURE_3D, m_TextureHandle);
+      gl::Utils::CheckError("glBindTexture");
+      s_pBoundTextures[slotIndex] = this;
+    }
   }
 }

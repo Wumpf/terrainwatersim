@@ -16,8 +16,12 @@ public:
   ~Terrain();
   
   void PerformSimulationStep(ezTime lastFrameDuration);
-  void Draw(const ezVec3& cameraPosition);
- 
+
+  void UpdateVisibilty(const ezVec3& cameraPosition);
+  void DrawTerrain();
+  /// Draws water. Needs to take a low resolution resolved copy of current framebuffer.
+  void DrawWater(gl::Texture2D& sceneTexture);
+
   // Getter & Setter
 
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
@@ -83,15 +87,20 @@ private:
   gl::ShaderObject m_waterRenderShader;
   gl::ShaderObject m_terrainRenderShader;
 
+    // UBO
   gl::UniformBuffer m_landscapeInfoUBO;
   gl::UniformBuffer m_simulationParametersUBO;
 
+    // Samplers
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;
 
+    // Terrain Textures
   ezUniquePtr<gl::Texture2D> m_pTextureGrassDiffuseSpec;
   ezUniquePtr<gl::Texture2D> m_pTextureStoneDiffuseSpec;
   ezUniquePtr<gl::Texture2D> m_pTextureGrassNormalHeight;
   ezUniquePtr<gl::Texture2D> m_pTextureStoneNormalHeight;
+
+  ezUniquePtr<gl::Texture2D> m_pRefractionTexture;
 };
 

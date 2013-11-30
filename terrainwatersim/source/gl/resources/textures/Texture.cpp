@@ -4,6 +4,8 @@
 
 namespace gl
 {
+  Texture* Texture::s_pBoundTextures[32];
+
   Texture::Texture(ezUInt32 uiWidth, ezUInt32 uiHeight, ezUInt32 uiDepth, GLuint format, ezInt32 iNumMipLevels, ezUInt32 numMSAASamples) :
     m_width(uiWidth),
     m_height(uiHeight),

@@ -187,10 +187,13 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     m_pTerrainData->GenMipMaps();
 }
 
-void Terrain::Draw(const ezVec3& cameraPosition)
+void Terrain::UpdateVisibilty(const ezVec3& cameraPosition)
 {
   m_pGeomClipMaps->UpdateInstanceData(cameraPosition);
+}
 
+void Terrain::DrawTerrain()
+{
   glBindSampler(0, m_texturingSamplerObjectTrilinear);
   m_pTerrainData->Bind(0);
 
@@ -216,12 +219,23 @@ void Terrain::Draw(const ezVec3& cameraPosition)
   // Terrain
   m_terrainRenderShader.Activate();
   m_pGeomClipMaps->DrawGeometry();
+
+  glBindSampler(0, 0);
+  //  glPatchParameteri(GL_PATCH_VERTICES, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Terrain::DrawWater(gl::Texture2D& sceneTexture)
+{
+  glBindSampler(0, m_texturingSamplerObjectTrilinear);
+  m_pTerrainData->Bind(0);
+
+  m_landscapeInfoUBO.BindBuffer(5);
+
   // Water
   m_waterRenderShader.Activate();
   m_pGeomClipMaps->DrawGeometry();
 
-
   glBindSampler(0, 0);
-  //  glPatchParameteri(GL_PATCH_VERTICES, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

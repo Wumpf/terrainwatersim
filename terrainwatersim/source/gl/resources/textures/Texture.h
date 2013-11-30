@@ -20,6 +20,7 @@ namespace gl
       READ_WRITE = GL_READ_WRITE
     };
       
+    /// Binds as image, currently without redundancy checking!
     void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_format); }
     void BindImage(GLuint slotIndex, ImageAccess access, GLenum format);
 
@@ -32,6 +33,10 @@ namespace gl
     ezUInt32 GetNumMSAASamples() const  { return m_numMSAASamples; }
 
   protected:
+    /// Currently bound textures - number is arbitrary!
+    /// Not used for image binding
+    static Texture* s_pBoundTextures[32];
+
     TextureId m_TextureHandle;
 
     const ezUInt32 m_width;

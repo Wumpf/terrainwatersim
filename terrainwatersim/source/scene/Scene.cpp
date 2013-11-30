@@ -152,6 +152,9 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   // simulate
   m_pTerrain->PerformSimulationStep(lastFrameDuration);
 
+  // visibility
+  m_pTerrain->UpdateVisibilty(m_pCamera->GetPosition());
+
   return EZ_SUCCESS;
 }
 
@@ -177,7 +180,8 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   if(SceneConfig::TerrainRendering::g_Wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
-  m_pTerrain->Draw(m_pCamera->GetPosition() );
+  m_pTerrain->DrawTerrain();
+  m_pTerrain->DrawWater(*m_pLinearHDRBuffer.Get());
    
   m_DrawTimer->End();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
