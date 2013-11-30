@@ -92,6 +92,8 @@ namespace gl
     const ShaderStorageInfos& GetShaderStorageBufferInfo() const    { return m_ShaderStorageInfos; }
 
 
+ //   static void ResetShaderBinding();
+
   private:
     /// Print information about the compiling step
     static void PrintShaderInfoLog(ShaderId shader, const ezString& sShaderName);

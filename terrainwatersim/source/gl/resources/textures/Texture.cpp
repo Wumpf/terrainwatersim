@@ -4,14 +4,17 @@
 
 namespace gl
 {
-  Texture::Texture(ezUInt32 uiWidth, ezUInt32 uiHeight, ezUInt32 uiDepth, GLuint format, ezInt32 iNumMipLevels) : 
-    m_uiWidth(uiWidth),
-    m_uiHeight(uiHeight),
-    m_uiDepth(uiDepth),
+  Texture::Texture(ezUInt32 uiWidth, ezUInt32 uiHeight, ezUInt32 uiDepth, GLuint format, ezInt32 iNumMipLevels, ezUInt32 numMSAASamples) :
+    m_width(uiWidth),
+    m_height(uiHeight),
+    m_depth(uiDepth),
 
-    m_Format(format),
-    m_uiNumMipLevels(ConvertMipMapSettingToActualCount(iNumMipLevels, uiWidth, uiHeight, format))
+    m_format(format),
+    m_numMipLevels(ConvertMipMapSettingToActualCount(iNumMipLevels, uiWidth, uiHeight, format)),
+
+    m_numMSAASamples(numMSAASamples)
   {
+    EZ_ASSERT(m_numMipLevels == 1 || numMSAASamples == 0, "Texture must have either zero MSAA samples or only one miplevel!");
     glGenTextures(1, &m_TextureHandle);
   }
 

@@ -10,6 +10,7 @@ namespace GeneralConfig
 {
   ezCVarInt g_ResolutionWidth("ResolutionWidth", 1280, ezCVarFlags::Save, "Backbuffer resolution in x direction");
   ezCVarInt g_ResolutionHeight("ResolutionHeight", 768, ezCVarFlags::Save, "Backbuffer resolution in y direction");
+  ezCVarInt g_MSAASamples("MSAA Samples", 0, ezCVarFlags::Save, "");
 
   ezSizeU32 GetScreenResolution()
   {
@@ -83,7 +84,7 @@ void RenderWindowGL::CreateGraphicsContext()
 {
   // init opengl device
   int iColorBits = 24;
-  int iDepthBits = 24;
+  int iDepthBits = 0;
   int iBPC = 8;
 
   PIXELFORMATDESCRIPTOR pfd =

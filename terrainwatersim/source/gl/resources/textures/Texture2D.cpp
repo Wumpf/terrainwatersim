@@ -7,11 +7,14 @@
 
 namespace gl
 {
-  Texture2D::Texture2D(ezUInt32 uiWidth, ezUInt32 uiHeight, GLuint format, ezInt32 iNumMipLevels) :
-    Texture(uiWidth, uiHeight, 1, format, iNumMipLevels)
+  Texture2D::Texture2D(ezUInt32 width, ezUInt32 height, GLuint format, ezInt32 numMipLevels, ezUInt32 numMSAASamples) :
+    Texture(width, height, 1, format, numMipLevels, numMSAASamples)
   {
     Bind(0);
-    glTexStorage2D(GL_TEXTURE_2D, m_uiNumMipLevels, format, m_uiWidth, m_uiHeight);
+    if(m_numMSAASamples == 0)
+      glTexStorage2D(GL_TEXTURE_2D, m_numMipLevels, format, m_width, m_height);
+    else
+      glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_numMSAASamples, format, m_width, m_height, GL_FALSE);
     gl::Utils::CheckError("glTexStorage2D");
   }
 
@@ -36,7 +39,7 @@ namespace gl
     ezUniquePtr<Texture2D> out(EZ_DEFAULT_NEW_UNIQUE(Texture2D, static_cast<ezUInt32>(uiTexSizeX), static_cast<ezUInt32>(uiTexSizeY), sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, generateMipMaps ? -1 : 1));
     out->SetData(0, reinterpret_cast<const ezColor8UNorm*>(TextureData));
 
-    if(generateMipMaps)
+    if(generateMipMaps && out->GetNumMipLevels() > 1)
       glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(TextureData);
@@ -46,13 +49,13 @@ namespace gl
 
   void Texture2D::SetData(ezUInt32 uiMipLevel, const ezColor* pData)
   {
-    EZ_ASSERT(uiMipLevel < m_uiNumMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_uiNumMipLevels);
+    EZ_ASSERT(uiMipLevel < m_numMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_numMipLevels);
 
     Bind(0);
-    glTexSubImage2D(GL_TEXTURE_2D, 
+    glTexSubImage2D(GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D,
                     uiMipLevel,
                     0, 0,
-                    m_uiWidth, m_uiHeight,
+                    m_width, m_height,
                     GL_RGBA, GL_FLOAT, pData);
   }
 
@@ -64,20 +67,20 @@ namespace gl
 
   void Texture2D::SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData)
   {
-    EZ_ASSERT(uiMipLevel < m_uiNumMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_uiNumMipLevels);
+    EZ_ASSERT(uiMipLevel < m_numMipLevels, "MipLevel %i does not exist, texture has only %i MipMapLevels", uiMipLevel, m_numMipLevels);
 
     Bind(0);
-    glTexSubImage2D(GL_TEXTURE_2D, 
+    glTexSubImage2D(GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D,
       uiMipLevel,
       0, 0,
-      m_uiWidth, m_uiHeight,
+      m_width, m_height,
       GL_RGBA, GL_UNSIGNED_BYTE, pData);
   }
 
   void Texture2D::Bind(GLuint slotIndex)
   {
     glActiveTexture(GL_TEXTURE0 + slotIndex);
-    glBindTexture(GL_TEXTURE_2D, m_TextureHandle);
+    glBindTexture(GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, m_TextureHandle);
     gl::Utils::CheckError("glBindTexture");
   }
 }

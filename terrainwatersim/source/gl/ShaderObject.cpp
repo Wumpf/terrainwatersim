@@ -579,4 +579,10 @@ namespace gl
       }
     }
   }
+
+ /* void ShaderObject::ResetShaderBinding()
+  {
+    glUseProgram(0);
+    g_pCurrentlyActiveShaderObject == NULL;
+  } */
 }

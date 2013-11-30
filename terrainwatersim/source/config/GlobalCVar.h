@@ -5,6 +5,7 @@ namespace GeneralConfig
   // defined in RenderWindow.cpp
   extern ezCVarInt g_ResolutionWidth;
   extern ezCVarInt g_ResolutionHeight;
+  extern ezCVarInt g_MSAASamples;
   ezSizeU32 GetScreenResolution();
   ezVec2 GetScreenResolutionF();
 }

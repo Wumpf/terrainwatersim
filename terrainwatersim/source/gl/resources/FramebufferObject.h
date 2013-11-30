@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../ShaderDataMetaInfo.h"
+#include <Foundation/Math/Rect.h>
+
 
 namespace gl
 {
@@ -27,13 +29,17 @@ namespace gl
     /// Resets the binding to zero (GL_DRAW_FRAMEBUFFER)
     static void BindBackBuffer();
 
+    /// Blits this Framebuffer to another one. Afterwards the dest buffer is set for drawing and this buffer is set for reading!
+    /// \param pDest   Backbuffer if NULL
+    void BlitTo(FramebufferObject* pDest, const ezRectU32& srcRect, const ezRectU32& dstRect, GLuint mask = GL_COLOR_BUFFER_BIT, GLuint filter = GL_NEAREST);
+
     Framebuffer GetInternHandle() { return m_framebuffer; }
 
   private:
     /// Currently bound draw framebuffer object (NULL means backbuffer)
     static FramebufferObject* s_BoundFrameBufferDraw;
     /// Currently bound read framebuffer object (NULL means backbuffer)
-   // static FramebufferObject* s_BoundFrameBufferRead;
+    static FramebufferObject* s_BoundFrameBufferRead;
 
     Framebuffer m_framebuffer;
 

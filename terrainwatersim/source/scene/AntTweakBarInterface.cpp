@@ -50,7 +50,7 @@ static void GetCVarValue(ezTypedCVar<Type, CVarType>& cvar, void *value)
     }; \
     TwAddVarCB(m_pTweakBar, cvar.GetName(), TwTypeFromCVarType(cvar.GetType()), setFkt, getFkt, NULL, cvar.GetDescription()); \
     const char* errorDesc = TwGetLastError(); \
-    if(errorDesc != NULL) ezLog::SeriousWarning(errorDesc); \
+    if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
   } while(false)
 
 #define ADD_CVAR_TO_TWEAKBAR_RO(cvar) \
@@ -60,7 +60,7 @@ static void GetCVarValue(ezTypedCVar<Type, CVarType>& cvar, void *value)
     }; \
     TwAddVarCB(m_pTweakBar, cvar.GetName(), TwTypeFromCVarType(cvar.GetType()), NULL, getFkt, NULL, cvar.GetDescription()); \
     const char* errorDesc = TwGetLastError(); \
-    if(errorDesc != NULL) ezLog::SeriousWarning(errorDesc); \
+    if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
   } while(false)
 
 #define ADD_STAT_TO_TWEAKBAR(statname, param) \
@@ -70,7 +70,7 @@ static void GetCVarValue(ezTypedCVar<Type, CVarType>& cvar, void *value)
     }; \
     TwAddVarCB(m_pTweakBar, statname, TW_TYPE_CDSTRING, NULL, getFkt, NULL, param); \
     const char* errorDesc = TwGetLastError(); \
-    if(errorDesc != NULL) ezLog::SeriousWarning(errorDesc); \
+    if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
   } while(false)
 
 
@@ -119,7 +119,16 @@ ezResult AntTweakBarInterface::Init()
   // General
   ADD_STAT_TO_TWEAKBAR("Frame time", "group=General");
   ADD_STAT_TO_TWEAKBAR("Frames per second", "group=General");
-  
+
+    // AntiAliasing
+  TwEnumVal antialiasingValues[] = { { 0, "None" }, { 2, "2x" }, { 4, "4x" }, { 8, "8x" } };
+  auto enumType = TwDefineEnum("AntiAliasing_enum", antialiasingValues, 4);
+  TwAddVarCB(m_pTweakBar, GeneralConfig::g_MSAASamples.GetName(), enumType,
+              [](const void *value, void *clientData) { SetCVarValue(GeneralConfig::g_MSAASamples, value); },
+              [](void *value, void *clientData) { GetCVarValue(GeneralConfig::g_MSAASamples, value); },
+              NULL, "group=General");
+  const char* errorDesc = TwGetLastError();
+  if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc);
 
   // terrain
   //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");

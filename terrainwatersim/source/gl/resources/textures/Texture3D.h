@@ -7,8 +7,8 @@ namespace gl
   class Texture3D : public Texture
   {
   public:
-    /// \param uiNumMipLevels   -1 for full chain, 0 and 1 have same result
-    Texture3D(ezUInt32 uiWidth, ezUInt32 uiHeight, ezUInt32 uiDepth, GLuint format = GL_RGBA8, ezInt32 iNumMipLevels = 1);
+    /// \param numMipLevels   -1 for full chain, 0 and 1 have same result
+    Texture3D(ezUInt32 width, ezUInt32 height, ezUInt32 depth, GLuint format = GL_RGBA8, ezInt32 numMipLevels = 1);
     
     void SetData(ezUInt32 uiMipLevel, const ezColor* pData) EZ_OVERRIDE;
     void SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData) EZ_OVERRIDE;

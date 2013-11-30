@@ -8,7 +8,7 @@ namespace GlobalEvents
   struct Win32Message
   {
     HWND wnd;
-    UINT msg;
+    INT msg;
     WPARAM wParam;
     LPARAM lParam;
   };

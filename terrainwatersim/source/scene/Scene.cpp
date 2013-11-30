@@ -94,6 +94,7 @@ void Scene::InitConfig()
   };
   GeneralConfig::g_ResolutionWidth.m_CVarEvents.AddEventHandler(onResolutionChange);
   GeneralConfig::g_ResolutionHeight.m_CVarEvents.AddEventHandler(onResolutionChange);
+  GeneralConfig::g_MSAASamples.m_CVarEvents.AddEventHandler([=](const ezCVar::CVarEvent&){ RecreateScreenBuffers(); });
 
   SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
     [=](const ezCVar::CVarEvent&) { m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue()); }));
@@ -119,8 +120,10 @@ void Scene::InitConfig()
 
 void Scene::RecreateScreenBuffers()
 {
-  m_pLinearHDRBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), GL_RGBA16F, 1));
-  m_pDepthBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), GL_DEPTH_COMPONENT32, 1));
+  m_pLinearHDRBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(),
+          GL_RGBA16F, 1, GeneralConfig::g_MSAASamples.GetValue()));
+  m_pDepthBuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(),
+          GL_DEPTH_COMPONENT32, 1, GeneralConfig::g_MSAASamples.GetValue()));
   m_pLinearHDRFramebuffer.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::FramebufferObject, { gl::FramebufferObject::Attachment(m_pLinearHDRBuffer.Get()) }, gl::FramebufferObject::Attachment(m_pDepthBuffer.Get())));
 }
 
@@ -185,18 +188,30 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
 
 
-  // Resolve rendertarget to backbuffer (blit is slow according to this http://stackoverflow.com/questions/9209936/copy-texture-to-screen-buffer-without-drawing-quad-opengl)
+  // Resolve rendertarget to backbuffer
   glEnable(GL_FRAMEBUFFER_SRGB);
   glDisable(GL_DEPTH_TEST); // no more depth needed
   glDepthMask(GL_FALSE);
-  gl::FramebufferObject::BindBackBuffer();
-  m_pLinearHDRBuffer->Bind(0);
-  m_pCopyShader->Activate();
-  m_pScreenAlignedTriangle->Draw();
+
+  // blit is slow according to this http://stackoverflow.com/questions/9209936/copy-texture-to-screen-buffer-without-drawing-quad-opengl
+  // But it turned out, that it is still the standard way to resolve textures.. so since the shader is already there, let's choose the best
+  if(m_pLinearHDRBuffer->GetNumMSAASamples() > 0)
+  {
+    ezRectU32 screenRect(0, 0, m_pLinearHDRBuffer->GetWidth(), m_pLinearHDRBuffer->GetHeight());
+    m_pLinearHDRFramebuffer->BlitTo(NULL, screenRect, screenRect);
+  }
+  else
+  {
+    gl::FramebufferObject::BindBackBuffer();
+    m_pLinearHDRBuffer->Bind(0);
+    m_pCopyShader->Activate();
+    m_pScreenAlignedTriangle->Draw();
+  }
 
 
 
   // Render ui directly to backbuffer
+//  gl::ShaderObject::ResetShaderBinding();
   glDisable(GL_FRAMEBUFFER_SRGB);
   RenderUI();
 

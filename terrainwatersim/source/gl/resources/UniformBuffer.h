@@ -14,7 +14,7 @@ namespace gl
     ezResult Init(std::initializer_list<const gl::ShaderObject*> shaders, const ezString& sBufferName);
 
     ezResult Init(const gl::ShaderObject& shader, const ezString& sBufferName);
-    ezResult Init(ezUInt32 uiBufferSizeBytes, const ezString& sBufferName);
+    ezResult Init(ezUInt32 BufferSizeBytes, const ezString& sBufferName);
 
     class Variable : public gl::ShaderVariable<UniformVariableInfo>
     {
@@ -23,7 +23,7 @@ namespace gl
       Variable(const UniformVariableInfo& metaInfo, UniformBuffer* pUniformBuffer) :
         ShaderVariable(metaInfo), m_pUniformBuffer(pUniformBuffer) {}
 
-      void Set(const void* pData, ezUInt32 uiSizeInBytes) EZ_OVERRIDE;
+      void Set(const void* pData, ezUInt32 SizeInBytes) EZ_OVERRIDE;
 
       using gl::ShaderVariable<UniformVariableInfo>::Set;
     private:
@@ -36,7 +36,7 @@ namespace gl
 
     /// \brief Sets data in buffer directly.
     /// Given data block will be set dirty and copied with the next BindBuffer/UpdateGPUData call
-    void SetData(const void* pData, ezUInt32 uiDataSize, ezUInt32 uiOffset);
+    void SetData(const void* pData, ezUInt32 DataSize, ezUInt32 Offset);
 
     /// Updates gpu data if necessary and binds buffer
     ezResult BindBuffer(GLuint locationIndex);

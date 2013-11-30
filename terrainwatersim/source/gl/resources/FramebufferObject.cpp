@@ -6,14 +6,16 @@
 namespace gl
 {
   FramebufferObject* FramebufferObject::s_BoundFrameBufferDraw = NULL;
-  //FramebufferObject* FramebufferObject::s_BoundFrameBufferRead = NULL;
+  FramebufferObject* FramebufferObject::s_BoundFrameBufferRead = NULL;
 
   FramebufferObject::FramebufferObject(std::initializer_list<Attachment> colorAttachments, Attachment depthStencil, bool depthWithStencil) :
     m_depthStencil(depthStencil)
   {
     glGenFramebuffers(1, &m_framebuffer);
 
-    Bind();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    s_BoundFrameBufferDraw = this;
+    s_BoundFrameBufferRead = this;
 
     if(depthStencil.pTexture)
     {
@@ -21,9 +23,10 @@ namespace gl
 
       // Sufficient for MSAA?
       if(depthStencil.layer > 0)
-        glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel, depthStencil.layer);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel, depthStencil.layer);
       else
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment, GL_TEXTURE_2D, depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, depthStencil.pTexture->GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D,
+                                depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel);
     }
 
 
@@ -31,25 +34,27 @@ namespace gl
     {
       GLint attachment = GL_COLOR_ATTACHMENT0 + m_colorAttachments.GetCount();
       if(it->layer > 0)
-        glFramebufferTextureLayer(GL_DRAW_FRAMEBUFFER, attachment, it->pTexture->GetInternHandle(), it->mipLevel, it->layer);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, it->pTexture->GetInternHandle(), it->mipLevel, it->layer);
       else
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachment, GL_TEXTURE_2D, it->pTexture->GetInternHandle(), it->mipLevel);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, it->pTexture->GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, 
+                                  it->pTexture->GetInternHandle(), it->mipLevel);
 
       m_colorAttachments.PushBack(*it);
     }
 
+    // setup draw buffers
     ezArrayPtr<GLuint> drawBuffers = EZ_DEFAULT_NEW_ARRAY(GLuint, m_colorAttachments.GetCount());
     for(ezUInt32 i = 0; i < m_colorAttachments.GetCount(); ++i)
       drawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
     glDrawBuffers(m_colorAttachments.GetCount(), drawBuffers.GetPtr());
     EZ_DEFAULT_DELETE_ARRAY(drawBuffers);
 
+    // Set read buffers to first color target.
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-    GLenum framebufferStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-    if(framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
-    {
-      ezLog::Error("Frame buffer creation failed! Error code: %i", framebufferStatus);
-    }
+
+    GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    EZ_ASSERT(framebufferStatus == GL_FRAMEBUFFER_COMPLETE, "Frame buffer creation failed! Error code: %i", framebufferStatus);
 
     BindBackBuffer();
   }
@@ -77,4 +82,20 @@ namespace gl
     }
   }
  
+
+  void FramebufferObject::BlitTo(FramebufferObject* pDest, const ezRectU32& srcRect, const ezRectU32& dstRect, GLuint mask, GLuint filter)
+  {
+    if(pDest == NULL)
+      BindBackBuffer();
+    else
+      pDest->Bind();
+    if(s_BoundFrameBufferRead != this)
+    {
+      glBindFramebuffer(GL_READ_BUFFER, m_framebuffer);
+      s_BoundFrameBufferRead = this;
+    }
+
+    glBlitFramebuffer(srcRect.x, srcRect.y, srcRect.x + srcRect.width, srcRect.y + srcRect.height,
+                      dstRect.x, dstRect.y, dstRect.x + dstRect.width, dstRect.y + dstRect.height, mask, filter);
+  }
 }
