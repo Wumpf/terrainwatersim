@@ -13,6 +13,7 @@ layout(binding = 2) uniform samplerCube ReflectionCubemap;
 layout(binding = 3) uniform sampler2D FlowMap;
 layout(binding = 4) uniform sampler2D Normalmap;
 layout(binding = 5) uniform sampler2D Noise;
+layout(binding = 6) uniform sampler2D Foam;
 
 
 // Water Rendering constants
@@ -25,9 +26,9 @@ layout(binding = 6) uniform WaterRendering
 
 	float SpeedToNormalDistortion;
 	float NormalMapRepeat;
+	float FlowDistortionStrength;
 
 	// only these are dynamic (split up?)
-	float FlowDistortionStrength;
 	float FlowDistortionTimer;
 };
 
@@ -60,15 +61,20 @@ void main()
 
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
 	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
-	float noise = texture(Noise, In.HeightmapCoord*2).x;
-	float distortionBlend = abs(fract(FlowDistortionTimer + noise) * 2 - 1);
+	float noise = texture(Noise, In.HeightmapCoord*4).x;
+	float distortionBlend = smoothstep(0, 1, abs(fract(FlowDistortionTimer + noise) * 2 - 1));	// smoothstep is the solution to every hack! it.. just looks better with it!
 	vec2 normalmapCoord = In.HeightmapCoord * NormalMapRepeat;
-	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord + flow * (1-distortionBlend) * FlowDistortionStrength).xzy;
-	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord.yx + flow * distortionBlend * FlowDistortionStrength + vec2(0.4f)).xzy;
+	vec2 normalmapCoord0 = normalmapCoord + flow * (1-distortionBlend) * FlowDistortionStrength;
+	vec2 normalmapCoord1 = normalmapCoord.xy + flow * distortionBlend * FlowDistortionStrength + vec2(0.4f);
+
+	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xzy;
+	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xzy;
 	vec3 normalMap = mix(normalMapLayer0, normalMapLayer1, distortionBlend);
 	vec3 normalMapNormal = normalMap * 2.0f - vec3(1.0f);
 		// scale with speed
-	normalMapNormal.xz *= SpeedToNormalDistortion * length(flow);
+	float flowSpeedSq = dot(flow, flow);
+	float flowSpeed = sqrt(flowSpeedSq);
+	normalMapNormal.xz *= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
 	vec3 normal = normalize(ComputeNormal(In.HeightmapCoord) + normalMapNormal);
@@ -140,6 +146,12 @@ void main()
 	float pixelToGround = In.WorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
 	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25f));
 
+	// Foam for fast water - just reuse the same coord and technique from the normalmaps
+	const float SpeedToFoamBlend = 0.0002f;
+	vec4 foam0 = texture(Foam, normalmapCoord0);
+	vec4 foam1 = texture(Foam, normalmapCoord1);
+	vec4 foam = mix(foam0, foam1, distortionBlend);
+	color = mix(color, foam.rgb, saturate(flowSpeedSq*SpeedToFoamBlend) * foam.a);
 
 	// Fogging
 	color = ApplyFog(color, cameraDistance, toCamera);

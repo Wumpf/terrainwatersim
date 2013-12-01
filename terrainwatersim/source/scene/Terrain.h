@@ -137,6 +137,7 @@ private:
 
   ezUniquePtr<gl::Texture2D> m_pWaterNormalMap;
   ezUniquePtr<gl::Texture2D> m_pLowResNoise;
+  ezUniquePtr<gl::Texture2D> m_pFoamTexture;
 
   ezUniquePtr<gl::Texture2D> m_pRefractionTexture;
   ezUniquePtr<gl::FramebufferObject> m_pRefractionFBO;  // needed for drawing to (resolve)

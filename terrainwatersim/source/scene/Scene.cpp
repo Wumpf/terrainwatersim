@@ -217,11 +217,11 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
   
   // update stats vars
-  ezStringBuilder statString; statString.Format("%.3f ms", m_pTerrainDrawTimer->GetLastTimeElapsed().GetMilliseconds());
+  ezStringBuilder statString; statString.Format("%.3f ms", m_pTerrainDrawTimer->GetLastTimeElapsed(true).GetMilliseconds());
   ezStats::SetStat("Terrain Draw Time", statString.GetData());
-  statString.Format("%.3f ms", m_pWaterDrawTimer->GetLastTimeElapsed().GetMilliseconds());
+  statString.Format("%.3f ms", m_pWaterDrawTimer->GetLastTimeElapsed(true).GetMilliseconds());
   ezStats::SetStat("Water Draw Time", statString.GetData());
-  statString.Format("%.3f ms", m_pSimulationTimer->GetLastTimeElapsed().GetMilliseconds());
+  statString.Format("%.3f ms", m_pSimulationTimer->GetLastTimeElapsed(true).GetMilliseconds());
   ezStats::SetStat("Simulation Time", statString.GetData());
 
   // simulate

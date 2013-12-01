@@ -122,6 +122,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
 
   m_pWaterNormalMap.Swap(gl::Texture2D::LoadFromFile("water_normal.png", true));
   m_pLowResNoise.Swap(gl::Texture2D::LoadFromFile("noise.png", true));
+  m_pFoamTexture.Swap(gl::Texture2D::LoadFromFile("foam.png", true));
 
   RecreateScreenSizeDependentTextures(screenSize);
 }
@@ -280,7 +281,8 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   glBindSampler(3, m_texturingSamplerObjectDataGrids); // flowmap
   glBindSampler(4, variableFilter); // normalmap
   glBindSampler(5, m_texturingSamplerObjectTrilinear); // noise
-
+  glBindSampler(6, variableFilter); // normalmap
+  
 
   // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
   glDisable(GL_DEPTH_TEST);
@@ -303,6 +305,7 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   m_pWaterFlowMap->Bind(3);
   m_pWaterNormalMap->Bind(4);
   m_pLowResNoise->Bind(5);
+  m_pFoamTexture->Bind(6);
 
   // UBO setup
   m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezSystemTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
