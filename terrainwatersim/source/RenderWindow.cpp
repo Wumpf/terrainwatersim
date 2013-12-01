@@ -10,7 +10,7 @@ namespace GeneralConfig
 {
   ezCVarInt g_ResolutionWidth("ResolutionWidth", 1280, ezCVarFlags::Save, "Backbuffer resolution in x direction");
   ezCVarInt g_ResolutionHeight("ResolutionHeight", 768, ezCVarFlags::Save, "Backbuffer resolution in y direction");
-  ezCVarInt g_MSAASamples("MSAA Samples", 0, ezCVarFlags::Save, "");
+  //ezCVarInt g_MSAASamples("MSAA Samples", 0, ezCVarFlags::Save, "");
 
   ezSizeU32 GetScreenResolution()
   {

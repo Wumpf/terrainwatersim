@@ -6,7 +6,39 @@ vec3 ComputeRayDirection(in vec2 screenTexCor, in mat4 inverseViewProjection)
 	vec4 rayTarget = inverseViewProjection * vec4(deviceCor, 0.0f, 1.0f) ;
 	rayTarget.xyz /= rayTarget.w;
 	return normalize(rayTarget.xyz - rayOrigin.xyz);
+};
+
+vec3 ApplyFog(vec3 color, float cameraDistance, vec3 toCameraVec)
+{
+	const float fogDensity = 0.001f;
+	const float fogIntensity = 0.6f;
+	float fogAmount = clamp( - fogIntensity * exp(-CameraPosition.y * fogDensity) * (1.0 - exp( cameraDistance * toCameraVec.y * fogDensity)) / toCameraVec.y, 0, 1);
+	vec3 fogColor = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131); // air color
+	return mix(color, fogColor, fogAmount);
 }
+
+float Fresnel(float nDotV, float R0)
+{
+	float base = 1.0 - nDotV;
+	float exponential = pow(base, 5.0f);
+	return exponential + R0 * (1.0f - exponential);
+}
+
+vec3 Refract(float enterDotNormal, vec3 enteringRay, vec3 normal, float eta)
+{
+    float k = 1.0f - eta * eta * (1.0f - enterDotNormal * enterDotNormal);
+    if (k < 0.0f)
+        return vec3(0.0f);
+    else
+        return eta * enteringRay - (eta * enterDotNormal + sqrt(k)) * normal;
+}
+
+vec3 Refract(vec3 enteringRay, vec3 normal, float eta)
+{
+	float cosi = dot(enteringRay, normal);
+	return Refract(cosi, enteringRay, normal, eta);
+}
+
 
 /*
 vec4 interpolateQuad(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)

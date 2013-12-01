@@ -39,6 +39,18 @@ static void GetCVarValue(ezTypedCVar<Type, CVarType>& cvar, void *value)
 {
   *reinterpret_cast<Type*>(value) = cvar;
 }
+template<typename Type>
+static void SetVarValue(Type& var, const void *value)
+{
+  var = *reinterpret_cast<const Type*>(value);
+}
+
+template<typename Type>
+static void GetVarValue(Type& var, void *value)
+{
+  *reinterpret_cast<Type*>(value) = var;
+}
+
 
 #define ADD_CVAR_TO_TWEAKBAR_RW(cvar) \
   do { \
@@ -53,6 +65,22 @@ static void GetCVarValue(ezTypedCVar<Type, CVarType>& cvar, void *value)
     if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
   } while(false)
 
+/*
+#define ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(var, twType, name, desc) \
+  do { \
+    TwSetVarCallback setFkt = [](const void *value, void *clientData) { \
+      SetVarValue(var, value); \
+      var##_changedEvent.GetStatic().Broadcast(var); \
+    }; \
+    TwGetVarCallback getFkt = [](void *value, void *clientData) { \
+      GetVarValue(var, value); \
+    }; \
+    TwAddVarCB(m_pTweakBar, (name), (twType), setFkt, getFkt, NULL, (desc)); \
+    const char* errorDesc = TwGetLastError(); \
+    if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
+  } while(false)
+*/  
+  
 #define ADD_CVAR_TO_TWEAKBAR_RO(cvar) \
   do { \
     TwGetVarCallback getFkt = [](void *value, void *clientData) { \
@@ -121,7 +149,7 @@ ezResult AntTweakBarInterface::Init()
   ADD_STAT_TO_TWEAKBAR("Frames per second", "group=General");
 
     // AntiAliasing
-  TwEnumVal antialiasingValues[] = { { 0, "None" }, { 2, "2x" }, { 4, "4x" }, { 8, "8x" } };
+/*  TwEnumVal antialiasingValues[] = { { 0, "None" }, { 2, "2x" }, { 4, "4x" }, { 8, "8x" } };
   auto enumType = TwDefineEnum("AntiAliasing_enum", antialiasingValues, 4);
   TwAddVarCB(m_pTweakBar, GeneralConfig::g_MSAASamples.GetName(), enumType,
               [](const void *value, void *clientData) { SetCVarValue(GeneralConfig::g_MSAASamples, value); },
@@ -129,13 +157,26 @@ ezResult AntTweakBarInterface::Init()
               NULL, "group=General");
   const char* errorDesc = TwGetLastError();
   if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc);
-
+*/
   // terrain
   //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");
   ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=\'Terrain Rendering\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  
+
+//  ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColor, TW_TYPE_COLOR3F, "BigDepth Color", "group=\'Water Rendering\'");
+
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterOpaqueness);
 
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowDamping);

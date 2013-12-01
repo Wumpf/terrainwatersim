@@ -8,19 +8,26 @@
 #include "gl/ScreenAlignedTriangle.h"
 #include "gl/resources/textures/Texture3D.h"
 #include "gl/resources/textures/Texture2D.h"
+#include "gl/resources/FramebufferObject.h"
 #include "gl/GLUtils.h"
 
 #include "..\config\GlobalCVar.h"
 #include <Foundation\Math\Rect.h>
 
 const float Terrain::m_maxTesselationFactor = 64.0f;
+const float Terrain::m_refractionTextureSizeFactor = 1.0f;
 
-Terrain::Terrain() :
+Terrain::Terrain(const ezSizeU32& screenSize) :
   m_worldSize(1024.0f),
   m_gridSize(1024),
   m_minPatchSizeWorld(16.0f),
   m_heightScale(300.0f),
   m_anisotropicFiltering(false),
+
+  m_waterBigDepthColor(ezVec3(0.0039f, 0.00196f, 0.145f)*0.5f),
+  m_waterSurfaceColor(ezVec3(0.0078f, 0.5176f, 0.7f) * 0.5f),
+  m_waterExtinctionCoefficients(ezVec3(0.478f, 0.435f, 0.5f) * 0.1f),
+  m_waterOpaqueness(0.1f),
 
   m_simulationStepLength(ezTime::Seconds(1.0f / 60.0f)),
   m_flowDamping(0.98f),
@@ -46,9 +53,14 @@ Terrain::Terrain() :
   m_updateFlowShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "flowUpdate.comp");
   m_updateFlowShader.CreateProgram();
 
+  m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
+  m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "textureOutput.frag");
+  m_copyShader.CreateProgram();
+
   // UBO init
   m_landscapeInfoUBO.Init({ &m_terrainRenderShader, &m_applyFlowShader }, "GlobalLandscapeInfo");
   m_simulationParametersUBO.Init({ &m_applyFlowShader, &m_updateFlowShader }, "SimulationParameters");
+  m_waterRenderingUBO.Init({ &m_waterRenderShader }, "WaterRendering");
 
 
   // set some default values
@@ -58,6 +70,10 @@ Terrain::Terrain() :
   SetPixelPerTriangle(50.0f);
   m_landscapeInfoUBO["TextureRepeat"].Set(0.05f);
   SetSimulationStepsPerSecond(60.0f);  // Sets implicit all time scaled values
+  SetWaterBigDepthColor(m_waterBigDepthColor);
+  SetWaterSurfaceColor(m_waterSurfaceColor);
+  SetWaterExtinctionCoefficients(m_waterExtinctionCoefficients);
+  SetWaterOpaqueness(m_waterOpaqueness);
 
 
   // sampler
@@ -91,6 +107,8 @@ Terrain::Terrain() :
   m_pTextureStoneDiffuseSpec.Swap(gl::Texture2D::LoadFromFile("rock.tga", true));
   m_pTextureGrassNormalHeight.Swap(gl::Texture2D::LoadFromFile("grass_normal.tga"));
   m_pTextureStoneNormalHeight.Swap(gl::Texture2D::LoadFromFile("rock_normal.tga"));
+
+  RecreateScreenSizeDependentTextures(screenSize);
 }
 
 Terrain::~Terrain()
@@ -101,6 +119,13 @@ Terrain::~Terrain()
 
   glDeleteSamplers(1, &m_texturingSamplerObjectAnisotropic);
   glDeleteSamplers(1, &m_texturingSamplerObjectTrilinear);
+}
+
+void Terrain::RecreateScreenSizeDependentTextures(const ezSizeU32& screenSize)
+{
+  m_pRefractionTexture.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::Texture2D, static_cast<ezUInt32>(screenSize.width * m_refractionTextureSizeFactor), 
+                                                                 static_cast<ezUInt32>(screenSize.height * m_refractionTextureSizeFactor), GL_RGBA16F, 1, 0));
+  m_pRefractionFBO.Swap(EZ_DEFAULT_NEW_UNIQUE(gl::FramebufferObject, { gl::FramebufferObject::Attachment(m_pRefractionTexture.Get()) }));
 }
 
 void Terrain::SetPixelPerTriangle(float pixelPerTriangle)
@@ -133,6 +158,27 @@ void Terrain::SetFlowAcceleration(float flowAcceleration)
   m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
+void Terrain::SetWaterBigDepthColor(const ezVec3& waterBigDepthColor)
+{
+  m_waterBigDepthColor = waterBigDepthColor;
+  m_waterRenderingUBO["BigDepthColor"].Set(m_waterBigDepthColor);
+}
+void Terrain::SetWaterSurfaceColor(const ezVec3& waterSurfaceColor)
+{
+  m_waterSurfaceColor = waterSurfaceColor;
+  m_waterRenderingUBO["SurfaceColor"].Set(m_waterSurfaceColor);
+}
+void Terrain::SetWaterExtinctionCoefficients(const ezVec3& waterExtinctionCoefficients)
+{
+  m_waterExtinctionCoefficients = waterExtinctionCoefficients;
+  m_waterRenderingUBO["ColorExtinctionCoefficient"].Set(m_waterExtinctionCoefficients);
+}
+void Terrain::SetWaterOpaqueness(float waterOpaqueness)
+{
+  m_waterOpaqueness = waterOpaqueness;
+  m_waterRenderingUBO["Opaqueness"].Set(m_waterOpaqueness);
+}
+
 void Terrain::CreateHeightmap()
 {
   m_pTerrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, -1);
@@ -153,7 +199,6 @@ void Terrain::CreateHeightmap()
         - volumeData[x + y * m_gridSize].r);
     }
   }
-
   m_pTerrainData->SetData(0, volumeData);
 
   EZ_DEFAULT_DELETE_RAW_BUFFER(volumeData);
@@ -162,12 +207,17 @@ void Terrain::CreateHeightmap()
 void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
 {
   m_timeSinceLastSimulationStep += lastFrameDuration;
-  bool anySimStep = m_timeSinceLastSimulationStep >= m_simulationStepLength;
+  ezUInt32 numSimulationSteps = static_cast<ezUInt32>(m_timeSinceLastSimulationStep.GetSeconds() / m_simulationStepLength.GetSeconds());
+  m_timeSinceLastSimulationStep -= m_simulationStepLength * numSimulationSteps;
 
+  // clamp simulation step count, otherwise we could get stuck here under certain circumstances.
+  numSimulationSteps = ezMath::Min(numSimulationSteps, (ezUInt32)10);
+
+  bool anySimStep = numSimulationSteps > 0;
   if(anySimStep)
     m_simulationParametersUBO.BindBuffer(5);
 
-  while(m_timeSinceLastSimulationStep >= m_simulationStepLength)
+  for(; numSimulationSteps > 0; --numSimulationSteps)
   {
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
@@ -178,8 +228,6 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     m_pWaterFlow->BindImage(1, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_applyFlowShader.Activate();
     glDispatchCompute(m_gridSize / 32, m_gridSize / 32, 1);
-
-    m_timeSinceLastSimulationStep -= m_simulationStepLength;
   }
 
   // Todo: Is this very slow?
@@ -225,12 +273,31 @@ void Terrain::DrawTerrain()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Terrain::DrawWater(gl::Texture2D& sceneTexture)
+void Terrain::DrawWater(gl::FramebufferObject& sceneFBO)
 {
   glBindSampler(0, m_texturingSamplerObjectTrilinear);
+  glBindSampler(1, m_texturingSamplerObjectTrilinear);
+
+  // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
+  glDisable(GL_DEPTH_TEST);
+  glDepthMask(GL_FALSE);
+  m_pRefractionFBO->Bind();
+  sceneFBO.GetColorAttachments()[0].pTexture->Bind(0);
+  m_copyShader.Activate();
+  gl::ScreenAlignedTriangle::Draw();
+
+  // reset
+  sceneFBO.Bind();
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+
+
+  // texture setup
   m_pTerrainData->Bind(0);
+  m_pRefractionTexture->Bind(1);
 
   m_landscapeInfoUBO.BindBuffer(5);
+  m_waterRenderingUBO.BindBuffer(6);
 
   // Water
   m_waterRenderShader.Activate();

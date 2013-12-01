@@ -31,6 +31,7 @@ namespace gl
     ezUInt32 GetDepth() const           { return m_depth; }
     ezUInt32 GetNumMipLevels() const    { return m_numMipLevels; }
     ezUInt32 GetNumMSAASamples() const  { return m_numMSAASamples; }
+    ezUInt32 GetFormat() const          { return m_format; }
 
   protected:
     /// Currently bound textures - number is arbitrary!

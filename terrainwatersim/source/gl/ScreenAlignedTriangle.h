@@ -6,12 +6,19 @@ namespace gl
   class ScreenAlignedTriangle
   {
   public:
-    ScreenAlignedTriangle();
+    static void Draw();
+
     ~ScreenAlignedTriangle();
 
-    void Draw() const;
-
   private:
+    ScreenAlignedTriangle();
+
+    static ScreenAlignedTriangle& GetInstance()
+    {
+      static ScreenAlignedTriangle m_instance;
+      return m_instance;
+    };
+
     BufferId vbo;
     VertexArrayObjectId vao;
   };

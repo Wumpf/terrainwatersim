@@ -2,6 +2,7 @@
 #include "../GLUtils.h"
 #include "FramebufferObject.h"
 #include "textures/Texture.h"
+#include "textures/Texture2D.h"
 
 namespace gl
 {
@@ -55,8 +56,6 @@ namespace gl
 
     GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     EZ_ASSERT(framebufferStatus == GL_FRAMEBUFFER_COMPLETE, "Frame buffer creation failed! Error code: %i", framebufferStatus);
-
-    BindBackBuffer();
   }
 
   FramebufferObject::~FramebufferObject()

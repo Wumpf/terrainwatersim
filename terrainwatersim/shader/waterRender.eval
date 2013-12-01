@@ -6,7 +6,7 @@
 layout(triangles, fractional_even_spacing, ccw) in;
 
 layout(location = 0) in EvalInVertex In[];
-layout(location = 0) out FragInVertex Out;
+layout(location = 0) out FragInVertexWater Out;
 
 in gl_PerVertex
 {
@@ -25,10 +25,14 @@ void main()
 						gl_TessCoord.z * In[2].WorldPos2D;
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
-	vec4 terrainInfo = textureLod(Heightmap, Out.HeightmapCoord, 0);
+	vec4 terrainInfo = textureLod(TerrainInfo, Out.HeightmapCoord, 0);
 	Out.WorldPos.y = terrainInfo.a + terrainInfo.r;
 	if(terrainInfo.a < 0.1f)
 		Out.WorldPos.y -= (0.1 - terrainInfo.a) * 50f;
 
 	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
+	Out.ProjectiveCoord.x = 0.5f * (gl_Position.z + gl_Position.x);
+	Out.ProjectiveCoord.y = 0.5f * (gl_Position.z + gl_Position.y);
+	Out.ProjectiveCoord.z = 0.0f;
+	Out.ProjectiveCoord.w = gl_Position.w;
 }

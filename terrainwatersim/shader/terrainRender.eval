@@ -6,7 +6,7 @@
 layout(triangles, fractional_even_spacing, ccw) in;
 
 layout(location = 0) in EvalInVertex In[];
-layout(location = 0) out FragInVertex Out;
+layout(location = 0) out FragInVertexTerrain Out;
 
 in gl_PerVertex
 {
@@ -25,7 +25,7 @@ void main()
 						gl_TessCoord.z * In[2].WorldPos2D;
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
-	Out.WorldPos.y = textureLod(Heightmap, Out.HeightmapCoord, 0).x;
+	Out.WorldPos.y = textureLod(TerrainInfo, Out.HeightmapCoord, 0).x;
 
 	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
 }

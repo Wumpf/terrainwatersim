@@ -35,6 +35,10 @@ namespace gl
 
     Framebuffer GetInternHandle() { return m_framebuffer; }
 
+  
+    const ezDynamicArray<Attachment>& GetColorAttachments() const { return m_colorAttachments; }
+    const Attachment& GetDepthStencilAttachment() { return m_depthStencil; }
+
   private:
     /// Currently bound draw framebuffer object (NULL means backbuffer)
     static FramebufferObject* s_BoundFrameBufferDraw;

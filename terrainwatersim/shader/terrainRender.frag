@@ -2,18 +2,26 @@
 
 #include "constantbuffers.glsl"
 #include "landscapeRenderData.glsl"
+#include "helper.glsl"
 
-layout(location = 0) in FragInVertex In;
+layout(location = 0) in FragInVertexTerrain In;
 layout(location = 0, index = 0) out vec4 FragColor;
+
+// Terrain textures
+layout(binding = 1) uniform sampler2D GrassDiffuse;
+layout(binding = 2) uniform sampler2D StoneDiffuse;
+layout(binding = 3) uniform sampler2D GrassNormal;
+layout(binding = 4) uniform sampler2D StoneNormal;
+
 
 vec3 ComputeNormal(in vec2 heightmapCoord)
 {
 	const float worldStep = 1.0f;
 	vec4 h;
-	h[0] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2( 0,-worldStep)).r;
-	h[1] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2( 0, worldStep)).r;
-	h[2] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2( worldStep, 0)).r;
-	h[3] = texture(Heightmap, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0)).r;
+	h[0] = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2( 0,-worldStep)).r;
+	h[1] = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2( 0, worldStep)).r;
+	h[2] = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2( worldStep, 0)).r;
+	h[3] = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0)).r;
 	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);
 	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0f);
 	return normalize(cross(vecdz, vecdx));
@@ -81,12 +89,8 @@ void main()
   	float specularAmount = pow(max(0.0f, dot(refl, toCamera)), 4.0f) * diffuseColor_spec.a;
 
 	// Schlick-Fresnel approx
-	vec3 halfVector_viewspace = normalize(GlobalDirLightDirection + toCamera);
-	float base = 1.0 - dot(GlobalDirLightDirection, halfVector_viewspace);
-	float exponential = pow(base, 5.0f);
-	float fresnel = exponential + 0.2f * (1.0f - exponential);
+	float fresnel = Fresnel(dot(normal, toCamera), 0.1f);
 	specularAmount *= fresnel;
-	
 
 	// Diffuse Lighting
 	float lighting = clamp(nDotL, 0, 1);
@@ -101,11 +105,7 @@ void main()
 	FragColor.xyz = diffuseColor_spec.rgb * (GlobalDirLightColor * lighting + GlobalAmbient * ambientLightAmount) + specularAmount * GlobalDirLightColor;
 
 	// clever fog http://www.iquilezles.org/www/articles/fog/fog.htm
-	const float fogDensity = 0.001f;
-	const float fogIntensity = 0.6f;
-	float fogAmount = clamp( - fogIntensity * exp(-CameraPosition.y * fogDensity) * (1.0 - exp( cameraDistance * toCamera.y * fogDensity)) / toCamera.y, 0, 1);
-	vec3 fogColor = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131); // air color
-	FragColor.xyz = mix(FragColor.xyz, fogColor, fogAmount);
+	FragColor.xyz = ApplyFog(FragColor.xyz, cameraDistance, toCamera);
 
 	// Normal debugging:
 	//FragColor.xyz = abs(vec3(normal.x, normal.y,normal.z));

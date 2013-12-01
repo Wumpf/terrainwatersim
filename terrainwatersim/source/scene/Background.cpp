@@ -3,8 +3,7 @@
 #include "gl/ScreenAlignedTriangle.h"
 
 
-Background::Background(const std::shared_ptr<const gl::ScreenAlignedTriangle>& pScreenAlignedTriangle) :
-  m_pScreenAlignedTriangle(pScreenAlignedTriangle)
+Background::Background()
 {
   m_BackgroundShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
   m_BackgroundShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "background.frag");
@@ -21,6 +20,6 @@ void Background::Draw()
   glDepthFunc(GL_EQUAL);
   glDepthMask(GL_FALSE);
   m_BackgroundShader.Activate();
-  m_pScreenAlignedTriangle->Draw();
+  gl::ScreenAlignedTriangle::Draw();
   glDepthFunc(GL_LESS);
 }

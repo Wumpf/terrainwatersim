@@ -12,11 +12,7 @@ layout(binding = 5, shared) uniform GlobalLandscapeInfo
 	float TextureRepeat;
 };
 
-layout(binding = 0) uniform sampler2D Heightmap;
-layout(binding = 1) uniform sampler2D GrassDiffuse;
-layout(binding = 2) uniform sampler2D StoneDiffuse;
-layout(binding = 3) uniform sampler2D GrassNormal;
-layout(binding = 4) uniform sampler2D StoneNormal;
+layout(binding = 0) uniform sampler2D TerrainInfo;
 
 // Shader out/in
 struct VertInVertex
@@ -36,8 +32,16 @@ struct EvalInVertex
 	vec2 WorldPos2D;
 	vec2 HeightmapCoord;
 };
-struct FragInVertex
+
+
+struct FragInVertexTerrain
 {
 	vec3 WorldPos;
+	vec2 HeightmapCoord;
+};
+struct FragInVertexWater
+{
+	vec3 WorldPos;
+	vec4 ProjectiveCoord;
 	vec2 HeightmapCoord;
 };

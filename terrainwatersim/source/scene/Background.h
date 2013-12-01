@@ -10,7 +10,7 @@ namespace gl
 class Background
 {
 public:
-  Background(const std::shared_ptr<const gl::ScreenAlignedTriangle>& pScreenAlignedTriangle);
+  Background();
   ~Background();
 
   void Draw();
@@ -18,7 +18,6 @@ public:
   const gl::ShaderObject& GetShader() { return m_BackgroundShader; }
 
 private:
-  std::shared_ptr<const gl::ScreenAlignedTriangle> m_pScreenAlignedTriangle; // todo: sharedptr
   gl::ShaderObject m_BackgroundShader;
 };
 
