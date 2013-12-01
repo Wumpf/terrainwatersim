@@ -31,9 +31,9 @@ namespace SceneConfig
   }
   namespace WaterRendering
   {
-    CVarRGBImpl(g_waterSurfaceColor, "Surface Color", ezVec3(0.0078f, 0.5176f, 0.7f) * 0.5f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.01");
-    CVarRGBImpl(g_waterBigDepthColor, "Big-Depth Color", ezVec3(0.0039f, 0.00196f, 0.145f)*0.5f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.01");
-    CVarRGBImpl(g_waterExtinctionCoefficients, "Extinction Coefficients", ezVec3(0.478f, 0.435f, 0.5f) * 0.1f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.01");
+    CVarRGBImpl(g_waterSurfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_waterBigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_waterExtinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
     ezCVarFloat g_waterOpaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
   }
 
@@ -51,18 +51,19 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
   m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
 
-  m_ExtractGeometryTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
-  m_DrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+  m_pWaterDrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+  m_pTerrainDrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
+  m_pSimulationTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
 
   m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
 {
   EZ_LOG_BLOCK("Scene init");
 
   m_pTerrain = EZ_DEFAULT_NEW(Terrain)(GeneralConfig::GetScreenResolution());
-  m_pBackground = EZ_DEFAULT_NEW(Background)();
+  m_pBackground = EZ_DEFAULT_NEW(Background)(256);
 
   // global ubo inits
-  m_CameraUBO.Init({ &m_pBackground->GetShader(), &m_pTerrain->GetTerrainShader() }, "Camera");
+  m_CameraUBO.Init({ &m_pBackground->GetBackgroundShader(), &m_pTerrain->GetTerrainShader() }, "Camera");
   m_GlobalSceneInfo.Init({ &m_pTerrain->GetTerrainShader(), }, "GlobalSceneInfo");
   
 /*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
@@ -179,12 +180,17 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
   
   // update stats vars
-  ezStringBuilder statString; statString.Format("%.2f ms", m_DrawTimer->GetLastTimeElapsed().GetMilliseconds());
-  ezStats::SetStat(
-    "Terrain Draw Time", statString.GetData());
+  ezStringBuilder statString; statString.Format("%.3f ms", m_pTerrainDrawTimer->GetLastTimeElapsed().GetMilliseconds());
+  ezStats::SetStat("Terrain Draw Time", statString.GetData());
+  statString.Format("%.3f ms", m_pWaterDrawTimer->GetLastTimeElapsed().GetMilliseconds());
+  ezStats::SetStat("Water Draw Time", statString.GetData());
+  statString.Format("%.3f ms", m_pSimulationTimer->GetLastTimeElapsed().GetMilliseconds());
+  ezStats::SetStat("Simulation Time", statString.GetData());
 
   // simulate
+  m_pSimulationTimer->Start();
   m_pTerrain->PerformSimulationStep(lastFrameDuration);
+  m_pSimulationTimer->End();
 
   // visibility
   m_pTerrain->UpdateVisibilty(m_pCamera->GetPosition());
@@ -199,9 +205,10 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_TimeUBO.BindBuffer(1);
   m_GlobalSceneInfo.BindBuffer(2);
 
-  m_ExtractGeometryTimer->Start();
-  m_ExtractGeometryTimer->End();
-  
+
+  // Update background
+  m_pBackground->UpdateCubemap();
+
   // DepthTest on.
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -209,22 +216,25 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_pLinearHDRFramebuffer->Bind();
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  // render terrain
-  m_DrawTimer->Start();
+ 
   if(SceneConfig::TerrainRendering::g_Wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
+  // render terrain
+  m_pTerrainDrawTimer->Start();
   m_pTerrain->DrawTerrain();
-  m_pTerrain->DrawWater(*m_pLinearHDRFramebuffer.Get());
-   
-  m_DrawTimer->End();
-  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  m_pTerrainDrawTimer->End();
 
+  // render water
+  m_pWaterDrawTimer->Start();
+  m_pTerrain->DrawWater(*m_pLinearHDRFramebuffer.Get());
+  m_pWaterDrawTimer->End();
+
+  if(SceneConfig::TerrainRendering::g_Wireframe)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // render nice background
   m_pBackground->Draw();
-
-
 
   // Resolve rendertarget to backbuffer
   glEnable(GL_FRAMEBUFFER_SRGB);

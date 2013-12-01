@@ -107,6 +107,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\gl\resources\textures\Texture.h" />
     <ClInclude Include="source\gl\resources\textures\Texture2D.h" />
     <ClInclude Include="source\gl\resources\textures\Texture3D.h" />
+    <ClInclude Include="source\gl\resources\textures\TextureCube.h" />
     <ClInclude Include="source\gl\resources\UniformBuffer.h" />
     <ClInclude Include="source\gl\ScreenAlignedTriangle.h" />
     <ClInclude Include="source\gl\ShaderDataMetaInfo.h" />
@@ -127,7 +128,9 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\UniquePtr.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shader\athmosphericScattering.frag" />
     <None Include="shader\background.frag" />
+    <None Include="shader\eachCubemapFace.geom" />
     <None Include="shader\simulation.comp" />
     <None Include="shader\constantbuffers.glsl" />
     <None Include="shader\helper.glsl" />
@@ -159,6 +162,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClCompile Include="source\gl\resources\textures\Texture.cpp" />
     <ClCompile Include="source\gl\resources\textures\Texture2D.cpp" />
     <ClCompile Include="source\gl\resources\textures\Texture3D.cpp" />
+    <ClCompile Include="source\gl\resources\textures\TextureCube.cpp" />
     <ClCompile Include="source\gl\resources\UniformBuffer.cpp" />
     <ClCompile Include="source\gl\ScreenAlignedTriangle.cpp" />
     <ClCompile Include="source\gl\ShaderObject.cpp" />

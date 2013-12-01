@@ -44,8 +44,9 @@ private:
   class Terrain* m_pTerrain;
   class Background* m_pBackground;
 
-  ezUniquePtr<gl::TimerQuery> m_ExtractGeometryTimer;
-  ezUniquePtr<gl::TimerQuery> m_DrawTimer;
+  ezUniquePtr<gl::TimerQuery> m_pTerrainDrawTimer;
+  ezUniquePtr<gl::TimerQuery> m_pWaterDrawTimer;
+  ezUniquePtr<gl::TimerQuery> m_pSimulationTimer;
 
   ezUniquePtr<class AntTweakBarInterface> m_UserInterface;
 

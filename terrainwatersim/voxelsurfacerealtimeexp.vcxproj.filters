@@ -94,6 +94,9 @@
     <ClInclude Include="source\gl\resources\FramebufferObject.h">
       <Filter>source\gl\resources</Filter>
     </ClInclude>
+    <ClInclude Include="source\gl\resources\textures\TextureCube.h">
+      <Filter>source\gl\resources\textures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -132,9 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\screenTri.vert">
-      <Filter>shader</Filter>
-    </None>
-    <None Include="shader\background.frag">
       <Filter>shader</Filter>
     </None>
     <None Include="source\gl\ShaderDataMetaInfo.inl">
@@ -180,6 +180,15 @@
       <Filter>shader</Filter>
     </None>
     <None Include="shader\textureOutput.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\athmosphericScattering.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\eachCubemapFace.geom">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\background.frag">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>
@@ -264,6 +273,9 @@
     </ClCompile>
     <ClCompile Include="source\gl\resources\FramebufferObject.cpp">
       <Filter>source\gl\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\gl\resources\textures\TextureCube.cpp">
+      <Filter>source\gl\resources\textures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

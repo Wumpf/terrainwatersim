@@ -167,6 +167,7 @@ ezResult AntTweakBarInterface::Init()
 
 //  ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColor, TW_TYPE_COLOR3F, "BigDepth Color", "group=\'Water Rendering\'");
 
+  ADD_STAT_TO_TWEAKBAR("Water Draw Time", "group=\'Water Rendering\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorR);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorG);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorB);
@@ -178,6 +179,7 @@ ezResult AntTweakBarInterface::Init()
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorB);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterOpaqueness);
 
+  ADD_STAT_TO_TWEAKBAR("Simulation Time", "group=\'Simulation\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowDamping);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowAcceleration);
