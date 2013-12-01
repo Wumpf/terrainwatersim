@@ -26,13 +26,11 @@ void main()
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
 	vec4 terrainInfo = textureLod(TerrainInfo, Out.HeightmapCoord, 0);
-	Out.WorldPos.y = terrainInfo.a + terrainInfo.r;
+	Out.WorldPos.y = terrainInfo.a + terrainInfo.r - 0.1f;
 	if(terrainInfo.a < 0.1f)
-		Out.WorldPos.y -= (0.1 - terrainInfo.a) * 50f;
+		Out.WorldPos.y -= 10.0f;
 
 	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
-	Out.ProjectiveCoord.x = 0.5f * (gl_Position.z + gl_Position.x);
-	Out.ProjectiveCoord.y = 0.5f * (gl_Position.z + gl_Position.y);
-	Out.ProjectiveCoord.z = 0.0f;
-	Out.ProjectiveCoord.w = gl_Position.w;
+	Out.ProjectiveCoord.xy = 0.5f * (gl_Position.w + gl_Position.xy);
+	Out.ProjectiveCoord.z = gl_Position.w;
 }

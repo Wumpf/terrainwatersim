@@ -19,6 +19,8 @@ layout(binding = 6) uniform WaterRendering
 	vec3 SurfaceColor;
 	vec3 ColorExtinctionCoefficient;
 	float Opaqueness;
+
+	float RefractionFactor;
 };
 
 vec3 ComputeNormal(in vec2 heightmapCoord)
@@ -70,22 +72,27 @@ void main()
 
 	// Needed: amout of water in screenspace on this very pixel
 	// This would need raymarching... instead just use this self-made approximation
-	float waterDepth = texture(TerrainInfo, In.HeightmapCoord).a;
+	vec4 terrainInfo = texture(TerrainInfo, In.HeightmapCoord);
+	float waterDepth = terrainInfo.a;
 	float waterViewSpaceDepth = waterDepth / nDotV;
 
 
 
 	// Refraction Texture fetch
-	const float WaterRefractionIndex = 1.0f / 1.33333333333f;
-	vec3 refractionVector = Refract(-toCamera, normal, WaterRefractionIndex);
-	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth * 0.5f;
-	vec4 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0));
-		// This is ugly, but nobody won't notice, trust me ;)
-	if(any(lessThan(underwaterProjective.xy, vec2(-underwaterProjective.w))) || any(greaterThan(underwaterProjective.xy, vec2(underwaterProjective.w))))
-		underwaterProjective = In.ProjectiveCoord;
-	else
-		underwaterProjective.xy = 0.5f * (underwaterProjective.w + underwaterProjective.xy);
-	vec3 refractionTexture = textureProj(RefractionTexture, underwaterProjective).rgb;
+	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
+	// So we just blend over to no refraction at all if necessary
+	const float WaterRefractionIndex = 1.00029f / 1.33;	// air / water
+	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, WaterRefractionIndex);
+	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth;
+	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
+	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
+	vec3 refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
+	vec3 projectiveTexture = textureLod(RefractionTexture, In.ProjectiveCoord.xy / In.ProjectiveCoord.z, 0).rgb;
+
+	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
+	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
+	projectiveWeight = pow(projectiveWeight, 32);
+	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
 
 
 	// Water color
@@ -101,7 +108,10 @@ void main()
 
 	// Combine Refraction & Reflection & Specular
 	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;
-
+	
+	// Shore hack against artifacts
+	float pixelToGround = In.WorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
+	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.1f));
 
 
 	// Fogging
