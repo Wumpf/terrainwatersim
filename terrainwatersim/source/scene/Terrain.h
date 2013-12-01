@@ -7,6 +7,7 @@ namespace gl
 {
   class ScreenAlignedTriangle;
   class Texture2D;
+  class TextureCube;
   class FramebufferObject;
 };
 
@@ -23,12 +24,13 @@ public:
   void UpdateVisibilty(const ezVec3& cameraPosition);
   void DrawTerrain();
   /// Draws water. Needs to take a low resolution resolved copy of current framebuffer.
-  void DrawWater(gl::FramebufferObject& sceneFBO);
+  void DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap);
 
   // Getter & Setter
 
   // General
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
+  const gl::ShaderObject& GetWaterShader() { return m_waterRenderShader; }
 
   float GetTerrainWorldSize() const             { return m_worldSize; }
   //void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; }    // Expected patch count changes!

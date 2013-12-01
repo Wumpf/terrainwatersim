@@ -29,6 +29,7 @@ public:
 
 private:
   void InitConfig();
+  void InitGlobalUBO();
   void RecreateScreenBuffers();
 
   ezUniquePtr<gl::FramebufferObject> m_pLinearHDRFramebuffer;

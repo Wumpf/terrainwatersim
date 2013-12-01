@@ -9,14 +9,13 @@
 const vec3 LightDirection = vec3(0, -0.333, 0.333);
 
 // input
-in vec2 vs_out_texcoord;
+in vec3 gs_out_direction;
+//in vec2 gs_out_cameraDir;
 
 // output
 layout(location = 0, index = 0) out vec4 fragColor;
 
-// ------------------------------------------------
-// SKY
-// ------------------------------------------------
+
 const vec3 AdditonalSunColor = vec3(1.0, 0.98, 0.8)/3;
 const vec3 LowerHorizonColour = vec3(0.815, 1.141, 1.54)/2;
 const vec3 UpperHorizonColour = vec3(0.986, 1.689, 2.845)/2;
@@ -45,12 +44,9 @@ vec3 computeSkyColor(in vec3 ray)
 	return color;
 }
 
-// ------------------------------------------------
-// MAIN
-// ------------------------------------------------
 void main()
 {
-	vec3 rayDirection = ComputeRayDirection(vs_out_texcoord, InverseViewProjection);
+	vec3 rayDirection = normalize(gs_out_direction);
 
 	// Color
 	fragColor.a = 0.0f;

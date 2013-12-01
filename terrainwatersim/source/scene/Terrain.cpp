@@ -6,8 +6,8 @@
 #include "InstancedGeomClipMapping.h"
 
 #include "gl/ScreenAlignedTriangle.h"
-#include "gl/resources/textures/Texture3D.h"
 #include "gl/resources/textures/Texture2D.h"
+#include "gl/resources/textures/TextureCube.h"
 #include "gl/resources/FramebufferObject.h"
 #include "gl/GLUtils.h"
 
@@ -15,7 +15,7 @@
 #include <Foundation\Math\Rect.h>
 
 const float Terrain::m_maxTesselationFactor = 64.0f;
-const float Terrain::m_refractionTextureSizeFactor = 1.0f;
+const float Terrain::m_refractionTextureSizeFactor = 0.5f;
 
 Terrain::Terrain(const ezSizeU32& screenSize) :
   m_worldSize(1024.0f),
@@ -273,7 +273,7 @@ void Terrain::DrawTerrain()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Terrain::DrawWater(gl::FramebufferObject& sceneFBO)
+void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap)
 {
   glBindSampler(0, m_texturingSamplerObjectTrilinear);
   glBindSampler(1, m_texturingSamplerObjectTrilinear);
@@ -281,13 +281,13 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO)
   // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
-  m_pRefractionFBO->Bind();
+  m_pRefractionFBO->Bind(true);
   sceneFBO.GetColorAttachments()[0].pTexture->Bind(0);
   m_copyShader.Activate();
   gl::ScreenAlignedTriangle::Draw();
 
   // reset
-  sceneFBO.Bind();
+  sceneFBO.Bind(true);
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 
@@ -295,6 +295,7 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO)
   // texture setup
   m_pTerrainData->Bind(0);
   m_pRefractionTexture->Bind(1);
+  reflectionCubemap.Bind(2);
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_waterRenderingUBO.BindBuffer(6);

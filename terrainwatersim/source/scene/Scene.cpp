@@ -63,19 +63,8 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pBackground = EZ_DEFAULT_NEW(Background)(256);
 
   // global ubo inits
-  m_CameraUBO.Init({ &m_pBackground->GetBackgroundShader(), &m_pTerrain->GetTerrainShader() }, "Camera");
-  m_GlobalSceneInfo.Init({ &m_pTerrain->GetTerrainShader(), }, "GlobalSceneInfo");
-  
-/*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
-  cameraUBOusingShader.PushBack(&m_DirectVolVisShader);
-  m_TimeUBO.Init(cameraUBOusingShader, "Time");
-*/
-  
-  m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3(1.5f, 1.0f, 1.5f).GetNormalized());
-  m_GlobalSceneInfo["GlobalDirLightColor"].Set(ezVec3(0.98f, 0.98f, 0.8f));
-  m_GlobalSceneInfo["GlobalAmbient"].Set(ezVec3(0.38f, 0.38f, 0.4f));
-//  m_GlobalSceneInfo["NumMSAASamples"].Set(static_cast<ezUInt32>(GeneralConfig::g_MSAASamples.GetValue()));
-  
+  InitGlobalUBO();
+
   ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 100, m_pTerrain->GetTerrainWorldSize() / 2);
   m_pCamera->SetPosition(vCameraPos);
 
@@ -90,6 +79,31 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   // user interface
   m_UserInterface->Init();
   InitConfig();
+
+  // Update background
+  m_pBackground->UpdateCubemap();
+}
+
+void Scene::InitGlobalUBO()
+{
+  std::initializer_list<const gl::ShaderObject*> shaderList =
+  { 
+    &m_pBackground->GetBackgroundShader(), &m_pBackground->GetScatteringShader(), 
+    &m_pTerrain->GetTerrainShader(), &m_pTerrain->GetWaterShader()
+  };
+  m_CameraUBO.Init(shaderList, "Camera");
+  m_GlobalSceneInfo.Init(shaderList, "GlobalSceneInfo");
+
+  /*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
+  cameraUBOusingShader.PushBack(&m_DirectVolVisShader);
+  m_TimeUBO.Init(cameraUBOusingShader, "Time");
+  */
+
+  m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3(1.5f, 1.0f, 1.5f).GetNormalized());
+  m_GlobalSceneInfo["GlobalDirLightColor"].Set(ezVec3(0.98f, 0.98f, 0.8f));
+  m_GlobalSceneInfo["GlobalAmbient"].Set(ezVec3(0.38f, 0.38f, 0.4f));
+  //  m_GlobalSceneInfo["NumMSAASamples"].Set(static_cast<ezUInt32>(GeneralConfig::g_MSAASamples.GetValue()));
+
 }
 
 void Scene::InitConfig()
@@ -97,6 +111,10 @@ void Scene::InitConfig()
   // Callbacks for CVars
   ezEvent<const ezCVar::CVarEvent&>::Handler onResolutionChange = [=](const ezCVar::CVarEvent&)
   {
+    // skip invalid sizes
+    if(GeneralConfig::g_ResolutionWidth.GetValue() == 0 || GeneralConfig::g_ResolutionHeight.GetValue() == 0)
+      return;
+
     m_pTerrain->RecreateScreenSizeDependentTextures(GeneralConfig::GetScreenResolution());
     m_pCamera->ChangeAspectRatio(static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue());
     RecreateScreenBuffers();
@@ -205,15 +223,11 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_TimeUBO.BindBuffer(1);
   m_GlobalSceneInfo.BindBuffer(2);
 
-
-  // Update background
-  m_pBackground->UpdateCubemap();
-
   // DepthTest on.
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
   // HDR on.
-  m_pLinearHDRFramebuffer->Bind();
+  m_pLinearHDRFramebuffer->Bind(true);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
  
@@ -227,7 +241,7 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
   // render water
   m_pWaterDrawTimer->Start();
-  m_pTerrain->DrawWater(*m_pLinearHDRFramebuffer.Get());
+  m_pTerrain->DrawWater(*m_pLinearHDRFramebuffer.Get(), m_pBackground->GetSkyboxCubemap());
   m_pWaterDrawTimer->End();
 
   if(SceneConfig::TerrainRendering::g_Wireframe)
@@ -259,6 +273,8 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
 
   // Render ui directly to backbuffer
+  gl::FramebufferObject::BindBackBuffer();
+  glViewport(0, 0, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue());
 //  gl::ShaderObject::ResetShaderBinding();
   glDisable(GL_FRAMEBUFFER_SRGB);
   RenderUI();

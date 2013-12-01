@@ -66,7 +66,7 @@ namespace gl
     {
       if(*shaderObjectIt == NULL) // the first was fatal, this one is skippable
       {
-        ezLog::SeriousWarning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());
+        ezLog::Warning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());
         continue;
       }
       auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().Find(sBufferName);

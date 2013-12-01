@@ -12,12 +12,15 @@ Background::Background(ezUInt32 cubemapResolution, GLenum format)
   m_backgroundShader.CreateProgram();
 
   m_scatteringShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
-  m_scatteringShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "background.frag");
+  m_scatteringShader.AddShaderFromFile(gl::ShaderObject::ShaderType::GEOMETRY, "eachCubemapFace.geom");
   m_scatteringShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "athmosphericScattering.frag");
   m_scatteringShader.CreateProgram();
 
   m_pSkyboxCubemap = EZ_DEFAULT_NEW(gl::TextureCube)(cubemapResolution, format, 1);
   m_pSkyboxFrameBuffer = EZ_DEFAULT_NEW(gl::FramebufferObject)({ gl::FramebufferObject::Attachment(m_pSkyboxCubemap) });
+
+  // who would dare to ever reset that oô
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 
@@ -29,7 +32,7 @@ Background::~Background(void)
 
 void Background::UpdateCubemap()
 {
-  m_pSkyboxFrameBuffer->Bind();
+  m_pSkyboxFrameBuffer->Bind(true);
 
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);

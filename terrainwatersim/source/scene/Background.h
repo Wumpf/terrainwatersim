@@ -20,6 +20,8 @@ public:
   const gl::ShaderObject& GetBackgroundShader() { return m_backgroundShader; }
   const gl::ShaderObject& GetScatteringShader() { return m_scatteringShader; }
 
+  gl::TextureCube& GetSkyboxCubemap() { return *m_pSkyboxCubemap; }
+
 private:
   gl::TextureCube* m_pSkyboxCubemap;
   gl::FramebufferObject* m_pSkyboxFrameBuffer;

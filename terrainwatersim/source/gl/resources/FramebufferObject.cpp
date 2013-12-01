@@ -32,6 +32,7 @@ namespace gl
 
     for(auto it = colorAttachments.begin(); it != colorAttachments.end(); ++it)
     {
+      EZ_ASSERT(it->pTexture, "FBO Color attachment texture is NULL!");
       GLint attachment = GL_COLOR_ATTACHMENT0 + m_colorAttachments.GetCount();
       if(it->layer > 0)
         glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, it->pTexture->GetInternHandle(), it->mipLevel, it->layer);
@@ -52,6 +53,8 @@ namespace gl
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
 
+    // Error checking
+    EZ_ASSERT(m_depthStencil.pTexture != NULL || m_colorAttachments.GetCount() > 0, "You cannot create empty FBOs! Need at least a depth/stencil buffer or a color attachement.");
     GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     EZ_ASSERT(framebufferStatus == GL_FRAMEBUFFER_COMPLETE, "Frame buffer creation failed! Error code: %i", framebufferStatus);
   }
@@ -61,12 +64,23 @@ namespace gl
     glDeleteFramebuffers(1, &m_framebuffer);
   }
 
-  void FramebufferObject::Bind()
+  void FramebufferObject::Bind(bool autoViewportSet)
   {
     if(s_BoundFrameBufferDraw != this)
     {
       glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_framebuffer);
       s_BoundFrameBufferDraw = this;
+
+      if(autoViewportSet)
+      {
+        Texture* pSizeSource = NULL;
+        if(m_depthStencil.pTexture)
+          pSizeSource = m_depthStencil.pTexture;
+        else
+          pSizeSource = m_colorAttachments[0].pTexture;
+        // Due to creation asserts pSizeSource should be now non zero!
+        glViewport(0, 0, pSizeSource->GetWidth(), pSizeSource->GetHeight());
+      }
     }
   }
 
@@ -85,7 +99,7 @@ namespace gl
     if(pDest == NULL)
       BindBackBuffer();
     else
-      pDest->Bind();
+      pDest->Bind(false);
     if(s_BoundFrameBufferRead != this)
     {
       glBindFramebuffer(GL_READ_BUFFER, m_framebuffer);

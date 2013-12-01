@@ -9,6 +9,8 @@ layout(location = 0, index = 0) out vec4 FragColor;
 
 // Texture for refraction color
 layout(binding = 1) uniform sampler2D RefractionTexture;
+layout(binding = 2) uniform samplerCube ReflectionCubemap;
+
 
 // Water Rendering constants
 layout(binding = 6) uniform WaterRendering
@@ -47,13 +49,30 @@ void main()
 	float cameraDistance = length(toCamera);
 	toCamera /= cameraDistance;
 
+
+
+	// Normal dot Light - basic lighting term
+	float nDotL = saturate(dot(normal, GlobalDirLightDirection));
 	// Normal dot Camera - angle of viewer to water surface
-	float nDotV = clamp(dot(normal, toCamera), 0, 1);
+	float nDotV = saturate(dot(normal, toCamera));
+	// Schlick-Fresnel approx
+	float fresnel = Fresnel(nDotV, 0.2f);
+
+
+	// specular lighting
+	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
+	// Don't worry, the outcome is exactly the same!
+	vec3 cameraDirReflection = normalize((2 * nDotV) * normal - toCamera);
+  	float specularAmount = pow(max(0.0f, dot(cameraDirReflection, GlobalDirLightDirection)), 8.0f);
+  	specularAmount *= fresnel;
+
+
 
 	// Needed: amout of water in screenspace on this very pixel
 	// This would need raymarching... instead just use this self-made approximation
 	float waterDepth = texture(TerrainInfo, In.HeightmapCoord).a;
 	float waterViewSpaceDepth = waterDepth / nDotV;
+
 
 
 	// Refraction Texture fetch
@@ -69,26 +88,21 @@ void main()
 	vec3 refractionTexture = textureProj(RefractionTexture, underwaterProjective).rgb;
 
 
-	// Schlick-Fresnel approx
-	float fresnel = Fresnel(nDotV, 0.1f);
-	// Lighting
-	float nDotL = dot(normal, GlobalDirLightDirection) + 0.2f;
-	// specular lighting
-	vec3 refl = normalize((2 * nDotL) * normal - GlobalDirLightDirection);
-  	float specularAmount = pow(max(0.0f, dot(refl, toCamera)), 8.0f) * 0.5f;
-  	specularAmount *= fresnel;
-
-
-
 	// Water color
 	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
+	// All non-refractive parts (water self color) are lit with nDotL
 	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
-	vec3 waterColor = mix(refractionTexture, SurfaceColor * GlobalDirLightColor, clamp(waterViewSpaceDepth * Opaqueness, 0.0f, 1.0f));
-	vec3 refractionColor = mix(BigDepthColor, waterColor, colorExtinction);
+	vec3 waterColor = mix(refractionTexture, SurfaceColor * GlobalDirLightColor * nDotL, saturate(waterViewSpaceDepth * Opaqueness));
+	vec3 refractionColor = mix(BigDepthColor * nDotL, waterColor, colorExtinction);
 
-	// Combine
-	vec3 reflectionColor = GlobalDirLightColor;
-	vec3 color = mix(refractionColor, reflectionColor, fresnel * 0.1f) + specularAmount * GlobalDirLightColor * 0.5f;
+	// Reflection
+	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
+
+
+	// Combine Refraction & Reflection & Specular
+	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;
+
+
 
 	// Fogging
 	color = ApplyFog(color, cameraDistance, toCamera);
