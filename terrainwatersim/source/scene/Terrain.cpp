@@ -120,7 +120,8 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_pTextureGrassNormalHeight.Swap(gl::Texture2D::LoadFromFile("grass_normal.tga"));
   m_pTextureStoneNormalHeight.Swap(gl::Texture2D::LoadFromFile("rock_normal.tga"));
 
-  m_pWaterNormalMap.Swap(gl::Texture2D::LoadFromFile("water_normal.jpg", true));
+  m_pWaterNormalMap.Swap(gl::Texture2D::LoadFromFile("water_normal.png", true));
+  m_pLowResNoise.Swap(gl::Texture2D::LoadFromFile("noise.png", true));
 
   RecreateScreenSizeDependentTextures(screenSize);
 }
@@ -278,6 +279,7 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   glBindSampler(2, variableFilter);  // reflection
   glBindSampler(3, m_texturingSamplerObjectDataGrids); // flowmap
   glBindSampler(4, variableFilter); // normalmap
+  glBindSampler(5, m_texturingSamplerObjectTrilinear); // noise
 
 
   // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
@@ -300,13 +302,10 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   reflectionCubemap.Bind(2);
   m_pWaterFlowMap->Bind(3);
   m_pWaterNormalMap->Bind(4);
+  m_pLowResNoise->Bind(5);
 
   // UBO setup
-  float flowBlend = static_cast<float>(ezMath::Mod(ezSystemTime::Now().GetSeconds(), m_waterDistortionLayerBlendInterval.GetSeconds()) / m_waterDistortionLayerBlendInterval.GetSeconds());
-  flowBlend = (flowBlend > 0.5f ? (1.0f - flowBlend) : flowBlend) * 2.0f;
-  m_waterRenderingUBO["FlowDistortion0"].Set(flowBlend * m_waterFlowDistortionStrength);
-  m_waterRenderingUBO["FlowDistortion1"].Set((1.0f - flowBlend) * m_waterFlowDistortionStrength);
-  m_waterRenderingUBO["FlowDistortionBlend"].Set(flowBlend);
+  m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezSystemTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
   
 
   m_landscapeInfoUBO.BindBuffer(5);

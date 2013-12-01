@@ -24,7 +24,7 @@ namespace SceneConfig
 {
   namespace TerrainRendering
   {
-    ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
+    ezCVarBool g_Wireframe("Wireframe Terrain", false, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
     ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=3.0 max=200");
     ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
     ezCVarFloat g_FresnelReflection("Fresnel Reflection Coef", 0.1f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=0.0 max=2.0 step = 0.01");
@@ -32,7 +32,7 @@ namespace SceneConfig
   }
   namespace WaterRendering
   {
-    ezCVarBool g_wireframe("Wireframe", false, ezCVarFlags::Save, "group=\'Water Rendering\'");
+    ezCVarBool g_wireframe("Wireframe Water", false, ezCVarFlags::Save, "group=\'Water Rendering\'");
     CVarRGBImpl(g_surfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
     CVarRGBImpl(g_bigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
     CVarRGBImpl(g_extinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
@@ -41,7 +41,7 @@ namespace SceneConfig
     ezCVarFloat g_normalMapRepeat("Normalmap repeat", 30.0f, ezCVarFlags::Save, "group=\'Water Rendering\' min=5.0 max=100.0 step=1");
     ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.3 step=0.01");
     ezCVarFloat g_normalLayerBlendInveral("Normal layer blend interval", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.5 max=50.0 step=0.25");
-    ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.1f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
+    ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.001f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.1 step=0.0005");
   }
 
   namespace Simulation

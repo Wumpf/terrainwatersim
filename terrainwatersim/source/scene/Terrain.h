@@ -56,9 +56,9 @@ public:
   void SetWaterOpaqueness(float waterOpaqueness)             { m_waterRenderingUBO["Opaqueness"].Set(waterOpaqueness); }
       // Flow
   void SetWaterSpeedToNormalDistortion(float speedToNormalDistortion) { m_waterRenderingUBO["SpeedToNormalDistortion"].Set(speedToNormalDistortion); }
-  void SetWaterDistortionLayerBlendInterval(ezTime interval) { m_waterDistortionLayerBlendInterval = interval; }
-  void SetWaterFlowDistortionStrength(float distortionStrength) { m_waterFlowDistortionStrength = distortionStrength; }
-  void SetWaterNormalMapRepeat(float normalMapRepeat) { m_waterRenderingUBO["NormalMapRepeat"].Set(normalMapRepeat); }
+  void SetWaterDistortionLayerBlendInterval(ezTime interval)    { m_waterDistortionLayerBlendInterval = interval; }
+  void SetWaterFlowDistortionStrength(float distortionStrength) { m_waterRenderingUBO["FlowDistortionStrength"].Set(distortionStrength); }
+  void SetWaterNormalMapRepeat(float normalMapRepeat)           { m_waterRenderingUBO["NormalMapRepeat"].Set(normalMapRepeat); }
 
   // Simulation
   float GetSimulationStepsPerSecond() const { return static_cast<float>(1.0f / m_simulationStepLength.GetSeconds() + 0.5f); }
@@ -96,7 +96,6 @@ private:
   static const float m_refractionTextureSizeFactor;
     // Waterflow
   ezTime m_waterDistortionLayerBlendInterval;
-  float m_waterFlowDistortionStrength;
 
   // State
   ezTime m_timeSinceLastSimulationStep;
@@ -137,6 +136,7 @@ private:
   ezUniquePtr<gl::Texture2D> m_pTextureStoneNormalHeight;
 
   ezUniquePtr<gl::Texture2D> m_pWaterNormalMap;
+  ezUniquePtr<gl::Texture2D> m_pLowResNoise;
 
   ezUniquePtr<gl::Texture2D> m_pRefractionTexture;
   ezUniquePtr<gl::FramebufferObject> m_pRefractionFBO;  // needed for drawing to (resolve)

@@ -114,8 +114,5 @@ void main()
 
 	// clever fog http://www.iquilezles.org/www/articles/fog/fog.htm
 	FragColor.xyz = ApplyFog(FragColor.xyz, cameraDistance, toCamera);
-
-	// Normal debugging:
-	//FragColor.xyz = abs(vec3(normal.x, normal.y,normal.z));
 	FragColor.a = 1.0f;
 }

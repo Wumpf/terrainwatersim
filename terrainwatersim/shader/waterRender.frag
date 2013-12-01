@@ -12,6 +12,7 @@ layout(binding = 1) uniform sampler2D RefractionTexture;
 layout(binding = 2) uniform samplerCube ReflectionCubemap;
 layout(binding = 3) uniform sampler2D FlowMap;
 layout(binding = 4) uniform sampler2D Normalmap;
+layout(binding = 5) uniform sampler2D Noise;
 
 
 // Water Rendering constants
@@ -26,9 +27,8 @@ layout(binding = 6) uniform WaterRendering
 	float NormalMapRepeat;
 
 	// only these are dynamic (split up?)
-	float FlowDistortion0;
-	float FlowDistortion1;
-	float FlowDistortionBlend;
+	float FlowDistortionStrength;
+	float FlowDistortionTimer;
 };
 
 vec3 ComputeNormal(in vec2 heightmapCoord)
@@ -60,16 +60,18 @@ void main()
 
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
 	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
-	vec3 normalMapLayer0 = texture(Normalmap, In.HeightmapCoord * NormalMapRepeat + flow * FlowDistortion0).xzy;
-	vec3 normalMapLayer1 = texture(Normalmap, In.HeightmapCoord * NormalMapRepeat + flow * FlowDistortion1 + vec2(0.3f)).xzy;
-	vec3 normalMap = mix(normalMapLayer1, normalMapLayer0, FlowDistortionBlend);
+	float noise = texture(Noise, In.HeightmapCoord*2).x;
+	float distortionBlend = abs(fract(FlowDistortionTimer + noise) * 2 - 1);
+	vec2 normalmapCoord = In.HeightmapCoord * NormalMapRepeat;
+	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord + flow * (1-distortionBlend) * FlowDistortionStrength).xzy;
+	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord.yx + flow * distortionBlend * FlowDistortionStrength + vec2(0.4f)).xzy;
+	vec3 normalMap = mix(normalMapLayer0, normalMapLayer1, distortionBlend);
+	vec3 normalMapNormal = normalMap * 2.0f - vec3(1.0f);
 		// scale with speed
-	normalMap.xz *= SpeedToNormalDistortion * length(flow);
+	normalMapNormal.xz *= SpeedToNormalDistortion * length(flow);
 
-	// Surface Normal
-	vec3 normal = ComputeNormal(In.HeightmapCoord);
-	normal += normalize(normalMap * 2.0f - 1.0f) * 0.8f;
-	normal = normalize(normal);
+	// Final Normal
+	vec3 normal = normalize(ComputeNormal(In.HeightmapCoord) + normalMapNormal);
 
 
 	// vector to camera and camera distance
@@ -100,7 +102,7 @@ void main()
 	// This would need raymarching... instead just use this self-made approximation
 	vec4 terrainInfo = texture(TerrainInfo, In.HeightmapCoord);
 	float waterDepth = terrainInfo.a;
-	float waterViewSpaceDepth = waterDepth / (nDotV+0.01f);
+	float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1f);
 
 
 
@@ -136,14 +138,13 @@ void main()
 	
 	// Shore hack against artifacts
 	float pixelToGround = In.WorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
-	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.1f));
+	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25f));
 
 
 	// Fogging
 	color = ApplyFog(color, cameraDistance, toCamera);
 
 	// Color output
-	FragColor.rgb = vec3(color); //vec3(waterViewSpaceDepth*0.01f);
-	//vec3(abs(flow.xy) * 0.01f, 0);
+	FragColor.rgb = vec3(color);
 	FragColor.a = 1.0f;
 }
