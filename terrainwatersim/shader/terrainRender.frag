@@ -14,6 +14,14 @@ layout(binding = 3) uniform sampler2D GrassNormal;
 layout(binding = 4) uniform sampler2D StoneNormal;
 
 
+layout(binding = 6, shared) uniform TerrainRendering
+{
+	// (Diffuse) Texture repeat per World unit.
+	float TextureRepeat;
+	float FresnelReflectionCoefficient;
+	float SpecularPower;
+};
+
 vec3 ComputeNormal(in vec2 heightmapCoord)
 {
 	const float worldStep = 1.0f;
@@ -86,10 +94,10 @@ void main()
 	vec3 toCamera = CameraPosition - In.WorldPos;
 	float cameraDistance = length(toCamera);
 	toCamera /= cameraDistance;
-  	float specularAmount = pow(max(0.0f, dot(refl, toCamera)), 4.0f) * diffuseColor_spec.a;
+  	float specularAmount = pow(max(0.0f, dot(refl, toCamera)), SpecularPower) * diffuseColor_spec.a;
 
 	// Schlick-Fresnel approx
-	float fresnel = Fresnel(dot(normal, toCamera), 0.1f);
+	float fresnel = Fresnel(dot(normal, toCamera), FresnelReflectionCoefficient);
 	specularAmount *= fresnel;
 
 	// Diffuse Lighting

@@ -24,16 +24,16 @@ const vec3 SliceRight[6] =
 	vec3( 0,  0,  1),
 	vec3( 0,  0,  -1),
 	vec3( 1,  0,  0),
-	vec3( 0,  0,  1),
+	vec3( 1,  0,  0),
 	vec3( 1,  0, 0),
-	vec3( -1,  0,  0),
+	vec3(-1,  0,  0),
 };
 const vec3 SliceUp[6] =
 {
 	vec3( 0,  1,  0),
 	vec3( 0,  1,  0),
 	vec3( 0,  0,  1),
-	vec3(-1,  0,  0),
+	vec3( 0,  0,  -1),
 	vec3( 0,  1,  0),
 	vec3( 0,  1,  0),
 };

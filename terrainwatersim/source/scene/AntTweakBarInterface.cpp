@@ -133,7 +133,7 @@ ezResult AntTweakBarInterface::Init()
   // Create a tweak bar
   m_pTweakBar = TwNewBar("TweakBar");
 
-  static const ezSizeU32 tweakBarSize(330, 300);
+  static const ezSizeU32 tweakBarSize(330, 600);
   ezStringBuilder stringBuilder;
   stringBuilder.Format(" TweakBar size='%i %i' ", tweakBarSize.width, tweakBarSize.height);
   TwDefine(stringBuilder.GetData());
@@ -164,20 +164,23 @@ ezResult AntTweakBarInterface::Init()
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_SpecularPower);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_FresnelReflection);
 
-//  ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColor, TW_TYPE_COLOR3F, "BigDepth Color", "group=\'Water Rendering\'");
+//  ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColor, TW_TYPE_COLOR3F, "BigDepth Color", "group=\'Water Rendering\'");
 
   ADD_STAT_TO_TWEAKBAR("Water Draw Time", "group=\'Water Rendering\'");
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterBigDepthColorB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterSurfaceColorB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_waterOpaqueness);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_wireframe);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorR);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorG);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorB);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_opaqueness);
 
   ADD_STAT_TO_TWEAKBAR("Simulation Time", "group=\'Simulation\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);

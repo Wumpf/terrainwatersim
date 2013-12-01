@@ -24,11 +24,6 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_heightScale(300.0f),
   m_anisotropicFiltering(false),
 
-  m_waterBigDepthColor(ezVec3(0.0039f, 0.00196f, 0.145f)*0.5f),
-  m_waterSurfaceColor(ezVec3(0.0078f, 0.5176f, 0.7f) * 0.5f),
-  m_waterExtinctionCoefficients(ezVec3(0.478f, 0.435f, 0.5f) * 0.1f),
-  m_waterOpaqueness(0.1f),
-
   m_simulationStepLength(ezTime::Seconds(1.0f / 60.0f)),
   m_flowDamping(0.98f),
   m_flowAcceleration(10.0f)
@@ -61,6 +56,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_landscapeInfoUBO.Init({ &m_terrainRenderShader, &m_applyFlowShader }, "GlobalLandscapeInfo");
   m_simulationParametersUBO.Init({ &m_applyFlowShader, &m_updateFlowShader }, "SimulationParameters");
   m_waterRenderingUBO.Init({ &m_waterRenderShader }, "WaterRendering");
+  m_terrainRenderingUBO.Init({ &m_terrainRenderShader }, "TerrainRendering");
 
 
   // set some default values
@@ -68,12 +64,17 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_landscapeInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
   m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
   SetPixelPerTriangle(50.0f);
-  m_landscapeInfoUBO["TextureRepeat"].Set(0.05f);
+  m_terrainRenderingUBO["TextureRepeat"].Set(0.05f);
+
   SetSimulationStepsPerSecond(60.0f);  // Sets implicit all time scaled values
-  SetWaterBigDepthColor(m_waterBigDepthColor);
-  SetWaterSurfaceColor(m_waterSurfaceColor);
-  SetWaterExtinctionCoefficients(m_waterExtinctionCoefficients);
-  SetWaterOpaqueness(m_waterOpaqueness);
+  
+  SetTerrainFresnelReflectionCoef(0.2f);
+  SetTerrainSpecularPower(4.0f);
+  
+  SetWaterBigDepthColor(ezVec3(0.0039f, 0.00196f, 0.145f)*0.5f);
+  SetWaterSurfaceColor(ezVec3(0.0078f, 0.5176f, 0.7f) * 0.5f);
+  SetWaterExtinctionCoefficients(ezVec3(0.478f, 0.435f, 0.5f) * 0.1f);
+  SetWaterOpaqueness(0.1f);
 
 
   // sampler
@@ -158,26 +159,6 @@ void Terrain::SetFlowAcceleration(float flowAcceleration)
   m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
-void Terrain::SetWaterBigDepthColor(const ezVec3& waterBigDepthColor)
-{
-  m_waterBigDepthColor = waterBigDepthColor;
-  m_waterRenderingUBO["BigDepthColor"].Set(m_waterBigDepthColor);
-}
-void Terrain::SetWaterSurfaceColor(const ezVec3& waterSurfaceColor)
-{
-  m_waterSurfaceColor = waterSurfaceColor;
-  m_waterRenderingUBO["SurfaceColor"].Set(m_waterSurfaceColor);
-}
-void Terrain::SetWaterExtinctionCoefficients(const ezVec3& waterExtinctionCoefficients)
-{
-  m_waterExtinctionCoefficients = waterExtinctionCoefficients;
-  m_waterRenderingUBO["ColorExtinctionCoefficient"].Set(m_waterExtinctionCoefficients);
-}
-void Terrain::SetWaterOpaqueness(float waterOpaqueness)
-{
-  m_waterOpaqueness = waterOpaqueness;
-  m_waterRenderingUBO["Opaqueness"].Set(m_waterOpaqueness);
-}
 
 void Terrain::CreateHeightmap()
 {
@@ -263,6 +244,7 @@ void Terrain::DrawTerrain()
 
 
   m_landscapeInfoUBO.BindBuffer(5);
+  m_terrainRenderingUBO.BindBuffer(6);
 
   // Terrain
   m_terrainRenderShader.Activate();

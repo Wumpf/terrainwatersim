@@ -26,15 +26,17 @@ namespace SceneConfig
   {
     ezCVarBool g_Wireframe("Wireframe", false, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
     ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=3.0 max=200");
-
     ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
+    ezCVarFloat g_FresnelReflection("Fresnel Reflection Coef", 0.1f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=0.0 max=2.0 step = 0.01");
+    ezCVarFloat g_SpecularPower("Specular Power", 4.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=0.0 max=32.0 step = 0.5");
   }
   namespace WaterRendering
   {
-    CVarRGBImpl(g_waterSurfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
-    CVarRGBImpl(g_waterBigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
-    CVarRGBImpl(g_waterExtinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
-    ezCVarFloat g_waterOpaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
+    ezCVarBool g_wireframe("Wireframe", false, ezCVarFlags::Save, "group=\'Water Rendering\'");
+    CVarRGBImpl(g_surfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_bigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_extinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
+    ezCVarFloat g_opaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
   }
 
   namespace Simulation
@@ -80,8 +82,6 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_UserInterface->Init();
   InitConfig();
 
-  // Update background
-  m_pBackground->UpdateCubemap();
 }
 
 void Scene::InitGlobalUBO()
@@ -108,6 +108,8 @@ void Scene::InitGlobalUBO()
 
 void Scene::InitConfig()
 {
+#define CONFIG_EVENTHANDLER_LAMBDA(CODE) ezEvent<const ezCVar::CVarEvent&>::Handler([=](const ezCVar::CVarEvent&) { CODE } )
+
   // Callbacks for CVars
   ezEvent<const ezCVar::CVarEvent&>::Handler onResolutionChange = [=](const ezCVar::CVarEvent&)
   {
@@ -126,45 +128,45 @@ void Scene::InitConfig()
     m_GlobalSceneInfo["NumMSAASamples"].Set(static_cast<ezUInt32>(GeneralConfig::g_MSAASamples.GetValue()));
   });*/
 
-  SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue()); }));
-  SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue()); }));
+  SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());));
+  SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());));
+  SceneConfig::TerrainRendering::g_FresnelReflection.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetTerrainFresnelReflectionCoef(SceneConfig::TerrainRendering::g_FresnelReflection.GetValue());));
+  SceneConfig::TerrainRendering::g_SpecularPower.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetTerrainSpecularPower(SceneConfig::TerrainRendering::g_SpecularPower.GetValue());));
 
-  auto setWaterBigDepthColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterBigDepthColor(ezVec3(SceneConfig::WaterRendering::g_waterBigDepthColorR.GetValue(), SceneConfig::WaterRendering::g_waterBigDepthColorG.GetValue(), SceneConfig::WaterRendering::g_waterBigDepthColorB.GetValue())); };
-  SceneConfig::WaterRendering::g_waterBigDepthColorR.m_CVarEvents.AddEventHandler(setWaterBigDepthColor);
-  SceneConfig::WaterRendering::g_waterBigDepthColorG.m_CVarEvents.AddEventHandler(setWaterBigDepthColor);
-  SceneConfig::WaterRendering::g_waterBigDepthColorB.m_CVarEvents.AddEventHandler(setWaterBigDepthColor);
+  auto setBigDepthColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterBigDepthColor(ezVec3(SceneConfig::WaterRendering::g_bigDepthColorR.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorG.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorB.GetValue())); };
+  SceneConfig::WaterRendering::g_bigDepthColorR.m_CVarEvents.AddEventHandler(setBigDepthColor);
+  SceneConfig::WaterRendering::g_bigDepthColorG.m_CVarEvents.AddEventHandler(setBigDepthColor);
+  SceneConfig::WaterRendering::g_bigDepthColorB.m_CVarEvents.AddEventHandler(setBigDepthColor);
 
-  auto setWaterSurfaceColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterSurfaceColor(ezVec3(SceneConfig::WaterRendering::g_waterSurfaceColorR.GetValue(), SceneConfig::WaterRendering::g_waterSurfaceColorG.GetValue(), SceneConfig::WaterRendering::g_waterSurfaceColorB.GetValue())); };
-  SceneConfig::WaterRendering::g_waterSurfaceColorR.m_CVarEvents.AddEventHandler(setWaterSurfaceColor);
-  SceneConfig::WaterRendering::g_waterSurfaceColorG.m_CVarEvents.AddEventHandler(setWaterSurfaceColor);
-  SceneConfig::WaterRendering::g_waterSurfaceColorB.m_CVarEvents.AddEventHandler(setWaterSurfaceColor);
+  auto setSurfaceColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterSurfaceColor(ezVec3(SceneConfig::WaterRendering::g_surfaceColorR.GetValue(), SceneConfig::WaterRendering::g_surfaceColorG.GetValue(), SceneConfig::WaterRendering::g_surfaceColorB.GetValue())); };
+  SceneConfig::WaterRendering::g_surfaceColorR.m_CVarEvents.AddEventHandler(setSurfaceColor);
+  SceneConfig::WaterRendering::g_surfaceColorG.m_CVarEvents.AddEventHandler(setSurfaceColor);
+  SceneConfig::WaterRendering::g_surfaceColorB.m_CVarEvents.AddEventHandler(setSurfaceColor);
 
-  auto setWaterExtinctionCoef = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterExtinctionCoefficients(ezVec3(SceneConfig::WaterRendering::g_waterExtinctionCoefficientsR.GetValue(), SceneConfig::WaterRendering::g_waterExtinctionCoefficientsG.GetValue(), SceneConfig::WaterRendering::g_waterExtinctionCoefficientsB.GetValue())); };
-  SceneConfig::WaterRendering::g_waterExtinctionCoefficientsR.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
-  SceneConfig::WaterRendering::g_waterExtinctionCoefficientsG.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
-  SceneConfig::WaterRendering::g_waterExtinctionCoefficientsB.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
+  auto setWaterExtinctionCoef = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterExtinctionCoefficients(ezVec3(SceneConfig::WaterRendering::g_extinctionCoefficientsR.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsG.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsB.GetValue())); };
+  SceneConfig::WaterRendering::g_extinctionCoefficientsR.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
+  SceneConfig::WaterRendering::g_extinctionCoefficientsG.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
+  SceneConfig::WaterRendering::g_extinctionCoefficientsB.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
 
-  SceneConfig::WaterRendering::g_waterOpaqueness.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_waterOpaqueness.GetValue()); }));
 
-  SceneConfig::Simulation::g_SimulationStepsPerSecond.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue()); }));
-  SceneConfig::Simulation::g_FlowDamping.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue()); }));
-  SceneConfig::Simulation::g_FlowAcceleration.m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler(
-    [=](const ezCVar::CVarEvent&) { m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue()); }));
+  SceneConfig::WaterRendering::g_opaqueness.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());));
+
+  SceneConfig::Simulation::g_SimulationStepsPerSecond.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());));
+  SceneConfig::Simulation::g_FlowDamping.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());));
+
+  SceneConfig::Simulation::g_FlowAcceleration.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());));
 
 
   // Trigger initial values that may be saved
   m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
   m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());
+  m_pTerrain->SetTerrainSpecularPower(SceneConfig::TerrainRendering::g_SpecularPower.GetValue());
+  m_pTerrain->SetTerrainFresnelReflectionCoef(SceneConfig::TerrainRendering::g_FresnelReflection.GetValue());
 
-  setWaterBigDepthColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_waterBigDepthColorR));
-  setWaterSurfaceColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_waterSurfaceColorR));
-  setWaterExtinctionCoef(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_waterExtinctionCoefficientsR));
-  m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_waterOpaqueness.GetValue());
+  setBigDepthColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_bigDepthColorR));
+  setSurfaceColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_surfaceColorR));
+  setWaterExtinctionCoef(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_extinctionCoefficientsR));
+  m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());
 
   m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());
   m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());
@@ -218,6 +220,10 @@ ezResult Scene::Update(ezTime lastFrameDuration)
 
 ezResult Scene::Render(ezTime lastFrameDuration)
 { 
+
+  // Update background
+  m_pBackground->UpdateCubemap();
+
   // set global ubos to their global binding points
   m_CameraUBO.BindBuffer(0);
   m_TimeUBO.BindBuffer(1);
@@ -231,21 +237,25 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
  
-  if(SceneConfig::TerrainRendering::g_Wireframe)
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
   // render terrain
+  if(SceneConfig::TerrainRendering::g_Wireframe)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   m_pTerrainDrawTimer->Start();
   m_pTerrain->DrawTerrain();
   m_pTerrainDrawTimer->End();
+  if(SceneConfig::TerrainRendering::g_Wireframe)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   // render water
+  if(SceneConfig::WaterRendering::g_wireframe)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   m_pWaterDrawTimer->Start();
   m_pTerrain->DrawWater(*m_pLinearHDRFramebuffer.Get(), m_pBackground->GetSkyboxCubemap());
   m_pWaterDrawTimer->End();
-
-  if(SceneConfig::TerrainRendering::g_Wireframe)
+  if(SceneConfig::WaterRendering::g_wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
   // render nice background
   m_pBackground->Draw();

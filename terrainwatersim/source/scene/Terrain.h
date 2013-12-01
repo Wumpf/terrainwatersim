@@ -34,7 +34,6 @@ public:
 
   float GetTerrainWorldSize() const             { return m_worldSize; }
   //void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; }    // Expected patch count changes!
-
   float GetMinBlockSizeWorld() const             { return m_minPatchSizeWorld; }
   //void SetMinBlockSizeWorld(float worldSize)     { m_minBlockSizeWorld = worldSize; } // Expected patch count changes!
 
@@ -45,18 +44,15 @@ public:
   bool GetAnisotropicFiltering() const { return m_anisotropicFiltering; }
   void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
+    // Terrain
+  void SetTerrainFresnelReflectionCoef(float terrainFresnelReflectionCoef) { m_terrainRenderingUBO["FresnelReflectionCoefficient"].Set(terrainFresnelReflectionCoef); }
+  void SetTerrainSpecularPower(float terrainSpecularPower) { m_terrainRenderingUBO["SpecularPower"].Set(terrainSpecularPower); }
+
     // Water
-  ezVec3 GetWaterBigDepthColor() const { m_waterBigDepthColor; }
-  void SetWaterBigDepthColor(const ezVec3& waterBigDepthColor);
-
-  ezVec3 GetWaterSurfaceColor() const { m_waterSurfaceColor; }
-  void SetWaterSurfaceColor(const ezVec3& waterSurfaceColor);
-
-  ezVec3 GetWaterExtinctionCoefficients() const { m_waterExtinctionCoefficients; }
-  void SetWaterExtinctionCoefficients(const ezVec3& waterExtinctionCoefficients);
-
-  float GetWaterOpaqueness() const { m_waterOpaqueness; }
-  void SetWaterOpaqueness(float waterOpaqueness);
+  void SetWaterBigDepthColor(const ezVec3& bigDepthColor)    { m_waterRenderingUBO["BigDepthColor"].Set(bigDepthColor); }
+  void SetWaterSurfaceColor(const ezVec3& surfaceColor)      { m_waterRenderingUBO["SurfaceColor"].Set(surfaceColor); }
+  void SetWaterExtinctionCoefficients(const ezVec3& extinctionCoefficients) { m_waterRenderingUBO["ColorExtinctionCoefficient"].Set(extinctionCoefficients); }
+  void SetWaterOpaqueness(float waterOpaqueness)             { m_waterRenderingUBO["Opaqueness"].Set(waterOpaqueness); }
 
 
   // Simulation
@@ -68,7 +64,6 @@ public:
 
   float GetFlowAcceleration() const { return m_flowAcceleration; }
   void SetFlowAcceleration(float flowAcceleration);
-
 
 
 private:
@@ -94,11 +89,6 @@ private:
   static const float m_maxTesselationFactor;
   bool m_anisotropicFiltering;
   static const float m_refractionTextureSizeFactor;
-    // Water
-  ezVec3 m_waterBigDepthColor;
-  ezVec3 m_waterSurfaceColor;
-  ezVec3 m_waterExtinctionCoefficients;
-  float m_waterOpaqueness;
 
   // State
   ezTime m_timeSinceLastSimulationStep;
@@ -120,6 +110,7 @@ private:
     // UBO
   gl::UniformBuffer m_landscapeInfoUBO;
   gl::UniformBuffer m_simulationParametersUBO;
+  gl::UniformBuffer m_terrainRenderingUBO;
   gl::UniformBuffer m_waterRenderingUBO;
 
     // Samplers

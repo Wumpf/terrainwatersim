@@ -7,9 +7,6 @@ layout(binding = 5, shared) uniform GlobalLandscapeInfo
 
 	// Determines how many triangles per Clip Space unit the shader tries to generate
 	float TrianglesPerClipSpaceUnit;
-
-	// (Diffuse) Texture repeat per World unit.
-	float TextureRepeat;
 };
 
 layout(binding = 0) uniform sampler2D TerrainInfo;
@@ -42,6 +39,6 @@ struct FragInVertexTerrain
 struct FragInVertexWater
 {
 	vec3 WorldPos;
-	vec4 ProjectiveCoord;
+	vec3 ProjectiveCoord;
 	vec2 HeightmapCoord;
 };

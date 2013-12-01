@@ -29,16 +29,19 @@ namespace SceneConfig
     extern ezCVarBool g_Wireframe;
     extern ezCVarFloat g_PixelPerTriangle;
     extern ezCVarBool g_UseAnisotropicFilter;
+    extern ezCVarFloat g_FresnelReflection;
+    extern ezCVarFloat g_SpecularPower;
   }
 
   namespace WaterRendering
   {
-    CVarRGBDecl(g_waterSurfaceColor);
-    CVarRGBDecl(g_waterBigDepthColor);
-    CVarRGBDecl(g_waterExtinctionCoefficients);
-    extern ezStatic<ezEvent<ezVec3>> g_waterExtinctionCoefficients_changedEvent;
+    extern ezCVarBool g_wireframe;
+    CVarRGBDecl(g_surfaceColor);
+    CVarRGBDecl(g_bigDepthColor);
+    CVarRGBDecl(g_extinctionCoefficients);
+    extern ezStatic<ezEvent<ezVec3>> g_extinctionCoefficients_changedEvent;
 
-    extern ezCVarFloat g_waterOpaqueness;
+    extern ezCVarFloat g_opaqueness;
   }
 
   namespace Simulation

@@ -19,8 +19,6 @@ layout(binding = 6) uniform WaterRendering
 	vec3 SurfaceColor;
 	vec3 ColorExtinctionCoefficient;
 	float Opaqueness;
-
-	float RefractionFactor;
 };
 
 vec3 ComputeNormal(in vec2 heightmapCoord)
@@ -43,6 +41,12 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 
 void main()
 {
+	const float RefractionIndex_Water = 1.33f;
+	const float RefractionIndex_Air = 1.00029f;
+	const float RefractoinAirToWater = RefractionIndex_Air / RefractionIndex_Water;
+	const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water) * (RefractionIndex_Air - RefractionIndex_Water) / 
+									   ((RefractionIndex_Air + RefractionIndex_Water) * (RefractionIndex_Air + RefractionIndex_Water));
+
 	// Surface Normal
 	vec3 normal = ComputeNormal(In.HeightmapCoord);
 
@@ -58,7 +62,7 @@ void main()
 	// Normal dot Camera - angle of viewer to water surface
 	float nDotV = saturate(dot(normal, toCamera));
 	// Schlick-Fresnel approx
-	float fresnel = Fresnel(nDotV, 0.2f);
+	float fresnel = Fresnel(nDotV, ReflectionCoefficient);
 
 
 	// specular lighting
@@ -81,8 +85,7 @@ void main()
 	// Refraction Texture fetch
 	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
 	// So we just blend over to no refraction at all if necessary
-	const float WaterRefractionIndex = 1.00029f / 1.33;	// air / water
-	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, WaterRefractionIndex);
+	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, RefractoinAirToWater);
 	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth;
 	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
 	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;

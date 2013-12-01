@@ -38,7 +38,7 @@ namespace gl
     /// Given data block will be set dirty and copied with the next BindBuffer/UpdateGPUData call
     void SetData(const void* pData, ezUInt32 DataSize, ezUInt32 Offset);
 
-    /// Updates gpu data if necessary and binds buffer
+    /// Updates gpu data if necessary and binds buffer if not already bound.
     ezResult BindBuffer(GLuint locationIndex);
 
     const ezString& GetBufferName() const { return m_sBufferName; }
@@ -64,6 +64,9 @@ namespace gl
     /// meta information
     ezMap<ezString, Variable> m_Variables;  /// \todo no ezHashTable possible?
 
+
+    /// Currently bound UBOs - number is arbitrary!
+    static UniformBuffer* s_pBoundUBOs[16];
   };
 
   #include "UniformBuffer.inl"

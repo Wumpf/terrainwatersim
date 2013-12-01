@@ -5,6 +5,7 @@
 
 namespace gl
 {
+  UniformBuffer* UniformBuffer::s_pBoundUBOs[16];
 
   UniformBuffer::UniformBuffer() :
     m_BufferObject(9999),
@@ -126,12 +127,19 @@ namespace gl
 
   ezResult UniformBuffer::BindBuffer(GLuint locationIndex)
   {
+    EZ_ASSERT(locationIndex < sizeof(s_pBoundUBOs) / sizeof(UniformBuffer*), "Can't bind ubo to slot %i. Maximum number of slots is %i", locationIndex, sizeof(s_pBoundUBOs) / sizeof(UniformBuffer*));
+
     if(UpdateGPUData() == EZ_FAILURE)
       return EZ_FAILURE;
 
-    glBindBufferBase(GL_UNIFORM_BUFFER, locationIndex, m_BufferObject);
-
-    return gl::Utils::CheckError("glBindBufferBase");
+    if(s_pBoundUBOs[locationIndex] != this)
+    {
+      glBindBufferBase(GL_UNIFORM_BUFFER, locationIndex, m_BufferObject);
+      s_pBoundUBOs[locationIndex] = this;
+      return gl::Utils::CheckError("glBindBufferBase");
+    }
+    
+    return EZ_SUCCESS;
   }
 
 }
