@@ -13,12 +13,12 @@ namespace gl
     /// loads texture from file using stb_image
     static ezUniquePtr<Texture2D> LoadFromFile(const ezString& sFilename, bool sRGB = false, bool generateMipMaps = true);
 
-    void SetData(ezUInt32 mipLevel, const ezColor* pData) EZ_OVERRIDE;
-    void SetData(ezUInt32 mipLevel, const ezColor8UNorm* pData) EZ_OVERRIDE;
+    void SetData(ezUInt32 mipLevel, const ezColor* pData);
+    void SetData(ezUInt32 mipLevel, const ezColor8UNorm* pData);
 
     void GenMipMaps();
 
-    void Bind(GLuint slotIndex) EZ_OVERRIDE;
+    GLenum GetOpenGLTextureType() EZ_OVERRIDE { return GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D; }
   };
 
 }

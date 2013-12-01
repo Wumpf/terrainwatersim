@@ -64,4 +64,16 @@ namespace gl
     glBindImageTexture(slotIndex, m_TextureHandle, 0, GL_TRUE, 0, static_cast<GLenum>(access), format);
     gl::Utils::CheckError("glBindImageTexture");
   }
+
+  void Texture::Bind(GLuint slotIndex)
+  {
+    EZ_ASSERT(slotIndex < sizeof(s_pBoundTextures) / sizeof(Texture*), "Can't bind texture to slot %i. Maximum number of slots is %i", slotIndex, sizeof(s_pBoundTextures) / sizeof(Texture*));
+    if(s_pBoundTextures[slotIndex] != this)
+    {
+      glActiveTexture(GL_TEXTURE0 + slotIndex);
+      glBindTexture(GetOpenGLTextureType(), m_TextureHandle);
+      gl::Utils::CheckError("glBindTexture");
+      s_pBoundTextures[slotIndex] = this;
+    }
+  }
 }

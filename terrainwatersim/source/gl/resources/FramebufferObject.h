@@ -8,6 +8,13 @@ namespace gl
 {
   class Texture;
 
+  /// Abstraction for rendertarget objects
+  /// \remarks Not yet supported:
+  /// - Bind cubemap faces
+  /// - Some MSAA functionality?
+  /// - Blit multiple Targets at once
+  /// - Clear multiple Targets at once
+  /// - ...
   class FramebufferObject
   {
   public:

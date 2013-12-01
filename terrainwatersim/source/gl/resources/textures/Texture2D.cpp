@@ -76,16 +76,4 @@ namespace gl
       m_width, m_height,
       GL_RGBA, GL_UNSIGNED_BYTE, pData);
   }
-
-  void Texture2D::Bind(GLuint slotIndex)
-  {
-    EZ_ASSERT(slotIndex < sizeof(s_pBoundTextures) / sizeof(Texture*), "Can't bind texture to slot %i. Maximum number of slots is %i", slotIndex, sizeof(s_pBoundTextures) / sizeof(Texture*));
-    if(s_pBoundTextures[slotIndex] != this)
-    {
-      glActiveTexture(GL_TEXTURE0 + slotIndex);
-      glBindTexture(GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, m_TextureHandle);
-      gl::Utils::CheckError("glBindTexture");
-      s_pBoundTextures[slotIndex] = this;
-    }
-  }
 }

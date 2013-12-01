@@ -26,8 +26,7 @@ namespace gl
       if(depthStencil.layer > 0)
         glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel, depthStencil.layer);
       else
-        glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, depthStencil.pTexture->GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D,
-                                depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel);
+        glFramebufferTexture(GL_FRAMEBUFFER, attachment, depthStencil.pTexture->GetInternHandle(), depthStencil.mipLevel);
     }
 
 
@@ -37,8 +36,7 @@ namespace gl
       if(it->layer > 0)
         glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, it->pTexture->GetInternHandle(), it->mipLevel, it->layer);
       else
-        glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, it->pTexture->GetNumMSAASamples() > 0 ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, 
-                                  it->pTexture->GetInternHandle(), it->mipLevel);
+        glFramebufferTexture(GL_FRAMEBUFFER, attachment, it->pTexture->GetInternHandle(), it->mipLevel);
 
       m_colorAttachments.PushBack(*it);
     }

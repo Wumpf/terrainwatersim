@@ -8,10 +8,7 @@ namespace gl
     Texture(ezUInt32 width, ezUInt32 height, ezUInt32 depth, GLuint format, ezInt32 numMipLevels, ezUInt32 numMSAASamples = 0);
     ~Texture();
 
-    virtual void SetData(ezUInt32 uiMipLevel, const ezColor* pData)=0;
-    virtual void SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData)=0;
-
-    virtual void Bind(GLuint slotIndex)=0;
+    void Bind(GLuint slot);
 
     enum class ImageAccess
     {
@@ -32,6 +29,8 @@ namespace gl
     ezUInt32 GetNumMipLevels() const    { return m_numMipLevels; }
     ezUInt32 GetNumMSAASamples() const  { return m_numMSAASamples; }
     ezUInt32 GetFormat() const          { return m_format; }
+
+    virtual GLenum GetOpenGLTextureType() = 0;
 
   protected:
     /// Currently bound textures - number is arbitrary!
