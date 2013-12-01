@@ -3,7 +3,8 @@
 #include "simulationCommon.glsl"
 
 layout(binding = 0, rgba32f) restrict uniform image2D TerrainData;
-layout(binding = 1, rgba32f) restrict readonly uniform image2D Flow;
+layout(binding = 1, rgba32f) restrict readonly uniform image2D OutgoingFlow;
+layout(binding = 2, rg16f) restrict writeonly uniform image2D FlowMap;
 
 // compute shader size
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
@@ -16,19 +17,26 @@ void main()
 	
 	// Todo: Shared memory optimizations
 	// Read outgoing flow
-	vec4 flowOut = imageLoad(Flow, gridPosition);
-	vec4 flowOutX1 = imageLoad(Flow, gridPosition + ivec2(1, 0));
-	vec4 flowOutX0 = imageLoad(Flow, gridPosition + ivec2(-1, 0));
-	vec4 flowOutY1 = imageLoad(Flow, gridPosition + ivec2(0, 1));
-	vec4 flowOutY0 = imageLoad(Flow, gridPosition + ivec2(0, -1));
+	vec4 flowOut = imageLoad(OutgoingFlow, gridPosition);
+	float flowOutX1 = imageLoad(OutgoingFlow, gridPosition + ivec2(1, 0)).y;
+	float flowOutX0 = imageLoad(OutgoingFlow, gridPosition + ivec2(-1, 0)).x;
+	float flowOutY1 = imageLoad(OutgoingFlow, gridPosition + ivec2(0, 1)).w;
+	float flowOutY0 = imageLoad(OutgoingFlow, gridPosition + ivec2(0, -1)).z;
+
 
 	// Compute new water height.
-	float ingoingFlow = flowOutX1.y + flowOutX0.x + flowOutY1.w + flowOutY0.z;
+	float ingoingFlow = flowOutX1 + flowOutX0 + flowOutY1 + flowOutY0;
 	float outgoingFlow = flowOut.x + flowOut.y + flowOut.z + flowOut.w;
 	float newWaterAmount = max(0, terrainInfo.a + (ingoingFlow - outgoingFlow) * CellAreaInv_timeScaled);
 
+	// Compute directed flow in this point (needed for rendering and other computations)
+	vec4 flowVec;
+	flowVec.x = (flowOutX1 - flowOut.x) - (flowOutX0 - flowOut.y);
+	flowVec.y = (flowOutY1 - flowOut.z) - (flowOutY0 - flowOut.w);
+	flowVec.zw = vec2(0);
 
 	// Store stuff.
 	terrainInfo.a = newWaterAmount;
 	imageStore(TerrainData, gridPosition, terrainInfo);
+	imageStore(FlowMap, gridPosition, flowVec);
 }

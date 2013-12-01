@@ -10,6 +10,8 @@ layout(location = 0, index = 0) out vec4 FragColor;
 // Texture for refraction color
 layout(binding = 1) uniform sampler2D RefractionTexture;
 layout(binding = 2) uniform samplerCube ReflectionCubemap;
+layout(binding = 3) uniform sampler2D FlowMap;
+layout(binding = 4) uniform sampler2D Normalmap;
 
 
 // Water Rendering constants
@@ -19,6 +21,14 @@ layout(binding = 6) uniform WaterRendering
 	vec3 SurfaceColor;
 	vec3 ColorExtinctionCoefficient;
 	float Opaqueness;
+
+	float SpeedToNormalDistortion;
+	float NormalMapRepeat;
+
+	// only these are dynamic (split up?)
+	float FlowDistortion0;
+	float FlowDistortion1;
+	float FlowDistortionBlend;
 };
 
 vec3 ComputeNormal(in vec2 heightmapCoord)
@@ -46,9 +56,21 @@ void main()
 	const float RefractoinAirToWater = RefractionIndex_Air / RefractionIndex_Water;
 	const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water) * (RefractionIndex_Air - RefractionIndex_Water) / 
 									   ((RefractionIndex_Air + RefractionIndex_Water) * (RefractionIndex_Air + RefractionIndex_Water));
+							  
+
+	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
+	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
+	vec3 normalMapLayer0 = texture(Normalmap, In.HeightmapCoord * NormalMapRepeat + flow * FlowDistortion0).xzy;
+	vec3 normalMapLayer1 = texture(Normalmap, In.HeightmapCoord * NormalMapRepeat + flow * FlowDistortion1 + vec2(0.3f)).xzy;
+	vec3 normalMap = mix(normalMapLayer1, normalMapLayer0, FlowDistortionBlend);
+		// scale with speed
+	normalMap.xz *= SpeedToNormalDistortion * length(flow);
 
 	// Surface Normal
 	vec3 normal = ComputeNormal(In.HeightmapCoord);
+	normal += normalize(normalMap * 2.0f - 1.0f) * 0.8f;
+	normal = normalize(normal);
+
 
 	// vector to camera and camera distance
 	vec3 toCamera = CameraPosition - In.WorldPos;
@@ -78,7 +100,7 @@ void main()
 	// This would need raymarching... instead just use this self-made approximation
 	vec4 terrainInfo = texture(TerrainInfo, In.HeightmapCoord);
 	float waterDepth = terrainInfo.a;
-	float waterViewSpaceDepth = waterDepth / nDotV;
+	float waterViewSpaceDepth = waterDepth / (nDotV+0.01f);
 
 
 
@@ -121,6 +143,7 @@ void main()
 	color = ApplyFog(color, cameraDistance, toCamera);
 
 	// Color output
-	FragColor.rgb = color; //vec3(waterViewSpaceDepth*0.01f);
+	FragColor.rgb = vec3(color); //vec3(waterViewSpaceDepth*0.01f);
+	//vec3(abs(flow.xy) * 0.01f, 0);
 	FragColor.a = 1.0f;
 }

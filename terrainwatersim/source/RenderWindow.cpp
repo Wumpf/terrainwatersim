@@ -26,6 +26,11 @@ RenderWindowGL::RenderWindowGL() :
   ezWindow(),
   m_hDeviceContext(NULL), m_hRC(NULL)
 {
+  if(GeneralConfig::g_ResolutionWidth.GetValue() == 0)
+    GeneralConfig::g_ResolutionWidth = 1024;
+  if(GeneralConfig::g_ResolutionHeight.GetValue() == 0)
+    GeneralConfig::g_ResolutionHeight = 600;
+
   m_CreationDescription.m_Title = "terrainwatersim";
   m_CreationDescription.m_ClientAreaSize.width = GeneralConfig::g_ResolutionWidth.GetValue();
   m_CreationDescription.m_ClientAreaSize.height = GeneralConfig::g_ResolutionHeight.GetValue();

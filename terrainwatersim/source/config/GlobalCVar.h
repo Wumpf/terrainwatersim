@@ -42,6 +42,11 @@ namespace SceneConfig
     extern ezStatic<ezEvent<ezVec3>> g_extinctionCoefficients_changedEvent;
 
     extern ezCVarFloat g_opaqueness;
+
+    extern ezCVarFloat g_normalMapRepeat;
+    extern ezCVarFloat g_normalLayerBlendInveral;
+    extern ezCVarFloat g_speedToNormalDistortion;
+    extern ezCVarFloat g_flowDistortionStrength;
   }
 
   namespace Simulation

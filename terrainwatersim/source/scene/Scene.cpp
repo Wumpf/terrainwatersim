@@ -37,6 +37,11 @@ namespace SceneConfig
     CVarRGBImpl(g_bigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
     CVarRGBImpl(g_extinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
     ezCVarFloat g_opaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
+
+    ezCVarFloat g_normalMapRepeat("Normalmap repeat", 30.0f, ezCVarFlags::Save, "group=\'Water Rendering\' min=5.0 max=100.0 step=1");
+    ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.3 step=0.01");
+    ezCVarFloat g_normalLayerBlendInveral("Normal layer blend interval", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.5 max=50.0 step=0.25");
+    ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.1f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
   }
 
   namespace Simulation
@@ -151,6 +156,13 @@ void Scene::InitConfig()
 
   SceneConfig::WaterRendering::g_opaqueness.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());));
 
+  SceneConfig::WaterRendering::g_normalMapRepeat.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterNormalMapRepeat(SceneConfig::WaterRendering::g_normalMapRepeat.GetValue());));
+  SceneConfig::WaterRendering::g_speedToNormalDistortion.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterSpeedToNormalDistortion(SceneConfig::WaterRendering::g_speedToNormalDistortion.GetValue());));
+  SceneConfig::WaterRendering::g_normalLayerBlendInveral.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterDistortionLayerBlendInterval(ezTime::Seconds(SceneConfig::WaterRendering::g_normalLayerBlendInveral.GetValue()));));
+  SceneConfig::WaterRendering::g_flowDistortionStrength.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterFlowDistortionStrength(SceneConfig::WaterRendering::g_flowDistortionStrength.GetValue());));
+
+
+    // Simulation
   SceneConfig::Simulation::g_SimulationStepsPerSecond.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());));
   SceneConfig::Simulation::g_FlowDamping.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());));
 
@@ -167,6 +179,11 @@ void Scene::InitConfig()
   setSurfaceColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_surfaceColorR));
   setWaterExtinctionCoef(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_extinctionCoefficientsR));
   m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());
+
+  m_pTerrain->SetWaterNormalMapRepeat(SceneConfig::WaterRendering::g_normalMapRepeat.GetValue());
+  m_pTerrain->SetWaterSpeedToNormalDistortion(SceneConfig::WaterRendering::g_speedToNormalDistortion.GetValue());
+  m_pTerrain->SetWaterDistortionLayerBlendInterval(ezTime::Seconds(SceneConfig::WaterRendering::g_normalLayerBlendInveral.GetValue()));
+  m_pTerrain->SetWaterFlowDistortionStrength(SceneConfig::WaterRendering::g_flowDistortionStrength.GetValue());
 
   m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());
   m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());

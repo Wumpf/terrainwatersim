@@ -49,11 +49,16 @@ public:
   void SetTerrainSpecularPower(float terrainSpecularPower) { m_terrainRenderingUBO["SpecularPower"].Set(terrainSpecularPower); }
 
     // Water
+      // Appearance
   void SetWaterBigDepthColor(const ezVec3& bigDepthColor)    { m_waterRenderingUBO["BigDepthColor"].Set(bigDepthColor); }
   void SetWaterSurfaceColor(const ezVec3& surfaceColor)      { m_waterRenderingUBO["SurfaceColor"].Set(surfaceColor); }
   void SetWaterExtinctionCoefficients(const ezVec3& extinctionCoefficients) { m_waterRenderingUBO["ColorExtinctionCoefficient"].Set(extinctionCoefficients); }
   void SetWaterOpaqueness(float waterOpaqueness)             { m_waterRenderingUBO["Opaqueness"].Set(waterOpaqueness); }
-
+      // Flow
+  void SetWaterSpeedToNormalDistortion(float speedToNormalDistortion) { m_waterRenderingUBO["SpeedToNormalDistortion"].Set(speedToNormalDistortion); }
+  void SetWaterDistortionLayerBlendInterval(ezTime interval) { m_waterDistortionLayerBlendInterval = interval; }
+  void SetWaterFlowDistortionStrength(float distortionStrength) { m_waterFlowDistortionStrength = distortionStrength; }
+  void SetWaterNormalMapRepeat(float normalMapRepeat) { m_waterRenderingUBO["NormalMapRepeat"].Set(normalMapRepeat); }
 
   // Simulation
   float GetSimulationStepsPerSecond() const { return static_cast<float>(1.0f / m_simulationStepLength.GetSeconds() + 0.5f); }
@@ -89,6 +94,9 @@ private:
   static const float m_maxTesselationFactor;
   bool m_anisotropicFiltering;
   static const float m_refractionTextureSizeFactor;
+    // Waterflow
+  ezTime m_waterDistortionLayerBlendInterval;
+  float m_waterFlowDistortionStrength;
 
   // State
   ezTime m_timeSinceLastSimulationStep;
@@ -98,7 +106,8 @@ private:
   class InstancedGeomClipMapping* m_pGeomClipMaps;
 
   gl::Texture2D* m_pTerrainData;
-  gl::Texture2D* m_pWaterFlow;
+  gl::Texture2D* m_pWaterOutgoingFlow;
+  gl::Texture2D* m_pWaterFlowMap;
 
     // Shader
   gl::ShaderObject m_updateFlowShader;
@@ -114,14 +123,20 @@ private:
   gl::UniformBuffer m_waterRenderingUBO;
 
     // Samplers
+  gl::SamplerId m_texturingSamplerObjectDataGrids;
   gl::SamplerId m_texturingSamplerObjectAnisotropic;
   gl::SamplerId m_texturingSamplerObjectTrilinear;
+
+    // Water Textures
+  //ezUniquePtr<gl::Texture2D> m_pTextureFoam;
 
     // Terrain Textures
   ezUniquePtr<gl::Texture2D> m_pTextureGrassDiffuseSpec;
   ezUniquePtr<gl::Texture2D> m_pTextureStoneDiffuseSpec;
   ezUniquePtr<gl::Texture2D> m_pTextureGrassNormalHeight;
   ezUniquePtr<gl::Texture2D> m_pTextureStoneNormalHeight;
+
+  ezUniquePtr<gl::Texture2D> m_pWaterNormalMap;
 
   ezUniquePtr<gl::Texture2D> m_pRefractionTexture;
   ezUniquePtr<gl::FramebufferObject> m_pRefractionFBO;  // needed for drawing to (resolve)

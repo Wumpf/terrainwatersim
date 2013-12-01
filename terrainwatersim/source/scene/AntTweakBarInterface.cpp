@@ -171,6 +171,9 @@ ezResult AntTweakBarInterface::Init()
 
   ADD_STAT_TO_TWEAKBAR("Water Draw Time", "group=\'Water Rendering\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_wireframe);
+
+  TwAddSeparator(m_pTweakBar, "Colors", "group=\'Water Rendering\'");
+
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorR);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorG);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorB);
@@ -181,6 +184,13 @@ ezResult AntTweakBarInterface::Init()
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorG);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorB);
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_opaqueness);
+
+  TwAddSeparator(m_pTweakBar, "Flow", "group=\'Water Rendering\'");
+
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_normalMapRepeat);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_normalLayerBlendInveral);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_speedToNormalDistortion);
+  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_flowDistortionStrength);
 
   ADD_STAT_TO_TWEAKBAR("Simulation Time", "group=\'Simulation\'");
   ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);
