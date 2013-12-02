@@ -61,20 +61,26 @@ void main()
 
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
 	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
-	float noise = texture(Noise, In.HeightmapCoord*4).x;
-	float distortionBlend = smoothstep(0, 1, abs(fract(FlowDistortionTimer + noise) * 2 - 1));	// smoothstep is the solution to every hack! it.. just looks better with it!
+	float noise = texture(Noise, In.HeightmapCoord*6).x;
+
+	float distortTimer = FlowDistortionTimer + noise;
+	float distortionFactor0 = fract(distortTimer);
+	float distortionFactor1 = fract(distortTimer + 0.5f);
+	float distortionBlend = abs(distortionFactor0 * 2 - 1);
+
 	vec2 normalmapCoord = In.HeightmapCoord * NormalMapRepeat;
-	vec2 normalmapCoord0 = normalmapCoord + flow * (1-distortionBlend) * FlowDistortionStrength;
-	vec2 normalmapCoord1 = normalmapCoord.xy + flow * distortionBlend * FlowDistortionStrength + vec2(0.4f);
+	vec2 flowDistortion = flow * FlowDistortionStrength;
+	vec2 normalmapCoord0 = normalmapCoord + distortionFactor0 * flowDistortion;
+	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.4f);
 
 	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xzy;
 	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xzy;
-	vec3 normalMap = mix(normalMapLayer0, normalMapLayer1, distortionBlend);
-	vec3 normalMapNormal = normalMap * 2.0f - vec3(1.0f);
+	vec3 normalMapNormal = mix(normalMapLayer0, normalMapLayer1, distortionBlend);
 		// scale with speed
 	float flowSpeedSq = dot(flow, flow);
 	float flowSpeed = sqrt(flowSpeedSq);
-	normalMapNormal.xz *= SpeedToNormalDistortion * flowSpeed;
+	normalMapNormal = normalMapNormal * 2.0f - vec3(1.0f);
+	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
 	vec3 normal = normalize(ComputeNormal(In.HeightmapCoord) + normalMapNormal);
@@ -132,8 +138,9 @@ void main()
 	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
 	// All non-refractive parts (water self color) are lit with nDotL
 	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
-	vec3 waterColor = mix(refractionTexture, SurfaceColor * GlobalDirLightColor * nDotL, saturate(waterViewSpaceDepth * Opaqueness));
-	vec3 refractionColor = mix(BigDepthColor * nDotL, waterColor, colorExtinction);
+	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
+	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterViewSpaceDepth * Opaqueness));
+	vec3 refractionColor = mix(BigDepthColor, waterColor, colorExtinction);
 
 	// Reflection
 	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
@@ -147,7 +154,7 @@ void main()
 	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25f));
 
 	// Foam for fast water - just reuse the same coord and technique from the normalmaps
-	const float SpeedToFoamBlend = 0.0002f;
+	const float SpeedToFoamBlend = 0.000025f;
 	vec4 foam0 = texture(Foam, normalmapCoord0);
 	vec4 foam1 = texture(Foam, normalmapCoord1);
 	vec4 foam = mix(foam0, foam1, distortionBlend);
@@ -157,6 +164,6 @@ void main()
 	color = ApplyFog(color, cameraDistance, toCamera);
 
 	// Color output
-	FragColor.rgb = vec3(color);
+	FragColor.rgb = color;
 	FragColor.a = 1.0f;
 }

@@ -39,7 +39,7 @@ namespace SceneConfig
     ezCVarFloat g_opaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
 
     ezCVarFloat g_normalMapRepeat("Normalmap repeat", 30.0f, ezCVarFlags::Save, "group=\'Water Rendering\' min=5.0 max=100.0 step=1");
-    ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.3 step=0.01");
+    ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.3 step=0.001");
     ezCVarFloat g_normalLayerBlendInveral("Normal layer blend interval", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.5 max=50.0 step=0.25");
     ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.001f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.1 step=0.0005");
   }
@@ -72,7 +72,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   // global ubo inits
   InitGlobalUBO();
 
-  ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 100, m_pTerrain->GetTerrainWorldSize() / 2);
+  ezVec3 vCameraPos(m_pTerrain->GetTerrainWorldSize() / 2, 200, m_pTerrain->GetTerrainWorldSize() / 2);
   m_pCamera->SetPosition(vCameraPos);
 
   // Shader for buffer copy operations
