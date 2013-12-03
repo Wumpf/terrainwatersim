@@ -46,7 +46,7 @@ namespace gl
     auto uniformBufferInfoIterator = shader.GetUniformBufferInfo().Find(sBufferName);
     if(!uniformBufferInfoIterator.IsValid())
     {
-      ezLog::Error("shader doesn't contain a uniform buffer meta block info with the name \"%s\"!", sBufferName.GetData());
+      ezLog::Error("Shader \"%s\" doesn't contain a uniform buffer meta block info with the name \"%s\"!", shader.GetName().GetData(), sBufferName.GetData());
       return EZ_FAILURE;
     }
 
@@ -58,32 +58,39 @@ namespace gl
 
   ezResult UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const ezString& sBufferName)
   {
-    EZ_ASSERT(metaInfos.size() != 0, "Meta info list is empty!");
-    EZ_ASSERT(*metaInfos.begin() != NULL, "First shader is NULL");
-    ezResult result = Init(**metaInfos.begin(), sBufferName);
-    if(result == EZ_FAILURE)
-      return result;
+    EZ_ASSERT(metaInfos.size() != 0, "Meta info lookup list is empty!");
 
+    bool initialized = false;
     int i = 0;
     for(auto shaderObjectIt = metaInfos.begin(); shaderObjectIt != metaInfos.end(); ++shaderObjectIt, ++i)
     {
       if(*shaderObjectIt == NULL) // the first was fatal, this one is skippable
       {
-        ezLog::Warning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());
+        ezLog::Warning("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", 
+                        (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData());
         continue;
       }
       auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().Find(sBufferName);
       if(!uniformBufferInfoIterator.IsValid()) // the first was fatal, this one is skippable
       {
-        ezLog::SeriousWarning("ShaderObject %i in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", i, sBufferName.GetData());
+        ezLog::Warning("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", 
+                        (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData());
+        continue;
+      }
+
+      if(!initialized)
+      {
+        ezResult result = Init(**metaInfos.begin(), sBufferName);
+        if(result == EZ_SUCCESS)
+          initialized = true;
         continue;
       }
 
       // sanity check
       if(uniformBufferInfoIterator.Value().iBufferDataSizeByte != m_uiBufferSizeBytes)
       {
-        ezLog::SeriousWarning("ShaderObject %i in list for uniform buffer \"%s\" initialization gives size %i, first shader gave size %i! Skipping..", 
-                                 i, sBufferName.GetData(), uniformBufferInfoIterator.Value().iBufferDataSizeByte, m_uiBufferSizeBytes);    
+        ezLog::Warning("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization gives size %i, first shader gave size %i! Skipping..",
+                   (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData(), uniformBufferInfoIterator.Value().iBufferDataSizeByte, m_uiBufferSizeBytes);
         continue;
       }
 
@@ -97,13 +104,12 @@ namespace gl
           const gl::UniformVariableInfo* otherVar = &varIt.Value();
           if(ezMemoryUtils::ByteCompare(ownVar, otherVar) != 0)
           {
-            ezLog::Error("ShaderObject %i in list for uniform buffer \"%s\" initialization has a description of variable \"%s\" that doesn't match with the ones before!", 
-                     i, sBufferName.GetData(), varIt.Key().GetData());   
+            ezLog::Error("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization has a description of variable \"%s\" that doesn't match with the ones before!", 
+                    (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData(), varIt.Key().GetData());
           }
         }
         else // new one
         {
-
           m_Variables.Insert(varIt.Key(), Variable(varIt.Value(), this));
           // todo? check overlaps
         }

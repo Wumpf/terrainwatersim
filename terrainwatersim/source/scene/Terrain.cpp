@@ -28,6 +28,12 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_flowDamping(0.98f),
   m_flowAcceleration(10.0f),
 
+  m_terrainRenderShader("terrainRender"),
+  m_waterRenderShader("waterRender"),
+  m_applyFlowShader("applyFlow"),
+  m_updateFlowShader("updateFlow"),
+  m_copyShader("copyRefractionShader"),
+
   m_pTextureGrassDiffuseSpec(NULL),
   m_pTextureStoneDiffuseSpec(NULL),
   m_pTextureGrassNormalHeight(NULL),
@@ -39,6 +45,8 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_pRefractionFBO(NULL),
   m_pRefractionTexture(NULL)
 {
+  EZ_LOG_BLOCK("Terrain");
+
   m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_worldSize, m_minPatchSizeWorld);
 
   // shader init
@@ -64,7 +72,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_copyShader.CreateProgram();
 
   // UBO init
-  m_landscapeInfoUBO.Init({ &m_terrainRenderShader, &m_applyFlowShader }, "GlobalLandscapeInfo");
+  m_landscapeInfoUBO.Init({ &m_terrainRenderShader, &m_waterRenderShader }, "GlobalLandscapeInfo");
   m_simulationParametersUBO.Init({ &m_applyFlowShader, &m_updateFlowShader }, "SimulationParameters");
   m_waterRenderingUBO.Init({ &m_waterRenderShader }, "WaterRendering");
   m_terrainRenderingUBO.Init({ &m_terrainRenderShader }, "TerrainRendering");

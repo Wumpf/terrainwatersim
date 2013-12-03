@@ -5,8 +5,12 @@
 #include "gl/resources/FramebufferObject.h"
 
 
-Background::Background(ezUInt32 cubemapResolution, GLenum format)
+Background::Background(ezUInt32 cubemapResolution, GLenum format) :
+  m_backgroundShader("renderSkybox"),
+  m_scatteringShader("athmosphericScattering")
 {
+  EZ_LOG_BLOCK("Background");
+
   m_backgroundShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
   m_backgroundShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "background.frag");
   m_backgroundShader.CreateProgram();

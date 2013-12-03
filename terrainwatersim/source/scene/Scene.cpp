@@ -53,7 +53,7 @@ namespace SceneConfig
 }
 
 Scene::Scene(const RenderWindowGL& renderWindow) :
-  m_pCopyShader(EZ_DEFAULT_NEW_UNIQUE(gl::ShaderObject)),
+  m_pCopyShader(EZ_DEFAULT_NEW_UNIQUE(gl::ShaderObject, "copySceneShader")),
 
   m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
   m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),

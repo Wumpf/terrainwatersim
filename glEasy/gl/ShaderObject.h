@@ -29,8 +29,12 @@ namespace gl
       NUM_SHADER_TYPES
     };
 
-    ShaderObject();
+    /// Constructs ShaderObject
+    /// \param shaderName   Name mainly used for debugging and identification.
+    ShaderObject(const ezString& shaderName);
     ~ShaderObject();
+
+    const ezString& GetName() const { return m_name; }
 
     ezResult AddShaderFromFile(ShaderType type, const ezString& sFilename);
     ezResult AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName);
@@ -100,9 +104,9 @@ namespace gl
 
   private:
     /// Print information about the compiling step
-    static void PrintShaderInfoLog(ShaderId shader, const ezString& sShaderName);
+    void PrintShaderInfoLog(ShaderId shader, const ezString& sShaderName);
     /// Print information about the linking step
-    static void PrintProgramInfoLog(ProgramId program);
+    void PrintProgramInfoLog(ProgramId program);
 
     /// file handler event for hot reloading
     void FileEventHandler(const ezString& changedShaderFile);
@@ -119,6 +123,10 @@ namespace gl
     template<typename BufferVariableType>
     void QueryBlockInformations(ezMap<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName);
     
+
+    /// Name for identifing at runtime
+    const ezString m_name;
+
     // the program itself
     ProgramId m_Program;
     bool m_bContainsAssembledProgram;

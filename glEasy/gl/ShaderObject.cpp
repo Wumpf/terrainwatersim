@@ -19,7 +19,8 @@ namespace gl
 
   const ShaderObject* ShaderObject::s_pCurrentlyActiveShaderObject = NULL;
 
-  ShaderObject::ShaderObject() :
+  ShaderObject::ShaderObject(const ezString& name) :
+    m_name(name),
     m_Program(0),
     m_bContainsAssembledProgram(false)
   {
@@ -439,13 +440,13 @@ namespace gl
 
   GLuint ShaderObject::GetProgram() const
   {
-    EZ_ASSERT(m_bContainsAssembledProgram, "No shader program ready yet. Call CreateProgram first!");
+    EZ_ASSERT(m_bContainsAssembledProgram, "No shader program ready yet for ShaderObject \"%s\". Call CreateProgram first!", m_name.GetData());
     return m_Program;
   }
 
   void ShaderObject::Activate() const 	
   {
-    EZ_ASSERT(m_bContainsAssembledProgram, "No shader program ready yet. Call CreateProgram first!");
+    EZ_ASSERT(m_bContainsAssembledProgram, "No shader program ready yet for ShaderObject \"%s\". Call CreateProgram first!", m_name.GetData());
     glUseProgram(m_Program);
     s_pCurrentlyActiveShaderObject = this;
   }
@@ -533,11 +534,11 @@ namespace gl
     pInfoLog[charsWritten] = '\0';
     if(strlen(pInfoLog.GetPtr()) > 0)
     {
-      ezLog::Error("Shader %s compiled. Output:", sShaderName.GetData());
+      ezLog::Error("ShaderObject \"%s\": Shader %s compiled. Output:", m_name.GetData(), sShaderName.GetData());
       ezLog::Error(pInfoLog.GetPtr());
     }
     else
-      ezLog::Success("Shader %s compiled successfully", sShaderName.GetData());
+      ezLog::Success("ShaderObject \"%s\": Shader %s compiled successfully", m_name.GetData(), sShaderName.GetData());
 
     EZ_DEFAULT_DELETE_ARRAY(pInfoLog);
 #endif
@@ -558,10 +559,10 @@ namespace gl
     if(strlen(pInfoLog.GetPtr()) > 0)
     {
      // ezLog::Error("Linked program. Output:");
-      ezLog::Error(pInfoLog.GetPtr());
+      ezLog::Error("ShaderObject \"%s\" Error:\n%s", m_name.GetData(), pInfoLog.GetPtr());
     }
     else
-      ezLog::Success("Linked program successfully");
+      ezLog::Success("ShaderObject \"%s\": Linked program successfully", m_name.GetData());
 
     EZ_DEFAULT_DELETE_ARRAY(pInfoLog);
 #endif
