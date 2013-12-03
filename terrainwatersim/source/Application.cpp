@@ -18,6 +18,8 @@
 #include "FolderChangeWatcher.h"
 #include "GlobalEvents.h"
 
+#include <gl/ShaderObject.h>
+
 
 Application::Application() :
    m_pHTMLLogWriter(nullptr),
@@ -44,7 +46,6 @@ void Application::AfterEngineInit()
   ezCVar::LoadCVars();
 
   // global events
-  GlobalEvents::g_pShaderFileChanged = EZ_DEFAULT_NEW(ezEvent<const ezString&>);
   GlobalEvents::g_pWindowMessage = EZ_DEFAULT_NEW(ezEvent<const GlobalEvents::Win32Message&>);
 
   // setup log
@@ -85,7 +86,6 @@ void Application::BeforeEngineShutdown()
   EZ_DEFAULT_DELETE(m_pOnScreenLogWriter);
   
   EZ_DEFAULT_DELETE(m_pShaderChangesWatcher);
-  EZ_DEFAULT_DELETE(GlobalEvents::g_pShaderFileChanged);
   EZ_DEFAULT_DELETE(GlobalEvents::g_pWindowMessage);
 
   ezGlobalLog::RemoveLogWriter(ezLoggingEvent::Handler(&ezLogWriter::HTML::LogMessageHandler, m_pHTMLLogWriter));
@@ -121,7 +121,7 @@ void Application::Update(ezTime lastFrameDuration)
   ezString changedShaderFile = m_pShaderChangesWatcher->PopChangedFile();
   while(changedShaderFile != "")
   {
-    GlobalEvents::g_pShaderFileChanged->Broadcast(changedShaderFile);
+    gl::ShaderObject::s_shaderFileChangedEvent.GetStatic().Broadcast(changedShaderFile);
     changedShaderFile = m_pShaderChangesWatcher->PopChangedFile();
   }
 

@@ -77,7 +77,16 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 
 	// Water color
 	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
+	// This leaves the questions: What are convincint Extinction coefficients?
+	
+	// For that solved the equations exp(-4.5 * R) = exp(-75 * G) = exp(-300 * B) = 0.001 (depths are from link above)
+	// .. which is.. convincing pseudo physical! :)
+	const vec3 ColorExtinctionCoefficient_ = vec3(1.53506f, 0.0921034f, 0.0230259f);
+
+
 	// All non-refractive parts (water self color) are lit with nDotL
+
+
 	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
 	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
 	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterViewSpaceDepth * Opaqueness));
