@@ -91,13 +91,8 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
 
 void Scene::InitGlobalUBO()
 {
-  std::initializer_list<const gl::ShaderObject*> shaderList =
-  { 
-    &m_pBackground->GetBackgroundShader(), &m_pBackground->GetScatteringShader(), 
-    &m_pTerrain->GetTerrainShader(), &m_pTerrain->GetWaterShader()
-  };
-  m_CameraUBO.Init(shaderList, "Camera");
-  m_GlobalSceneInfo.Init(shaderList, "GlobalSceneInfo");
+  m_CameraUBO.Init({ &m_pTerrain->GetTerrainShader(), &m_pTerrain->GetWaterShader(), &m_pBackground->GetBackgroundShader() }, "Camera");
+  m_GlobalSceneInfo.Init({ &m_pTerrain->GetTerrainShader(), &m_pBackground->GetScatteringShader() }, "GlobalSceneInfo");
 
   /*    ezDynamicArray<const gl::ShaderObject*> timeUBOusingShader;
   cameraUBOusingShader.PushBack(&m_DirectVolVisShader);

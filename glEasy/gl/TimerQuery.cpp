@@ -4,34 +4,54 @@
 namespace gl
 {
 
-  TimerQuery::TimerQuery() : m_querySubmitted(false)
+  TimerQuery::TimerQuery(bool doubleBuffered) : 
+    m_doubleBuffered(doubleBuffered),
+    m_useQueryIdx(0),
+    m_getQueryIdx(doubleBuffered ? 1 : 0)
   {
-    glGenQueries(1, &m_Query);
+    if(m_doubleBuffered)
+      glGenQueries(2, m_queries);
+    else
+      glGenQueries(1, m_queries);
+
+    m_queryResultAvailable[0] = false;
+    m_queryResultAvailable[1] = false;
   }
 
   TimerQuery::~TimerQuery(void)
   {
-    glDeleteQueries(1, &m_Query);
+    if(m_doubleBuffered)
+      glDeleteQueries(2, m_queries);
+    else
+      glDeleteQueries(1, m_queries);
   }
 
   void TimerQuery::Start()
   {
-    m_querySubmitted = false;
-    glBeginQuery(GL_TIME_ELAPSED, m_Query);
+    if(m_doubleBuffered)
+    {
+      m_getQueryIdx = m_useQueryIdx;
+      m_useQueryIdx = 1 - m_useQueryIdx;
+    }
+
+    m_queryResultAvailable[m_useQueryIdx] = false;
+    glBeginQuery(GL_TIME_ELAPSED, m_queries[m_useQueryIdx]);
   }
 
   void TimerQuery::End()
   {
     glEndQuery(GL_TIME_ELAPSED);
-    m_querySubmitted = true;
+    m_queryResultAvailable[m_useQueryIdx] = true;
+
+
   }
 
   bool TimerQuery::IsResultAvailable()
   {
-    if(m_querySubmitted)
+    if(m_queryResultAvailable[m_getQueryIdx])
     {
       GLuint available = 0;
-      glGetQueryObjectuiv(m_Query, GL_QUERY_RESULT_AVAILABLE, &available);
+      glGetQueryObjectuiv(m_queries[m_getQueryIdx], GL_QUERY_RESULT_AVAILABLE, &available);
       return available == GL_TRUE;
     }
     else
@@ -40,10 +60,10 @@ namespace gl
 
   ezTime TimerQuery::GetLastTimeElapsed(bool wait)
   {
-    if(m_querySubmitted && (wait || IsResultAvailable()))
+    if(m_queryResultAvailable[m_getQueryIdx] && (wait || IsResultAvailable()))
     {
       GLuint time = 0;
-      glGetQueryObjectuiv(m_Query, GL_QUERY_RESULT, &time);
+      glGetQueryObjectuiv(m_queries[m_getQueryIdx], GL_QUERY_RESULT, &time);
 
       m_lastResult = ezTime::Nanoseconds(time);
     }

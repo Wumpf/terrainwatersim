@@ -178,3 +178,5 @@ pip-log.txt
 /voxelsurfacerealtimeexp/*.db
 /terrainwatersim/x64/Debug
 /terrainwatersim/x64/Release
+/glEasy/x64/Debug
+/glEasy/x64/Release
