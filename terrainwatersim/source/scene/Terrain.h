@@ -127,19 +127,19 @@ private:
   gl::SamplerId m_texturingSamplerObjectTrilinear;
 
     // Water Textures
-  //ezUniquePtr<gl::Texture2D> m_pTextureFoam;
+  //gl::Texture2D* m_pTextureFoam;
 
     // Terrain Textures
-  ezUniquePtr<gl::Texture2D> m_pTextureGrassDiffuseSpec;
-  ezUniquePtr<gl::Texture2D> m_pTextureStoneDiffuseSpec;
-  ezUniquePtr<gl::Texture2D> m_pTextureGrassNormalHeight;
-  ezUniquePtr<gl::Texture2D> m_pTextureStoneNormalHeight;
+  gl::Texture2D* m_pTextureGrassDiffuseSpec;
+  gl::Texture2D* m_pTextureStoneDiffuseSpec;
+  gl::Texture2D* m_pTextureGrassNormalHeight;
+  gl::Texture2D* m_pTextureStoneNormalHeight;
 
-  ezUniquePtr<gl::Texture2D> m_pWaterNormalMap;
-  ezUniquePtr<gl::Texture2D> m_pLowResNoise;
-  ezUniquePtr<gl::Texture2D> m_pFoamTexture;
+  gl::Texture2D* m_pWaterNormalMap;
+  gl::Texture2D* m_pLowResNoise;
+  gl::Texture2D* m_pFoamTexture;
 
-  ezUniquePtr<gl::Texture2D> m_pRefractionTexture;
-  ezUniquePtr<gl::FramebufferObject> m_pRefractionFBO;  // needed for drawing to (resolve)
+  gl::Texture2D* m_pRefractionTexture;
+  gl::FramebufferObject* m_pRefractionFBO;  // needed for drawing to (resolve)
 };
 

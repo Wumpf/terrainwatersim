@@ -11,11 +11,13 @@
 #include <Foundation/io/OSFile.h>
 #include <Foundation/Basics/Types/ArrayPtr.h>
 
-#include "..\GlobalEvents.h"
-
 namespace gl
 {
-  const ShaderObject* ShaderObject::g_pCurrentlyActiveShaderObject = NULL;
+  /// Global event for changed shader files.
+  /// All Shader Objects will register upon this event. If any shader file is changed, just brodcast here!
+  ezStatic<ezEvent<const ezString&>> ShaderObject::s_shaderFileChangedEvent;
+
+  const ShaderObject* ShaderObject::s_pCurrentlyActiveShaderObject = NULL;
 
   ShaderObject::ShaderObject() :
     m_Program(0),
@@ -28,15 +30,15 @@ namespace gl
       shader.bLoaded = false;
     }
 
-    GlobalEvents::g_pShaderFileChanged->AddEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
+    s_shaderFileChangedEvent.GetStatic().AddEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
   }
 
   ShaderObject::~ShaderObject()
   {
-    if(g_pCurrentlyActiveShaderObject == this)
+    if(s_pCurrentlyActiveShaderObject == this)
     {
       glUseProgram(0);
-      g_pCurrentlyActiveShaderObject = NULL;
+      s_pCurrentlyActiveShaderObject = NULL;
     }
 
     for(Shader& shader : m_aShader)
@@ -48,7 +50,7 @@ namespace gl
     if(m_bContainsAssembledProgram)
       glDeleteProgram(m_Program);
 
-    GlobalEvents::g_pShaderFileChanged->RemoveEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
+    s_shaderFileChangedEvent.GetStatic().RemoveEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
   }
 
   ezResult ShaderObject::AddShaderFromFile(ShaderType Type, const ezString& sFilename)
@@ -445,7 +447,7 @@ namespace gl
   {
     EZ_ASSERT(m_bContainsAssembledProgram, "No shader program ready yet. Call CreateProgram first!");
     glUseProgram(m_Program);
-    g_pCurrentlyActiveShaderObject = this;
+    s_pCurrentlyActiveShaderObject = this;
   }
 
   ezResult ShaderObject::BindUBO(UniformBuffer& ubo)

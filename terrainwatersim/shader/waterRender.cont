@@ -8,7 +8,7 @@ layout(location = 0) in ContInVertex In[];
 layout(location = 2) in int UnderTerrain[];
 layout(location = 0) out EvalInVertex Out[];
 
-// Output quads
+// Output tris
 layout(vertices = 3) out;
 
 void main()
@@ -29,7 +29,7 @@ void main()
 			for(int i=0; i<3; ++i)	// unroll in ogl 4.3?
 			{
 				int second = (i+1) % 3;
-				gl_TessLevelOuter[(i+2)%3] = clamp(EstimateSphereSizeAroundEdge(In[i].WorldPos, In[second].WorldPos) * TrianglesPerClipSpaceUnit, 1.0f, MaxTesselationFactor);
+				gl_TessLevelOuter[(i+2)%3] = clamp(EstimateSphereSizeAroundEdge(In[i].WorldPos, In[second].WorldPos) * TrianglesPerClipSpaceUnit, 2.0f, MaxTesselationFactor);
 			}
 
 			gl_TessLevelInner[0] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[1] + gl_TessLevelOuter[2]) * 0.25f; 

@@ -1,6 +1,5 @@
 #include "PCH.h"
 #include "Font.h"
-#include "..\RenderWindow.h"
 
 namespace gl
 {

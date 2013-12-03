@@ -151,12 +151,14 @@ void Application::SetupFileSystem()
   ezFileSystem::AddDataDirectory(applicationDir.GetData(), ezFileSystem::AllowWrites, "general", "");
   
   ezStringBuilder shaderDir(applicationDir);
-  shaderDir.AppendPath("..", "..", "terrainwatersim", "shader"); // dev only! otherwise the realtime shader editing doesn't work as expected in rel+debug
+  shaderDir.AppendPath("..", "..", "..", "terrainwatersim"); // dev only! otherwise the realtime shader editing doesn't work as expected (since path is too long for automated copy -.-)
+  shaderDir.AppendPath("Shader");
   ezFileSystem::AddDataDirectory(shaderDir.GetData(), ezFileSystem::ReadOnly, "graphics", "");
   m_pShaderChangesWatcher = EZ_DEFAULT_NEW(FolderChangeWatcher)(shaderDir.GetData());
 
   ezStringBuilder textureDir(applicationDir);
-  textureDir.AppendPath("..", "..", "terrainwatersim", "textures"); // dev only! otherwise manual copies must be made
+  textureDir.AppendPath("..", "..", "..", "terrainwatersim"); // dev only! otherwise manual copies must be made (since path is too long for automated copy -.-)
+  textureDir.AppendPath("textures");
   ezFileSystem::AddDataDirectory(textureDir.GetData(), ezFileSystem::ReadOnly, "graphics", "");
   // optionally a texture change watcher could be established here ;)
 }

@@ -32,7 +32,14 @@ layout(binding = 6) uniform WaterRendering
 	float FlowDistortionTimer;
 };
 
-vec3 ComputeNormal(in vec2 heightmapCoord)
+const float RefractionIndex_Water = 1.33f;
+const float RefractionIndex_Air = 1.00029f;
+const float RefractionAirToWater = RefractionIndex_Air / RefractionIndex_Water;
+const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water) * (RefractionIndex_Air - RefractionIndex_Water) / 
+								   ((RefractionIndex_Air + RefractionIndex_Water) * (RefractionIndex_Air + RefractionIndex_Water));
+
+
+vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 {
 	const float worldStep = 1.0f;
 	vec4 terrainInfo;
@@ -50,15 +57,37 @@ vec3 ComputeNormal(in vec2 heightmapCoord)
 	return normalize(cross(vecdz, vecdx));
 }
 
+vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterViewSpaceDepth, vec3 projectiveCoord, out vec3 refractionTexture) 
+{
+	// Refraction Texture fetch
+	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
+	// So we just blend over to no refraction at all if necessary
+	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, RefractionAirToWater);
+	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth;
+	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
+	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
+	refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
+	vec3 projectiveTexture = textureLod(RefractionTexture, projectiveCoord.xy / projectiveCoord.z, 0).rgb;
+
+	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
+	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
+	projectiveWeight = pow(projectiveWeight, 32);
+	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
+
+
+	// Water color
+	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
+	// All non-refractive parts (water self color) are lit with nDotL
+	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
+	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
+	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterViewSpaceDepth * Opaqueness));
+	
+
+	return mix(BigDepthColor, waterColor, colorExtinction);
+}
+
 void main()
 {
-	const float RefractionIndex_Water = 1.33f;
-	const float RefractionIndex_Air = 1.00029f;
-	const float RefractoinAirToWater = RefractionIndex_Air / RefractionIndex_Water;
-	const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water) * (RefractionIndex_Air - RefractionIndex_Water) / 
-									   ((RefractionIndex_Air + RefractionIndex_Water) * (RefractionIndex_Air + RefractionIndex_Water));
-							  
-
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
 	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
 	float noise = texture(Noise, In.HeightmapCoord*6).x;
@@ -71,7 +100,7 @@ void main()
 	vec2 normalmapCoord = In.HeightmapCoord * NormalMapRepeat;
 	vec2 flowDistortion = flow * FlowDistortionStrength;
 	vec2 normalmapCoord0 = normalmapCoord + distortionFactor0 * flowDistortion;
-	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.4f);
+	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.3f);
 
 	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xzy;
 	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xzy;
@@ -83,7 +112,7 @@ void main()
 	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
-	vec3 normal = normalize(ComputeNormal(In.HeightmapCoord) + normalMapNormal);
+	vec3 normal = normalize(ComputeHeightmapNormal(In.HeightmapCoord) + normalMapNormal);
 
 
 	// vector to camera and camera distance
@@ -117,31 +146,9 @@ void main()
 	float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1f);
 
 
-
-	// Refraction Texture fetch
-	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
-	// So we just blend over to no refraction at all if necessary
-	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, RefractoinAirToWater);
-	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth;
-	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
-	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
-	vec3 refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
-	vec3 projectiveTexture = textureLod(RefractionTexture, In.ProjectiveCoord.xy / In.ProjectiveCoord.z, 0).rgb;
-
-	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
-	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
-	projectiveWeight = pow(projectiveWeight, 32);
-	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
-
-
-	// Water color
-	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
-	// All non-refractive parts (water self color) are lit with nDotL
-	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
-	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
-	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterViewSpaceDepth * Opaqueness));
-	vec3 refractionColor = mix(BigDepthColor, waterColor, colorExtinction);
-
+	// Refraction
+	vec3 refractionTexture;
+	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterViewSpaceDepth, In.ProjectiveCoord, refractionTexture);
 	// Reflection
 	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
 
@@ -154,7 +161,7 @@ void main()
 	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25f));
 
 	// Foam for fast water - just reuse the same coord and technique from the normalmaps
-	const float SpeedToFoamBlend = 0.000025f;
+	const float SpeedToFoamBlend = 0.00004f;
 	vec4 foam0 = texture(Foam, normalmapCoord0);
 	vec4 foam1 = texture(Foam, normalmapCoord1);
 	vec4 foam = mix(foam0, foam1, distortionBlend);

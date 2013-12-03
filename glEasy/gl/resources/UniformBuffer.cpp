@@ -12,7 +12,9 @@ namespace gl
     m_uiBufferSizeBytes(0),
     m_Variables(),
     m_sBufferName(""),
-    m_pBufferData(NULL)
+    m_pBufferData(NULL),
+    m_uiBufferDirtyRangeEnd(0),
+    m_uiBufferDirtyRangeStart(0)
   {
   }
 

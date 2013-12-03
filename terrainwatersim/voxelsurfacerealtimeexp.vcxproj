@@ -42,13 +42,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine;$(IncludePath)</IncludePath>
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Debug64\;$(LibraryPath)</LibraryPath>
+    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine;..\glEasy\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Debug64\;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;$(IncludePath)</IncludePath>
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Release64;$(LibraryPath)</LibraryPath>
+    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;..\glEasy\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Release64;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\bin\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -63,10 +65,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezInputWindows.lib;ezInputXBox360.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezInputWindows.lib;ezInputXBox360.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\Debug64" $(TargetDir) /Y /C</Command>
+      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\Debug64" $(TargetDir) /Y /C
+xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -86,7 +89,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezInputWindows.lib;ezInputXBox360.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezInputWindows.lib;ezInputXBox360.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(SolutionDir)..\ezEngine\Trunk\Output\Bin\Release64 $(TargetDir) /D /Y
@@ -94,25 +97,11 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\dependencies\include\stb_image\stb_image.h" />
     <ClInclude Include="source\Application.h" />
     <ClInclude Include="source\config\GlobalCVar.h" />
     <ClInclude Include="source\config\InputConfig.h" />
     <ClInclude Include="source\FolderChangeWatcher.h" />
     <ClInclude Include="source\GlobalEvents.h" />
-    <ClInclude Include="source\gl\Font.h" />
-    <ClInclude Include="source\gl\gl.h" />
-    <ClInclude Include="source\gl\GLUtils.h" />
-    <ClInclude Include="source\gl\resources\FramebufferObject.h" />
-    <ClInclude Include="source\gl\resources\textures\Texture.h" />
-    <ClInclude Include="source\gl\resources\textures\Texture2D.h" />
-    <ClInclude Include="source\gl\resources\textures\Texture3D.h" />
-    <ClInclude Include="source\gl\resources\textures\TextureCube.h" />
-    <ClInclude Include="source\gl\resources\UniformBuffer.h" />
-    <ClInclude Include="source\gl\ScreenAlignedTriangle.h" />
-    <ClInclude Include="source\gl\ShaderDataMetaInfo.h" />
-    <ClInclude Include="source\gl\ShaderObject.h" />
-    <ClInclude Include="source\gl\TimerQuery.h" />
     <ClInclude Include="source\math\camera\Camera.h" />
     <ClInclude Include="source\math\camera\FreeCamera.h" />
     <ClInclude Include="source\math\NoiseGenerator.h" />
@@ -145,28 +134,12 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\waterRender.cont" />
     <None Include="shader\waterRender.eval" />
     <None Include="shader\waterRender.frag" />
-    <None Include="source\gl\resources\UniformBuffer.inl" />
-    <None Include="source\gl\ShaderDataMetaInfo.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\include\stb_image\stb_image.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="source\Application.cpp" />
     <ClCompile Include="source\config\Input.cpp" />
     <ClCompile Include="source\FolderChangeWatcher.cpp" />
     <ClCompile Include="source\GlobalEvents.cpp" />
-    <ClCompile Include="source\gl\Font.cpp" />
-    <ClCompile Include="source\gl\GLUtils.cpp" />
-    <ClCompile Include="source\gl\resources\FramebufferObject.cpp" />
-    <ClCompile Include="source\gl\resources\textures\Texture.cpp" />
-    <ClCompile Include="source\gl\resources\textures\Texture2D.cpp" />
-    <ClCompile Include="source\gl\resources\textures\Texture3D.cpp" />
-    <ClCompile Include="source\gl\resources\textures\TextureCube.cpp" />
-    <ClCompile Include="source\gl\resources\UniformBuffer.cpp" />
-    <ClCompile Include="source\gl\ScreenAlignedTriangle.cpp" />
-    <ClCompile Include="source\gl\ShaderObject.cpp" />
-    <ClCompile Include="source\gl\TimerQuery.cpp" />
     <ClCompile Include="source\math\camera\Camera.cpp" />
     <ClCompile Include="source\math\camera\FreeCamera.cpp" />
     <ClCompile Include="source\math\NoiseGenerator.cpp" />

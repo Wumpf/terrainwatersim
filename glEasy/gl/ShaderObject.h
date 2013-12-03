@@ -94,6 +94,10 @@ namespace gl
 
  //   static void ResetShaderBinding();
 
+    /// Global event for changed shader files.
+    /// All Shader Objects will register upon this event. If any shader file is changed, just brodcast here!
+    static ezStatic<ezEvent<const ezString&>> s_shaderFileChangedEvent;
+
   private:
     /// Print information about the compiling step
     static void PrintShaderInfoLog(ShaderId shader, const ezString& sShaderName);
@@ -121,7 +125,7 @@ namespace gl
 
     /// currently active shader object
     /// As long as no user bypasses the Activate mechanism by calling glUseProgram, this pointer will always point the currently bound program.
-    static const ShaderObject* g_pCurrentlyActiveShaderObject;
+    static const ShaderObject* s_pCurrentlyActiveShaderObject;
 
     /// list of relevant files - if any of these changes a reload will be triggered
     ezMap<ezString, ShaderType> m_filesPerShaderType;

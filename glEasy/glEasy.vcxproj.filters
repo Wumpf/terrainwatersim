@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="gl\Font.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\GLUtils.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\ScreenAlignedTriangle.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\ShaderObject.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\TimerQuery.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\textures\Texture.cpp">
+      <Filter>gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\textures\Texture2D.cpp">
+      <Filter>gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\textures\Texture3D.cpp">
+      <Filter>gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\textures\TextureCube.cpp">
+      <Filter>gl\resources\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\UniformBuffer.cpp">
+      <Filter>gl\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\resources\FramebufferObject.cpp">
+      <Filter>gl\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="gl\PCH.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\include\stb_image\stb_image.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="gl\Font.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\gl.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\GLUtils.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\ScreenAlignedTriangle.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\ShaderDataMetaInfo.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\ShaderObject.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\TimerQuery.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\textures\Texture.h">
+      <Filter>gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\textures\Texture2D.h">
+      <Filter>gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\textures\Texture3D.h">
+      <Filter>gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\textures\TextureCube.h">
+      <Filter>gl\resources\textures</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\UniformBuffer.h">
+      <Filter>gl\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\resources\FramebufferObject.h">
+      <Filter>gl\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="gl\PCH.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\include\stb_image\stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="gl\ShaderDataMetaInfo.inl">
+      <Filter>gl</Filter>
+    </None>
+    <None Include="gl\resources\UniformBuffer.inl">
+      <Filter>gl\resources</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="gl">
+      <UniqueIdentifier>{da330df4-2d78-43c3-86f1-4e645e551aa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gl\resources">
+      <UniqueIdentifier>{6934a50d-73ff-4e9e-b387-9fdac243b667}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gl\resources\textures">
+      <UniqueIdentifier>{a5625d75-d227-4cef-b9a6-596d90d63a76}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
