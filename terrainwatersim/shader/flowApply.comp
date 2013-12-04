@@ -6,27 +6,38 @@ layout(binding = 0, rgba32f) restrict uniform image2D TerrainData;
 layout(binding = 1, rgba32f) restrict readonly uniform image2D OutgoingFlow;
 layout(binding = 2, rg16f) restrict writeonly uniform image2D FlowMap;
 
+shared vec4 flowCache[18*18]; 
+
+
 // compute shader size
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 18, local_size_y = 18, local_size_z = 1) in;
 void main()
 {
-	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 gridPosition = ivec2(gl_WorkGroupID.xy) * ivec2(16,16) + ivec2(gl_LocalInvocationID.xy) - ivec2(1,1);
+	uint textureCachePos = gl_LocalInvocationID.x + gl_LocalInvocationID.y*18;
 
-	// Read own terrain height
-	vec4 terrainInfo = imageLoad(TerrainData, gridPosition);
-	
-	// Todo: Shared memory optimizations
-	// Read outgoing flow
+	// sample own point and store in shared mem
 	vec4 flowOut = imageLoad(OutgoingFlow, gridPosition);
-	float flowOutX1 = imageLoad(OutgoingFlow, gridPosition + ivec2(1, 0)).y;
-	float flowOutX0 = imageLoad(OutgoingFlow, gridPosition + ivec2(-1, 0)).x;
-	float flowOutY1 = imageLoad(OutgoingFlow, gridPosition + ivec2(0, 1)).w;
-	float flowOutY0 = imageLoad(OutgoingFlow, gridPosition + ivec2(0, -1)).z;
+	flowCache[textureCachePos] = flowOut;
 
+	// border threads (useless now)
+	if(any(equal(gl_LocalInvocationID.xy, uvec2(0))) || any(equal(gl_LocalInvocationID.xy, uvec2(17))) )
+		return;
+
+	// sync!
+	barrier();
+
+	
+	// Read outgoing flow
+	float flowOutX1 = flowCache[textureCachePos+1].y;
+	float flowOutX0 = flowCache[textureCachePos-1].x;
+	float flowOutY1 = flowCache[textureCachePos+18].w;
+	float flowOutY0 = flowCache[textureCachePos-18].z;
 
 	// Compute new water height.
 	float ingoingFlow = flowOutX1 + flowOutX0 + flowOutY1 + flowOutY0;
 	float outgoingFlow = flowOut.x + flowOut.y + flowOut.z + flowOut.w;
+	vec4 terrainInfo = imageLoad(TerrainData, gridPosition);	// Read own terrain height
 	float newWaterAmount = max(0, terrainInfo.a + (ingoingFlow - outgoingFlow) * CellAreaInv_timeScaled);
 
 	// Compute directed flow in this point (needed for rendering and other computations)

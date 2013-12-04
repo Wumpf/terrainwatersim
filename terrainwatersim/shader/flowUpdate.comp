@@ -5,22 +5,31 @@
 layout(binding = 0, rgba32f) restrict readonly uniform image2D TerrainData;
 layout(binding = 1, rgba32f) restrict uniform image2D Flow;
 
+shared vec4 terrainInfoCache[18*18]; 
+
 // compute shader size
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 18, local_size_y = 18, local_size_z = 1) in;
 void main()
 {
-	ivec2 gridPosition = ivec2(gl_GlobalInvocationID.xy);
+	ivec2 gridPosition = ivec2(gl_WorkGroupID.xy) * ivec2(16,16) + ivec2(gl_LocalInvocationID.xy) - ivec2(1,1);
+	uint textureCachePos = gl_LocalInvocationID.x + gl_LocalInvocationID.y*18;
 
-	// Read own outgoing flow
-	vec4 flowOut = imageLoad(Flow, gridPosition);
-
-	// Todo: Shared memory optimizations
-	// Read terrain
+	// sample own point and store in shared mem
 	vec4 terrainInfo = imageLoad(TerrainData, gridPosition);
-	vec4 terrainInfoX1 = imageLoad(TerrainData, gridPosition + ivec2(1, 0));
-	vec4 terrainInfoX0 = imageLoad(TerrainData, gridPosition + ivec2(-1, 0));
-	vec4 terrainInfoY1 = imageLoad(TerrainData, gridPosition + ivec2(0, 1));
-	vec4 terrainInfoY0 = imageLoad(TerrainData, gridPosition + ivec2(0, -1));
+	terrainInfoCache[textureCachePos] = terrainInfo;
+
+	// border threads (useless now)
+	if(any(equal(gl_LocalInvocationID.xy, uvec2(0))) || any(equal(gl_LocalInvocationID.xy, uvec2(17))) )
+		return;
+
+	// sync!
+	barrier();
+
+	// Read terrain
+	vec4 terrainInfoX1 = terrainInfoCache[textureCachePos+1];
+	vec4 terrainInfoX0 = terrainInfoCache[textureCachePos-1];
+	vec4 terrainInfoY1 = terrainInfoCache[textureCachePos+18];
+	vec4 terrainInfoY0 = terrainInfoCache[textureCachePos-18];
 	
 	float ownWaterHeight = terrainInfo.a + terrainInfo.r;
 
@@ -30,12 +39,17 @@ void main()
 	float waterHeightY1 = terrainInfoY1.a + terrainInfoY1.r;
 	float waterHeightY0 = terrainInfoY0.a + terrainInfoY0.r;
 
-	// acceleration of outgoing flow
+	// acceleration of new outgoing flow
 	vec4 newFlowOut;
 	newFlowOut.x = ownWaterHeight - waterHeightX1;
 	newFlowOut.y = ownWaterHeight - waterHeightX0;
 	newFlowOut.z = ownWaterHeight - waterHeightY1;
 	newFlowOut.w = ownWaterHeight - waterHeightY0;
+
+	// Read own outgoing flow.
+	vec4 flowOut = imageLoad(Flow, gridPosition);
+
+	// Combine...
 	newFlowOut = flowOut * FlowFriction_perStep + newFlowOut * WaterAcceleration_perStep;
 	newFlowOut = max(vec4(0), newFlowOut);
 

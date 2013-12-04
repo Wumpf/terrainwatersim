@@ -60,14 +60,6 @@ namespace gl
     ezResult BindUBO(UniformBuffer& ubo);
 
 
-    // currently not possible to retrieve given texture binding
-    /// Binds a texture
-  //  ezResult BindTexture(Texture& texture, const ezString& sTextureName);
-    /// Binds texture as image
-  //  ezResult BindImage(Texture& texture, Texture::ImageAccess accessMode, const ezString& sImageName);
-
-
-
     /// The set of active user-defined inputs to the first shader stage in this program. 
     /// 
     /// If the first stage is a Vertex Shader, then this is the list of active attributes.
@@ -96,10 +88,8 @@ namespace gl
     const ShaderStorageInfos& GetShaderStorageBufferInfo() const    { return m_ShaderStorageInfos; }
 
 
- //   static void ResetShaderBinding();
-
     /// Global event for changed shader files.
-    /// All Shader Objects will register upon this event. If any shader file is changed, just brodcast here!
+    /// All Shader Objects will register upon this event. If any shader file is changed, just broadcast here!
     static ezStatic<ezEvent<const ezString&>> s_shaderFileChangedEvent;
 
   private:
@@ -124,7 +114,7 @@ namespace gl
     void QueryBlockInformations(ezMap<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName);
     
 
-    /// Name for identifing at runtime
+    /// Name for identifying at runtime
     const ezString m_name;
 
     // the program itself

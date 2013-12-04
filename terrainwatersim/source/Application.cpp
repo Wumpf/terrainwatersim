@@ -126,7 +126,7 @@ void Application::Update(ezTime lastFrameDuration)
   }
 
   // Update frame statistics.
-  ezStringBuilder stats; stats.Format("%.2f fps", 1.0f / lastFrameDuration.GetSeconds());
+  ezStringBuilder stats; stats.Format("%.2f fps", 1.0 / lastFrameDuration.GetSeconds());
   ezStats::SetStat("Frames per second", stats.GetData());
   stats.Format("%.2f ms", lastFrameDuration.GetMilliseconds());
   ezStats::SetStat("Frame time", stats.GetData()); 

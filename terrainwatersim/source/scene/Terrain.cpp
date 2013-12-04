@@ -250,17 +250,18 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     m_simulationParametersUBO.BindBuffer(5);
 
   for(; numSimulationSteps > 0; --numSimulationSteps)
+ // for(int i = 0; i < 5; ++i)
   {
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
     m_updateFlowShader.Activate();
-    glDispatchCompute(m_gridSize / 32, m_gridSize / 32, 1);
+    glDispatchCompute(m_gridSize / 16, m_gridSize / 16, 1);
 
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
     m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterFlowMap->BindImage(2, gl::Texture::ImageAccess::WRITE, GL_RG16F);
     m_applyFlowShader.Activate();
-    glDispatchCompute(m_gridSize / 32, m_gridSize / 32, 1);
+    glDispatchCompute(m_gridSize / 16, m_gridSize / 16, 1);
   }
 
   // Todo: Is this very slow?

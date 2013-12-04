@@ -67,11 +67,12 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
 	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
 	refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
-	vec3 projectiveTexture = textureLod(RefractionTexture, projectiveCoord.xy / projectiveCoord.z, 0).rgb;
+		// Projective Texture has also a bit distortion, so the effect won't  be that bad
+	vec3 projectiveTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1f), 0).rgb;
 
 	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
 	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
-	projectiveWeight = pow(projectiveWeight, 32);
+	projectiveWeight = pow(projectiveWeight, 16);
 	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
 
 
@@ -81,8 +82,8 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	
 	// For that solved the equations exp(-4.5 * R) = exp(-75 * G) = exp(-300 * B) = 0.001 (depths are from link above)
 	// .. which is.. convincing pseudo physical! :)
-	const vec3 ColorExtinctionCoefficient_ = vec3(1.53506f, 0.0921034f, 0.0230259f);
-
+//	const vec3 ColorExtinctionCoefficient_ = vec3(1.53506f, 0.0921034f, 0.0230259f);
+	// But tweakable is still better... 
 
 	// All non-refractive parts (water self color) are lit with nDotL
 
