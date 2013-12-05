@@ -18,7 +18,7 @@ namespace gl
     gl::Utils::CheckError("glTexStorage2D");
   }
 
-  Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps)
+  Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps, ezIAllocator* pAllocator)
   {
     int uiTexSizeX = -1;
     int uiTexSizeY = -1;
@@ -36,7 +36,7 @@ namespace gl
       return NULL;
     }
 
-    Texture2D* poOt = EZ_DEFAULT_NEW(Texture2D)(static_cast<ezUInt32>(uiTexSizeX), static_cast<ezUInt32>(uiTexSizeY), sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, generateMipMaps ? -1 : 1);
+    Texture2D* poOt = EZ_NEW(pAllocator, Texture2D)(static_cast<ezUInt32>(uiTexSizeX), static_cast<ezUInt32>(uiTexSizeY), sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, generateMipMaps ? -1 : 1);
     poOt->SetData(0, reinterpret_cast<const ezColor8UNorm*>(pTextureData));
 
     if(generateMipMaps && poOt->GetNumMipLevels() > 1)

@@ -36,8 +36,8 @@ namespace gl
 
     const ezString& GetName() const { return m_name; }
 
-    ezResult AddShaderFromFile(ShaderType type, const ezString& sFilename);
-    ezResult AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName);
+    ezResult AddShaderFromFile(ShaderType type, const ezString& sFilename, std::initializer_list<ezString> defines = {});
+    ezResult AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName, std::initializer_list<ezString> defines = {});
     ezResult CreateProgram();
 
     /// Returns raw gl program identifier (you know what you're doing, right?)

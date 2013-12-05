@@ -12,9 +12,9 @@ namespace gl
     
     /// \brief Loads texture from file using stb_image
     ///
-    /// Uses EZ_DEFAULT_NEW to create an object if file loading is successful. Use EZ_DEFAULT_DELETE to remove the texture.
+    /// Uses given to create an object if file loading is successful. Use corresponding deallocator to remove the texture.
     /// Will return NULL on error.
-    static Texture2D* LoadFromFile(const ezString& sFilename, bool sRGB = false, bool generateMipMaps = true);
+    static Texture2D* LoadFromFile(const ezString& sFilename, bool sRGB = false, bool generateMipMaps = true, ezIAllocator* pAllocator = ezFoundation::GetDefaultAllocator());
 
     void SetData(ezUInt32 mipLevel, const ezColor* pData);
     void SetData(ezUInt32 mipLevel, const ezColor8UNorm* pData);

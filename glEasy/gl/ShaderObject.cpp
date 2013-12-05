@@ -54,7 +54,7 @@ namespace gl
     s_shaderFileChangedEvent.GetStatic().RemoveEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
   }
 
-  ezResult ShaderObject::AddShaderFromFile(ShaderType Type, const ezString& sFilename)
+  ezResult ShaderObject::AddShaderFromFile(ShaderType Type, const ezString& sFilename, std::initializer_list<ezString> defines)
   {
     // load new code
     ezSet<ezString> includingFiles;
@@ -62,7 +62,7 @@ namespace gl
     if(sourceCode == "")
       return EZ_FAILURE;
 
-    ezResult result = AddShaderFromSource(Type, sourceCode.GetData(), sFilename);
+    ezResult result = AddShaderFromSource(Type, sourceCode.GetData(), sFilename, defines);
 
     if(result != EZ_FAILURE)
     {
@@ -152,7 +152,7 @@ namespace gl
     return sourceCode;
   }
 
-  ezResult ShaderObject::AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName)
+  ezResult ShaderObject::AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName, std::initializer_list<ezString> defines)
   {
     Shader& shader = m_aShader[static_cast<ezUInt32>(type)];
 
@@ -184,9 +184,17 @@ namespace gl
       break;
     }
 
-    // compile shader
-    const char* pSourceRaw = pSourceCode.GetData();
+    // attach defines
+    ezStringBuilder sourceRaw(pSourceCode.GetData());
+    for(auto it = defines.begin(); it != defines.end(); ++it)
+    {
+      sourceRaw.PrependFormat("#define %s\n", it->GetData());
+    }
+      
 
+
+    // compile shader
+    const char* pSourceRaw = sourceRaw.GetData();
     glShaderSource(shaderObjectTemp, 1, &pSourceRaw, NULL);	// attach shader code
 
     ezResult result = gl::Utils::CheckError("glShaderSource");
