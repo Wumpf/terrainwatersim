@@ -9,6 +9,7 @@ namespace gl
   class Texture2D;
   class TextureCube;
   class FramebufferObject;
+  class SamplerObject;
 };
 
 class Terrain
@@ -122,9 +123,9 @@ private:
   gl::UniformBuffer m_waterRenderingUBO;
 
     // Samplers
-  gl::SamplerId m_texturingSamplerObjectDataGrids;
-  gl::SamplerId m_texturingSamplerObjectAnisotropic;
-  gl::SamplerId m_texturingSamplerObjectTrilinear;
+  const gl::SamplerObject* m_texturingSamplerObjectDataGrids;
+  const gl::SamplerObject* m_texturingSamplerObjectAnisotropic;
+  const gl::SamplerObject* m_texturingSamplerObjectTrilinear;
 
     // Water Textures
   //gl::Texture2D* m_pTextureFoam;

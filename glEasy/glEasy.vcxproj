@@ -27,6 +27,7 @@
     <ClCompile Include="gl\resources\textures\Texture3D.cpp" />
     <ClCompile Include="gl\resources\textures\TextureCube.cpp" />
     <ClCompile Include="gl\resources\UniformBuffer.cpp" />
+    <ClCompile Include="gl\SamplerObject.cpp" />
     <ClCompile Include="gl\ScreenAlignedTriangle.cpp" />
     <ClCompile Include="gl\ShaderObject.cpp" />
     <ClCompile Include="gl\TimerQuery.cpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="gl\resources\textures\Texture3D.h" />
     <ClInclude Include="gl\resources\textures\TextureCube.h" />
     <ClInclude Include="gl\resources\UniformBuffer.h" />
+    <ClInclude Include="gl\SamplerObject.h" />
     <ClInclude Include="gl\ScreenAlignedTriangle.h" />
     <ClInclude Include="gl\ShaderDataMetaInfo.h" />
     <ClInclude Include="gl\ShaderObject.h" />

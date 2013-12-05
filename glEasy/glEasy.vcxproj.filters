@@ -38,6 +38,9 @@
       <Filter>gl</Filter>
     </ClCompile>
     <ClCompile Include="..\dependencies\include\stb_image\stb_image.c" />
+    <ClCompile Include="gl\SamplerObject.cpp">
+      <Filter>gl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gl\Font.h">
@@ -83,6 +86,9 @@
       <Filter>gl</Filter>
     </ClInclude>
     <ClInclude Include="..\dependencies\include\stb_image\stb_image.h" />
+    <ClInclude Include="gl\SamplerObject.h">
+      <Filter>gl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="gl\ShaderDataMetaInfo.inl">

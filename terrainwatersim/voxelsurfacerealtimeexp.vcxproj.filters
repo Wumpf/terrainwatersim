@@ -78,9 +78,6 @@
     <Filter Include="source\config">
       <UniqueIdentifier>{888a6c69-8e76-4a85-b23d-90a4c19e2cfc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="stb_image">
-      <UniqueIdentifier>{9bb394f6-95a5-46c0-bc00-45bf13957863}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\screenTri.vert">

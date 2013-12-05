@@ -6,6 +6,7 @@
 #include "InstancedGeomClipMapping.h"
 
 #include "gl/ScreenAlignedTriangle.h"
+#include "gl/SamplerObject.h"
 #include "gl/resources/textures/Texture2D.h"
 #include "gl/resources/textures/TextureCube.h"
 #include "gl/resources/FramebufferObject.h"
@@ -100,27 +101,12 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   SetWaterNormalMapRepeat(30.0f);
 
   // sampler
-  glGenSamplers(1, &m_texturingSamplerObjectDataGrids);
-  glSamplerParameteri(m_texturingSamplerObjectDataGrids, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-  glSamplerParameteri(m_texturingSamplerObjectDataGrids, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glSamplerParameteri(m_texturingSamplerObjectDataGrids, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectDataGrids, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectDataGrids, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
-
-  glGenSamplers(1, &m_texturingSamplerObjectAnisotropic);
-  glSamplerParameteri(m_texturingSamplerObjectAnisotropic, GL_TEXTURE_WRAP_R, GL_REPEAT);
-  glSamplerParameteri(m_texturingSamplerObjectAnisotropic, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glSamplerParameteri(m_texturingSamplerObjectAnisotropic, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectAnisotropic, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectAnisotropic, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
-
-  glGenSamplers(1, &m_texturingSamplerObjectTrilinear);
-  glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_WRAP_R, GL_REPEAT);
-  glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glSamplerParameteri(m_texturingSamplerObjectTrilinear, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
-
+  m_texturingSamplerObjectDataGrids = &gl::SamplerObject::GetSamplerObject(
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::CLAMP));
+  m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 16));
+  m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 1));
 
   // Create heightmap
   CreateHeightmap();
@@ -163,10 +149,6 @@ Terrain::~Terrain()
 
   EZ_DEFAULT_DELETE(m_pRefractionFBO);
   EZ_DEFAULT_DELETE(m_pRefractionTexture);
-
-  glDeleteSamplers(1, &m_texturingSamplerObjectDataGrids);
-  glDeleteSamplers(1, &m_texturingSamplerObjectAnisotropic);
-  glDeleteSamplers(1, &m_texturingSamplerObjectTrilinear);
 }
 
 void Terrain::RecreateScreenSizeDependentTextures(const ezSizeU32& screenSize)
@@ -250,7 +232,6 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     m_simulationParametersUBO.BindBuffer(5);
 
   for(; numSimulationSteps > 0; --numSimulationSteps)
- // for(int i = 0; i < 5; ++i)
   {
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
@@ -276,22 +257,19 @@ void Terrain::UpdateVisibilty(const ezVec3& cameraPosition)
 
 void Terrain::DrawTerrain()
 {
-  glBindSampler(0, m_texturingSamplerObjectDataGrids);
+  const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
+
   m_pTerrainData->Bind(0);
-
-  GLuint variableFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
-
-  glBindSampler(1, variableFilter);
-  glBindSampler(2, variableFilter);
-  glBindSampler(3, variableFilter);
-  glBindSampler(4, variableFilter);
-
-
   m_pTextureGrassDiffuseSpec->Bind(1);
   m_pTextureStoneDiffuseSpec->Bind(2);
   m_pTextureGrassNormalHeight->Bind(3);
   m_pTextureStoneNormalHeight->Bind(4);
 
+  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
+  pTextureFilter->BindSampler(1); // GrassDiffuse
+  pTextureFilter->BindSampler(2); // StoneDiffuse
+  pTextureFilter->BindSampler(3); // GrassNormal
+  pTextureFilter->BindSampler(4);// StoneNormal
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_terrainRenderingUBO.BindBuffer(6);
@@ -307,16 +285,15 @@ void Terrain::DrawTerrain()
 
 void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap)
 {
-  GLuint variableFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
+  const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
 
-  glBindSampler(0, m_texturingSamplerObjectDataGrids); // heightmap
-  glBindSampler(1, variableFilter); // refraction
-  glBindSampler(2, variableFilter);  // reflection
-  glBindSampler(3, m_texturingSamplerObjectDataGrids); // flowmap
-  glBindSampler(4, variableFilter); // normalmap
-  glBindSampler(5, m_texturingSamplerObjectTrilinear); // noise
-  glBindSampler(6, variableFilter); // normalmap
-
+  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
+  m_texturingSamplerObjectDataGrids->BindSampler(1); // refraction
+  m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
+  m_texturingSamplerObjectDataGrids->BindSampler(3); // flowmap
+  pTextureFilter->BindSampler(4);// normalmap
+  m_texturingSamplerObjectDataGrids->BindSampler(5); // noise
+  pTextureFilter->BindSampler(6); // Foam
 
   // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
   glDisable(GL_DEPTH_TEST);
