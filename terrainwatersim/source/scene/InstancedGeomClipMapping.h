@@ -3,7 +3,7 @@
 class InstancedGeomClipMapping
 {
 public:
-  InstancedGeomClipMapping(float maxGridSize, float minPatchSizeWorld);
+  InstancedGeomClipMapping(float maxGridSize, float minPatchSizeWorld, ezUInt32 ringThinkness, ezUInt32 numRings);
   ~InstancedGeomClipMapping();
 
   void UpdateInstanceData(const ezVec3& cameraPosition);
@@ -15,8 +15,8 @@ private:
   float m_minPatchSizeWorld;
   ezUInt32 m_maxNumRenderedPatchInstances;
 
-  static const ezUInt32 m_ringThinkness = 8;
-  static const ezUInt32 m_numRings = 6;
+  const ezUInt32 m_ringThinkness;
+  const ezUInt32 m_numRings;
 
   // Contains immutable relative patch positions.
   gl::BufferId m_patchVertexBuffer;

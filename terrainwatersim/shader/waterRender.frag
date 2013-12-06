@@ -57,23 +57,34 @@ vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 	return normalize(cross(vecdz, vecdx));
 }
 
-vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterViewSpaceDepth, vec3 projectiveCoord, out vec3 refractionTexture) 
+vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec3 projectiveCoord, out vec3 refractionTexture) 
 {
-	// Refraction Texture fetch
-	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
-	// So we just blend over to no refraction at all if necessary
-	vec3 refractionVector = Refract(-nDotV, -toCamera, normal, RefractionAirToWater);
-	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterViewSpaceDepth;
+	vec3 refractionVector = Refract(nDotV, toCamera, normal, RefractionAirToWater);
+
+	// basically same hack as with the viewspace water depth hack
+	float waterRefractionDepth = waterDepth / saturate(-dot(normal, refractionVector) + 0.1f);
+
+	// This was a promising attempt to mimic correct refraction
+	// Basic problems:
+	// * under water pos sometimes not under water
+	// * under water pos sometimes not in screen. This approach tried to blend over - ugly happens far to often!
+
+/*	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterRefractionDepth;
 	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
 	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
 	refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
-		// Projective Texture has also a bit distortion, so the effect won't  be that bad
+		// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
+	// So we just blend over to no refraction at all if necessary
+	// Projective Texture has also a bit distortion, so the effect won't  be that bad
 	vec3 projectiveTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1f), 0).rgb;
 
 	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
 	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
 	projectiveWeight = pow(projectiveWeight, 16);
 	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
+*/
+
+	refractionTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz* waterRefractionDepth * 0.05f), 0).rgb;
 
 
 	// Water color
@@ -88,9 +99,9 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	// All non-refractive parts (water self color) are lit with nDotL
 
 
-	vec3 colorExtinction = clamp(exp(-waterViewSpaceDepth * ColorExtinctionCoefficient), 0, 1);
+	vec3 colorExtinction = clamp(exp(-waterRefractionDepth * ColorExtinctionCoefficient), 0, 1);
 	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
-	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterViewSpaceDepth * Opaqueness));
+	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterRefractionDepth * Opaqueness));
 	
 
 	return mix(BigDepthColor, waterColor, colorExtinction);
@@ -149,16 +160,18 @@ void main()
 
 
 
-	// Needed: amout of water in screenspace on this very pixel
-	// This would need raymarching... instead just use this self-made approximation
+	// Water depth
 	vec4 terrainInfo = texture(TerrainInfo, In.HeightmapCoord);
 	float waterDepth = terrainInfo.a;
-	float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1f);
+
+	// Needed: amout of water in screenspace on this very pixel
+	// This would need raymarching... instead just use this self-made approximation
+	//float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1f);
 
 
 	// Refraction
 	vec3 refractionTexture;
-	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterViewSpaceDepth, In.ProjectiveCoord, refractionTexture);
+	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, In.ProjectiveCoord, refractionTexture);
 	// Reflection
 	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
 

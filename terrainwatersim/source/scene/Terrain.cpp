@@ -48,7 +48,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
 {
   EZ_LOG_BLOCK("Terrain");
 
-  m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_worldSize, m_minPatchSizeWorld);
+  m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_worldSize, m_minPatchSizeWorld, 8, 8);
 
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -105,7 +105,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::CLAMP));
   m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 16));
-  m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
+  m_texturingSamplerObjectTrilinear = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 1));
 
   // Create heightmap

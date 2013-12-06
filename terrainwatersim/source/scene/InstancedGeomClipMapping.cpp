@@ -2,9 +2,11 @@
 #include "InstancedGeomClipMapping.h"
 
 
-InstancedGeomClipMapping::InstancedGeomClipMapping(float maxGridSize, float minPatchSizeWorld) :
-m_maxGridSize(maxGridSize),
-m_minPatchSizeWorld(minPatchSizeWorld)
+InstancedGeomClipMapping::InstancedGeomClipMapping(float maxGridSize, float minPatchSizeWorld, ezUInt32 ringThinkness, ezUInt32 numRings) :
+  m_ringThinkness(ringThinkness),
+  m_numRings(numRings),
+  m_maxGridSize(maxGridSize),
+  m_minPatchSizeWorld(minPatchSizeWorld)
 {
   // Patch vertex buffer
   ezVec2 patchVertices[9];
