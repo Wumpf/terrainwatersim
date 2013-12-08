@@ -102,7 +102,7 @@ void InstancedGeomClipMapping::UpdateInstanceData(const ezVec3& cameraPosition)
   PatchInstanceData currentPatch;
   currentPatch.worldScale = m_minPatchSizeWorld;
 
-  for(int ring = 0; ring < m_numRings; ++ring)
+  for(unsigned int ring = 0; ring < m_numRings; ++ring)
   {
     // snap to next grid
     ezVec2 cameraBlockPosition = ezVec2(ezMath::Floor(cameraPosition.x / currentPatch.worldScale / 2) * currentPatch.worldScale * 2,

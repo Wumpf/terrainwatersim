@@ -17,15 +17,22 @@ class Terrain
 public:
   Terrain(const ezSizeU32& screenSize);
   ~Terrain();
-    
+  
+  /// Recreate all texture resources that are dependant on the screen size - call this on every screen size change!
   void RecreateScreenSizeDependentTextures(const ezSizeU32& screenSize);
 
+  /// Updates simulation.
   void PerformSimulationStep(ezTime lastFrameDuration);
 
   void UpdateVisibilty(const ezVec3& cameraPosition);
   void DrawTerrain();
   /// Draws water. Needs to take a low resolution resolved copy of current framebuffer.
   void DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap);
+
+
+  /// Creates heightmap from noise and resets flow.
+  void CreateHeightmapFromNoiseAndResetSim();
+
 
   // Getter & Setter
 
@@ -73,7 +80,6 @@ public:
 
 
 private:
-  void CreateHeightmap();
 
   void UpdateSimulationParameters();
 

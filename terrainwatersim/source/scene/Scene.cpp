@@ -62,7 +62,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pTerrainDrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
   m_pSimulationTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
 
-  m_UserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
+  m_pUserInterface(EZ_DEFAULT_NEW_UNIQUE(AntTweakBarInterface))
 {
   EZ_LOG_BLOCK("Scene init");
 
@@ -84,7 +84,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   RecreateScreenBuffers();
 
   // user interface
-  m_UserInterface->Init();
+  m_pUserInterface->Init();
   InitConfig();
 
 }
@@ -163,6 +163,9 @@ void Scene::InitConfig()
 
   SceneConfig::Simulation::g_FlowAcceleration.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());));
 
+
+  
+  m_pUserInterface->AddButton("Reset Simulation", "Simulation", [&]() { m_pTerrain->CreateHeightmapFromNoiseAndResetSim(); });
 
   // Trigger initial values that may be saved
   m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
@@ -306,5 +309,5 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
 void Scene::RenderUI()
 {
-  m_UserInterface->Render();
+  m_pUserInterface->Render();
 }

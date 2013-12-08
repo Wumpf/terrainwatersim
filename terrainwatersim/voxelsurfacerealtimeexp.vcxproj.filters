@@ -131,6 +131,9 @@
     <None Include="shader\background.frag">
       <Filter>shader</Filter>
     </None>
+    <None Include="source\scene\AntTweakBarInterface.inl">
+      <Filter>source\scene</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\math\NoiseGenerator.cpp">

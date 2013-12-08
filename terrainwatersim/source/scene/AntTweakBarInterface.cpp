@@ -3,9 +3,9 @@
 
 #include "config/GlobalCVar.h"
 
-#include <AntTweakBar.h>
 #include <Foundation/Utilities/Stats.h>
 
+ezStatic<ezDynamicArray<ezUInt8>> AntTweakBarInterface::m_callbackFunctionObjectbuffer;
 
 static TwType TwTypeFromCVarType(ezCVarType::Enum type)
 {

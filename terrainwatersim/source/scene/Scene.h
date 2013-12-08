@@ -49,7 +49,7 @@ private:
   ezUniquePtr<gl::TimerQuery> m_pWaterDrawTimer;
   ezUniquePtr<gl::TimerQuery> m_pSimulationTimer;
 
-  ezUniquePtr<class AntTweakBarInterface> m_UserInterface;
+  ezUniquePtr<class AntTweakBarInterface> m_pUserInterface;
 
   ezUniquePtr<FreeCamera> m_pCamera;
 

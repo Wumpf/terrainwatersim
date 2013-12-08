@@ -35,6 +35,10 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_updateFlowShader("updateFlow"),
   m_copyShader("copyRefractionShader"),
 
+  m_pTerrainData(NULL),
+  m_pWaterOutgoingFlow(NULL),
+  m_pWaterFlowMap(NULL),
+
   m_pTextureGrassDiffuseSpec(NULL),
   m_pTextureStoneDiffuseSpec(NULL),
   m_pTextureGrassNormalHeight(NULL),
@@ -109,15 +113,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 1));
 
   // Create heightmap
-  CreateHeightmap();
-
-  // Create flow textures
-  m_pWaterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, 1);
-  ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_gridSize*m_gridSize);
-  ezMemoryUtils::ZeroFill(pEmptyBuffer.GetPtr(), pEmptyBuffer.GetCount());
-  m_pWaterOutgoingFlow->SetData(0, pEmptyBuffer.GetPtr());
-  EZ_DEFAULT_DELETE_ARRAY(pEmptyBuffer);
-  m_pWaterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RG16F, 1);
+  CreateHeightmapFromNoiseAndResetSim();
 
   // load textures
   m_pTextureGrassDiffuseSpec = gl::Texture2D::LoadFromFile("grass.tga", true);
@@ -193,8 +189,11 @@ void Terrain::SetFlowAcceleration(float flowAcceleration)
 }
 
 
-void Terrain::CreateHeightmap()
+void Terrain::CreateHeightmapFromNoiseAndResetSim()
 {
+  if(m_pTerrainData != NULL)
+    EZ_DEFAULT_DELETE(m_pTerrainData);
+
   m_pTerrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, -1);
   ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_gridSize*m_gridSize);
 
@@ -216,6 +215,20 @@ void Terrain::CreateHeightmap()
   m_pTerrainData->SetData(0, volumeData);
 
   EZ_DEFAULT_DELETE_RAW_BUFFER(volumeData);
+
+
+
+  // Create flow textures
+  if(m_pWaterOutgoingFlow != NULL)
+    EZ_DEFAULT_DELETE(m_pWaterOutgoingFlow);
+  m_pWaterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, 1);
+  ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_gridSize*m_gridSize);
+  ezMemoryUtils::ZeroFill(pEmptyBuffer.GetPtr(), pEmptyBuffer.GetCount());
+  m_pWaterOutgoingFlow->SetData(0, pEmptyBuffer.GetPtr());
+  EZ_DEFAULT_DELETE_ARRAY(pEmptyBuffer);
+
+  if(m_pWaterFlowMap == NULL)
+    m_pWaterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RG16F, 1);
 }
 
 void Terrain::PerformSimulationStep(ezTime lastFrameDuration)

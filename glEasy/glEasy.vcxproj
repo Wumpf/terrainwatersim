@@ -84,13 +84,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Release64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Release64;$(LibraryPath)</LibraryPath>
     <IncludePath>gl\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Platform)\lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>gl\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;$(IncludePath)</IncludePath>
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\Release64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Debug64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\lib\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -109,6 +109,9 @@
     <Lib>
       <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;OpenGL32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
+    <PreBuildEvent>
+      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\WinVs2013Debug64" $(TargetDir) /Y /C</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -130,6 +133,10 @@
     <Lib>
       <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;OpenGL32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
