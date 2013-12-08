@@ -230,6 +230,10 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   // visibility
   m_pTerrain->UpdateVisibilty(m_pCamera->GetPosition());
 
+
+  //ezAngle angle = ezAngle::Radian(ezSystemTime::Now().GetSeconds() / 4);
+  //m_GlobalSceneInfo["GlobalDirLightDirection"].Set(ezVec3((float)ezMath::Sin(angle), ezMath::Abs(ezMath::Cos(angle)), 0.0f).GetNormalized());
+
   return EZ_SUCCESS;
 }
 

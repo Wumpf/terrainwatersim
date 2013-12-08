@@ -133,7 +133,7 @@ void main()
 	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
-	vec3 normal = normalize(ComputeHeightmapNormal(In.HeightmapCoord) + normalMapNormal);
+	vec3 normal = normalize(ComputeHeightmapNormal(In.HeightmapCoord) + normalMapNormal * 0.75f);
 
 
 	// vector to camera and camera distance
