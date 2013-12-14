@@ -334,7 +334,8 @@ namespace gl
     for(int iBlock=0; iBlock<iTotalNumUniforms; ++iBlock)
     {
       // general data
-      glGetProgramResourceiv(m_Program, GL_UNIFORM, iBlock, iNumQueriedUniformProps, pQueriedUniformProps, iNumQueriedUniformProps, NULL, pRawUniformBlockInfoData);
+      GLsizei length = 0;
+      glGetProgramResourceiv(m_Program, GL_UNIFORM, iBlock, iNumQueriedUniformProps, pQueriedUniformProps, iNumQueriedUniformProps, &length, pRawUniformBlockInfoData);
       UniformVariableInfo uniformInfo;
       uniformInfo.Type = static_cast<gl::ShaderVariableType>(pRawUniformBlockInfoData[1]);
       uniformInfo.iArrayElementCount = static_cast<ezInt32>(pRawUniformBlockInfoData[2]);
@@ -428,7 +429,8 @@ namespace gl
     for(int iBlock=0; iBlock<iTotalNumBlocks; ++iBlock)
     {
       // general data
-      glGetProgramResourceiv(m_Program, InterfaceName, iBlock, iNumQueriedBlockProps, pQueriedBlockProps, iNumQueriedBlockProps, NULL, pRawUniformBlockInfoData);
+      GLsizei length = 0;
+      glGetProgramResourceiv(m_Program, InterfaceName, iBlock, iNumQueriedBlockProps, pQueriedBlockProps, iNumQueriedBlockProps, &length, pRawUniformBlockInfoData);
       BufferInfo<BufferVariableType> BlockInfo;
       BlockInfo.iInternalBufferIndex = iBlock;
       BlockInfo.iBufferBinding = pRawUniformBlockInfoData[1];

@@ -5,8 +5,12 @@
 
 layout(triangles, fractional_even_spacing, ccw) in;
 
-layout(location = 0) in EvalInVertex In[];
-layout(location = 0) out FragInVertexWater Out;
+layout(location = 0) in vec2 inWorldPos2D[];
+layout(location = 1) in vec2 inHeightmapCoord[];
+
+layout(location = 0) out vec3 outWorldPos;
+layout(location = 1) out vec2 outHeightmapCoord;
+layout(location = 2) out vec3 outProjectiveCoord;
 
 in gl_PerVertex
 {
@@ -16,21 +20,22 @@ in gl_PerVertex
 
 void main()
 {	
-	Out.HeightmapCoord = gl_TessCoord.x * In[0].HeightmapCoord + 
-							gl_TessCoord.y * In[1].HeightmapCoord + 
-							gl_TessCoord.z * In[2].HeightmapCoord;
+	outHeightmapCoord = gl_TessCoord.x * inHeightmapCoord[0] + 
+						gl_TessCoord.y * inHeightmapCoord[1] + 
+						gl_TessCoord.z * inHeightmapCoord[2];
 
-	Out.WorldPos.xz = gl_TessCoord.x * In[0].WorldPos2D +
-						gl_TessCoord.y * In[1].WorldPos2D +
-						gl_TessCoord.z * In[2].WorldPos2D;
+	outWorldPos.xz = 	gl_TessCoord.x * inWorldPos2D[0] +
+						gl_TessCoord.y * inWorldPos2D[1] +
+						gl_TessCoord.z * inWorldPos2D[2];
 	
 	// Todo: Using lower mipmaps could both improve quality and performance!
-	vec4 terrainInfo = textureLod(TerrainInfo, Out.HeightmapCoord, 0);
-	Out.WorldPos.y = terrainInfo.a + terrainInfo.r - 0.1f;
-	if(terrainInfo.a < 0.1f)
-		Out.WorldPos.y -= 10.0f;
+	vec4 terrainInfo = textureLod(TerrainInfo, outHeightmapCoord, 0);
+	outWorldPos.y = terrainInfo.a + terrainInfo.r - 0.1;
+	if(terrainInfo.a < 0.1)
+		outWorldPos.y -= 10.0;
 
-	gl_Position = ViewProjection * vec4(Out.WorldPos, 1.0f);
-	Out.ProjectiveCoord.xy = 0.5f * (gl_Position.w + gl_Position.xy);
-	Out.ProjectiveCoord.z = gl_Position.w;
+
+	gl_Position = ViewProjection * vec4(outWorldPos, 1.0);
+	outProjectiveCoord.xy = 0.5 * (gl_Position.w + gl_Position.xy);
+	outProjectiveCoord.z = gl_Position.w;
 }

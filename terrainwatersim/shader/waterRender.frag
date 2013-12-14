@@ -4,7 +4,10 @@
 #include "landscapeRenderData.glsl"
 #include "helper.glsl"
 
-layout(location = 0) in FragInVertexWater In;
+layout(location = 0) in vec3 inWorldPos;
+layout(location = 1) in vec2 inHeightmapCoord;
+layout(location = 2) in vec3 inProjectiveCoord;
+
 layout(location = 0, index = 0) out vec4 FragColor;
 
 // Texture for refraction color
@@ -32,8 +35,8 @@ layout(binding = 6) uniform WaterRendering
 	float FlowDistortionTimer;
 };
 
-const float RefractionIndex_Water = 1.33f;
-const float RefractionIndex_Air = 1.00029f;
+const float RefractionIndex_Water = 1.33;
+const float RefractionIndex_Air = 1.00029;
 const float RefractionAirToWater = RefractionIndex_Air / RefractionIndex_Water;
 const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water) * (RefractionIndex_Air - RefractionIndex_Water) / 
 								   ((RefractionIndex_Air + RefractionIndex_Water) * (RefractionIndex_Air + RefractionIndex_Water));
@@ -41,7 +44,7 @@ const float ReflectionCoefficient = (RefractionIndex_Air - RefractionIndex_Water
 
 vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 {
-	const float worldStep = 1.0f;
+	const float worldStep = 1.0;
 	vec4 terrainInfo;
 	vec4 h;
 	terrainInfo = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2( 0,-worldStep));
@@ -52,8 +55,8 @@ vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 	h[2] = terrainInfo.a + terrainInfo.r;
 	terrainInfo = texture(TerrainInfo, heightmapCoord + HeightmapWorldTexelSize*vec2(-worldStep, 0));
 	h[3] = terrainInfo.a + terrainInfo.r;
-	vec3 vecdz = vec3(0.0f, h[1] - h[0], worldStep);
-	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0f);
+	vec3 vecdz = vec3(0.0, h[1] - h[0], worldStep);
+	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0);
 	return normalize(cross(vecdz, vecdx));
 }
 
@@ -62,7 +65,7 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	vec3 refractionVector = Refract(nDotV, toCamera, normal, RefractionAirToWater);
 
 	// basically same hack as with the viewspace water depth hack
-	float waterRefractionDepth = waterDepth / saturate(-dot(normal, refractionVector) + 0.1f);
+	float waterRefractionDepth = waterDepth / saturate(-dot(normal, refractionVector) + 0.1);
 
 	// This was a promising attempt to mimic correct refraction
 	// Basic problems:
@@ -76,15 +79,15 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 		// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
 	// So we just blend over to no refraction at all if necessary
 	// Projective Texture has also a bit distortion, so the effect won't  be that bad
-	vec3 projectiveTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1f), 0).rgb;
+	vec3 projectiveTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1), 0).rgb;
 
-	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0f - 1.0f);
+	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0 - 1.0);
 	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
 	projectiveWeight = pow(projectiveWeight, 16);
 	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
 */
 
-	refractionTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz* waterRefractionDepth * 0.05f), 0).rgb;
+	refractionTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz* waterRefractionDepth * 0.05), 0).rgb;
 
 
 	// Water color
@@ -110,18 +113,18 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 void main()
 {
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
-	vec2 flow = textureLod(FlowMap, In.HeightmapCoord, 0.0f).xy;
-	float noise = texture(Noise, In.HeightmapCoord*6).x;
+	vec2 flow = textureLod(FlowMap, inHeightmapCoord, 0.0).xy;
+	float noise = texture(Noise, inHeightmapCoord*6).x;
 
 	float distortTimer = FlowDistortionTimer + noise;
 	float distortionFactor0 = fract(distortTimer);
-	float distortionFactor1 = fract(distortTimer + 0.5f);
+	float distortionFactor1 = fract(distortTimer + 0.5);
 	float distortionBlend = abs(distortionFactor0 * 2 - 1);
 
-	vec2 normalmapCoord = In.HeightmapCoord * NormalMapRepeat;
+	vec2 normalmapCoord = inHeightmapCoord * NormalMapRepeat;
 	vec2 flowDistortion = flow * FlowDistortionStrength;
 	vec2 normalmapCoord0 = normalmapCoord + distortionFactor0 * flowDistortion;
-	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.3f);
+	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.3);
 
 	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xzy;
 	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xzy;
@@ -129,15 +132,15 @@ void main()
 		// scale with speed
 	float flowSpeedSq = dot(flow, flow);
 	float flowSpeed = sqrt(flowSpeedSq);
-	normalMapNormal = normalMapNormal * 2.0f - vec3(1.0f);
+	normalMapNormal = normalMapNormal * 2.0 - vec3(1.0);
 	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
-	vec3 normal = normalize(ComputeHeightmapNormal(In.HeightmapCoord) + normalMapNormal * 0.75f);
+	vec3 normal = normalize(ComputeHeightmapNormal(inHeightmapCoord) + normalMapNormal * 0.75);
 
 
 	// vector to camera and camera distance
-	vec3 toCamera = CameraPosition - In.WorldPos;
+	vec3 toCamera = CameraPosition - inWorldPos;
 	float cameraDistance = length(toCamera);
 	toCamera /= cameraDistance;
 
@@ -155,23 +158,23 @@ void main()
 	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
 	// Don't worry, the outcome is exactly the same!
 	vec3 cameraDirReflection = normalize((2 * nDotV) * normal - toCamera);
-  	float specularAmount = pow(max(0.0f, dot(cameraDirReflection, GlobalDirLightDirection)), 8.0f);
+  	float specularAmount = pow(max(0.0, dot(cameraDirReflection, GlobalDirLightDirection)), 8.0);
   	specularAmount *= fresnel;
 
 
 
 	// Water depth
-	vec4 terrainInfo = texture(TerrainInfo, In.HeightmapCoord);
+	vec4 terrainInfo = texture(TerrainInfo, inHeightmapCoord);
 	float waterDepth = terrainInfo.a;
 
 	// Needed: amout of water in screenspace on this very pixel
 	// This would need raymarching... instead just use this self-made approximation
-	//float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1f);
+	//float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1);
 
 
 	// Refraction
 	vec3 refractionTexture;
-	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, In.ProjectiveCoord, refractionTexture);
+	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, inProjectiveCoord, refractionTexture);
 	// Reflection
 	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
 
@@ -180,11 +183,11 @@ void main()
 	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;
 	
 	// Shore hack against artifacts
-	float pixelToGround = In.WorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
-	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25f));
+	float pixelToGround = inWorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
+	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25));
 
 	// Foam for fast water - just reuse the same coord and technique from the normalmaps
-	const float SpeedToFoamBlend = 0.00004f;
+	const float SpeedToFoamBlend = 0.00004;
 	vec4 foam0 = texture(Foam, normalmapCoord0);
 	vec4 foam1 = texture(Foam, normalmapCoord1);
 	vec4 foam = mix(foam0, foam1, distortionBlend);
@@ -195,5 +198,5 @@ void main()
 
 	// Color output
 	FragColor.rgb = color;
-	FragColor.a = 1.0f;
+	FragColor.a = 1.0;
 }

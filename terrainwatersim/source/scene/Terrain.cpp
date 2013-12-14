@@ -67,11 +67,12 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "waterRender.frag");
   m_waterRenderShader.CreateProgram();
 
+  
   m_applyFlowShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "flowApply.comp");
   m_applyFlowShader.CreateProgram();
   m_updateFlowShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "flowUpdate.comp");
   m_updateFlowShader.CreateProgram();
-
+  
   m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
   m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "textureOutput.frag");
   m_copyShader.CreateProgram();
@@ -172,20 +173,20 @@ void Terrain::SetSimulationStepsPerSecond(float simulationStepsPerSecond)
   SetFlowAcceleration(m_flowAcceleration);
 
   float cellDistance = m_worldSize / m_gridSize;
-  m_simulationParametersUBO["CellAreaInv_timeScaled"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() / (cellDistance * cellDistance)));
+  //m_simulationParametersUBO["CellAreaInv_timeScaled"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() / (cellDistance * cellDistance)));
 }
 
 void Terrain::SetFlowDamping(float flowDamping)
 {
   m_flowDamping = flowDamping;
-  m_simulationParametersUBO["FlowFriction_perStep"].Set(ezMath::Pow(m_flowDamping, static_cast<float>(m_simulationStepLength.GetSeconds())));
+  //m_simulationParametersUBO["FlowFriction_perStep"].Set(ezMath::Pow(m_flowDamping, static_cast<float>(m_simulationStepLength.GetSeconds())));
 }
 
 void Terrain::SetFlowAcceleration(float flowAcceleration)
 {
   m_flowAcceleration = flowAcceleration;
   float cellDistance = m_worldSize / m_gridSize;
-  m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
+  //m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
 

@@ -239,14 +239,13 @@ ezResult Scene::Update(ezTime lastFrameDuration)
 
 ezResult Scene::Render(ezTime lastFrameDuration)
 { 
-
-  // Update background
-  m_pBackground->UpdateCubemap();
-
   // set global ubos to their global binding points
   m_CameraUBO.BindBuffer(0);
   m_TimeUBO.BindBuffer(1);
   m_GlobalSceneInfo.BindBuffer(2);
+
+  // Update background
+  m_pBackground->UpdateCubemap();
 
   // DepthTest on.
   glEnable(GL_DEPTH_TEST);

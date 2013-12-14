@@ -10,35 +10,3 @@ layout(binding = 5, shared) uniform GlobalLandscapeInfo
 };
 
 layout(binding = 0) uniform sampler2D TerrainInfo;
-
-// Shader out/in
-struct VertInVertex
-{
-	vec2 PatchRelPosition;
-	vec2 PatchWorldPosition;
-	float PatchWorldScale;
-	uint PatchRotationType; // 0: Y-, 1: Y+, 2: X-, 3: X+, 4: Special corner
-};
-struct ContInVertex
-{
-	vec3 WorldPos;
-	vec2 HeightmapCoord;
-};
-struct EvalInVertex
-{
-	vec2 WorldPos2D;
-	vec2 HeightmapCoord;
-};
-
-
-struct FragInVertexTerrain
-{
-	vec3 WorldPos;
-	vec2 HeightmapCoord;
-};
-struct FragInVertexWater
-{
-	vec3 WorldPos;
-	vec3 ProjectiveCoord;
-	vec2 HeightmapCoord;
-};

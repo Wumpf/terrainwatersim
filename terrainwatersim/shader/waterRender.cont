@@ -4,9 +4,12 @@
 #include "landscapeRenderData.glsl"
 #include "landscapeRenderFunctions.glsl"
 
-layout(location = 0) in ContInVertex In[];
-layout(location = 2) in int UnderTerrain[];
-layout(location = 0) out EvalInVertex Out[];
+layout(location = 0) in vec3 inWorldPos[];
+layout(location = 1) in vec2 inHeightmapCoord[];
+layout(location = 2) in int  inUnderTerrain[];
+
+layout(location = 0) out vec2 outWorldPos2D[];
+layout(location = 1) out vec2 outHeightmapCoord[];
 
 // Output tris
 layout(vertices = 3) out;
@@ -17,30 +20,30 @@ void main()
 	if (gl_InvocationID == 0)
 	{	
 		// completly under terrain?
-		if(UnderTerrain[0] == 1 && UnderTerrain[1] == 1 && UnderTerrain[2] == 1)
+		if(inUnderTerrain[0] == 1 && inUnderTerrain[1] == 1 && inUnderTerrain[2] == 1)
 		{
-			gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = -1.0f;
-			gl_TessLevelInner[0] = -1.0f;
+			gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = -1.0;
+			gl_TessLevelInner[0] = -1.0;
 		}
 		else
 		{
-			vec3 mid = 0.25f * (In[0].WorldPos + In[1].WorldPos + In[2].WorldPos);
+			vec3 mid = 0.25 * (inWorldPos[0] + inWorldPos[1] + inWorldPos[2]);
 
 			for(int i=0; i<3; ++i)	// unroll in ogl 4.3?
 			{
 				int second = (i+1) % 3;
-				gl_TessLevelOuter[(i+2)%3] = clamp(EstimateSphereSizeAroundEdge(In[i].WorldPos, In[second].WorldPos) * TrianglesPerClipSpaceUnit, 2.0f, MaxTesselationFactor);
+				gl_TessLevelOuter[(i+2)%3] = clamp(EstimateSphereSizeAroundEdge(inWorldPos[i], inWorldPos[second]) * TrianglesPerClipSpaceUnit, 2.0, MaxTesselationFactor);
 			}
 
-			gl_TessLevelInner[0] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[1] + gl_TessLevelOuter[2]) * 0.25f; 
+			gl_TessLevelInner[0] = (gl_TessLevelOuter[0] + gl_TessLevelOuter[1] + gl_TessLevelOuter[2]) * 0.25; 
 			
 
 			// Debug: No Tess
-			//gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = 1.0f;
-			//gl_TessLevelInner[0] = 1.0f;
-		}
-  	}
+			//gl_TessLevelOuter[0] = gl_TessLevelOuter[1] = gl_TessLevelOuter[2] = 1.0;
+			//gl_TessLevelInner[0] = 1.0;
+	  	}
+	}
 
-    Out[gl_InvocationID].WorldPos2D = In[gl_InvocationID].WorldPos.xz;
-    Out[gl_InvocationID].HeightmapCoord = In[gl_InvocationID].HeightmapCoord;
+    outWorldPos2D[gl_InvocationID] = inWorldPos[gl_InvocationID].xz;
+    outHeightmapCoord[gl_InvocationID] = inHeightmapCoord[gl_InvocationID];
 }

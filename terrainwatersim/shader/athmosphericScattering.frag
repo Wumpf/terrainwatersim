@@ -4,7 +4,7 @@
 #include "helper.glsl"
 
 // input
-in vec3 gs_out_direction;
+layout(location = 0) in vec3 gs_out_direction;
 
 // output
 layout(location = 0, index = 0) out vec4 fragColor;

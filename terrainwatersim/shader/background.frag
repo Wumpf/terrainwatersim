@@ -6,7 +6,7 @@
 #include "helper.glsl"
 
 // input
-in vec2 vs_out_texcoord;
+layout(location = 0) in vec2 vs_out_texcoord;
 
 layout(binding = 0) uniform samplerCube Skybox;
 
