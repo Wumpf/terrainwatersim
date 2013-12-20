@@ -98,7 +98,7 @@ static void GetVarValue(Type& var, void *value)
     }; \
     TwAddVarCB(m_pTweakBar, statname, TW_TYPE_CDSTRING, NULL, getFkt, NULL, param); \
     const char* errorDesc = TwGetLastError(); \
-    if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
+if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc); \
   } while(false)
 
 
@@ -116,6 +116,97 @@ AntTweakBarInterface::~AntTweakBarInterface(void)
     TwTerminate();
     GlobalEvents::g_pWindowMessage->RemoveEventHandler(ezEvent<const GlobalEvents::Win32Message&>::Handler(&AntTweakBarInterface::WindowMessageEventHandler, this));
   }
+
+  for(auto it = m_entries.GetIterator(); it.IsValid(); ++it)
+    EZ_DEFAULT_DELETE(*it);
+}
+
+void AntTweakBarInterface::CheckTwError()
+{
+  const char* errorDesc = TwGetLastError();
+  if(errorDesc != NULL)
+    ezLog::SeriousWarning("Tw error: %s", errorDesc);
+}
+
+void AntTweakBarInterface::AddButton(const ezString& name, ezDelegate<void()>& triggerCallback, const ezString& twDefines)
+{
+  EntryButton* pEntry = EZ_DEFAULT_NEW(EntryButton)();
+  pEntry->name = name;
+  pEntry->triggerCallback = triggerCallback;
+  m_entries.PushBack(pEntry);
+
+  TwButtonCallback fkt = [](void* entry) {
+    static_cast<EntryButton*>(entry)->triggerCallback();
+  };
+
+  TwAddButton(m_pTweakBar, name.GetData(), fkt, m_entries.PeekBack(), twDefines.GetData());
+  CheckTwError();
+}
+
+void AntTweakBarInterface::AddReadOnly(const ezString& name, ezDelegate<ezString()>& getValue, const ezString& twDefines)
+{
+  EntryReadOnly* pEntry = EZ_DEFAULT_NEW(EntryReadOnly)();
+  pEntry->name = name;
+  pEntry->getValue = getValue;
+  m_entries.PushBack(pEntry);
+
+  TwGetVarCallback getFkt = [](void *value, void *clientData) {
+    *static_cast<const char**>(value) = static_cast<EntryReadOnly*>(clientData)->getValue().GetData();
+  };
+
+  TwAddVarCB(m_pTweakBar, name.GetData(), TW_TYPE_CDSTRING, NULL, getFkt, m_entries.PeekBack(), twDefines.GetData());
+  CheckTwError();
+}
+
+void AntTweakBarInterface::AddReadWrite(const ezString& name, ezDelegate<ezVariant()>& getValue, ezDelegate<void(const ezVariant&)>& setValue, const ezString& twDefines)
+{
+  TwGetVarCallback getFkt;
+  TwSetVarCallback setFkt;
+  TwType varType;
+
+  ezVariant testValue(getValue());
+
+  switch(testValue.GetType())
+  {
+  case ezVariant::Type::Bool:
+    getFkt = [](void *value, void *clientData) {
+      *static_cast<bool*>(value) = static_cast<EntryReadWrite*>(clientData)->getValue().Get<bool>();
+    };
+    setFkt = [](const void *value, void *clientData) {
+      static_cast<EntryReadWrite*>(clientData)->setValue(ezVariant(*static_cast<const bool*>(value)));
+    };
+    varType = TW_TYPE_BOOLCPP;
+    break;
+
+  case ezVariant::Type::Float:
+    getFkt = [](void *value, void *clientData) {
+      *static_cast<float*>(value) = static_cast<EntryReadWrite*>(clientData)->getValue().Get<float>();
+    };
+    setFkt = [](const void *value, void *clientData) {
+      static_cast<EntryReadWrite*>(clientData)->setValue(ezVariant(*static_cast<const float*>(value)));
+    };
+    varType = TW_TYPE_FLOAT;
+    break;
+
+  default:
+    ezLog::Error("AntTweakBarInterface::AddReadWrite: Variables \"%s\" has an unsupported variant type!", name.GetData());
+    return;
+  }
+
+  EntryReadWrite* pEntry = EZ_DEFAULT_NEW(EntryReadWrite)();
+  pEntry->name = name;
+  pEntry->getValue = getValue;
+  pEntry->setValue = setValue;
+  m_entries.PushBack(pEntry);
+
+  TwAddVarCB(m_pTweakBar, name.GetData(), varType, setFkt, getFkt, m_entries.PeekBack(), twDefines.GetData());
+  CheckTwError();
+}
+
+void AntTweakBarInterface::AddSeperator(const ezString& name, const ezString& twDefines)
+{
+  TwAddSeparator(m_pTweakBar, name.GetData(), twDefines.GetData());
+  CheckTwError();
 }
 
 ezResult AntTweakBarInterface::Init()
@@ -144,59 +235,6 @@ ezResult AntTweakBarInterface::Init()
   TwDefine(" TweakBar contained=true "); // TweakBar must be inside the window.
   //TwDefine(" TweakBar alpha=200 ");
 
-  // General
-  ADD_STAT_TO_TWEAKBAR("Frame time", "group=General");
-  ADD_STAT_TO_TWEAKBAR("Frames per second", "group=General");
-
-    // AntiAliasing
-/*  TwEnumVal antialiasingValues[] = { { 0, "None" }, { 2, "2x" }, { 4, "4x" }, { 8, "8x" } };
-  auto enumType = TwDefineEnum("AntiAliasing_enum", antialiasingValues, 4);
-  TwAddVarCB(m_pTweakBar, GeneralConfig::g_MSAASamples.GetName(), enumType,
-              [](const void *value, void *clientData) { SetCVarValue(GeneralConfig::g_MSAASamples, value); },
-              [](void *value, void *clientData) { GetCVarValue(GeneralConfig::g_MSAASamples, value); },
-              NULL, "group=General");
-  const char* errorDesc = TwGetLastError();
-  if(errorDesc != NULL) ezLog::SeriousWarning("Tw error: %s", errorDesc);
-*/
-  // terrain
-  //TwAddSeparator(m_pTweakBar, NULL, "group=Rendering");
-  ADD_STAT_TO_TWEAKBAR("Terrain Draw Time", "group=\'Terrain Rendering\'");
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_Wireframe);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_PixelPerTriangle);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_UseAnisotropicFilter);  
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_SpecularPower);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::TerrainRendering::g_FresnelReflection);
-
-//  ADD_VAR_WITH_EVT_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColor, TW_TYPE_COLOR3F, "BigDepth Color", "group=\'Water Rendering\'");
-
-  ADD_STAT_TO_TWEAKBAR("Water Draw Time", "group=\'Water Rendering\'");
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_wireframe);
-
-  TwAddSeparator(m_pTweakBar, "Colors", "group=\'Water Rendering\'");
-
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_bigDepthColorB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_extinctionCoefficientsB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorR);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorG);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_surfaceColorB);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_opaqueness);
-
-  TwAddSeparator(m_pTweakBar, "Flow", "group=\'Water Rendering\'");
-
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_normalMapRepeat);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_normalLayerBlendInveral);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_speedToNormalDistortion);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::WaterRendering::g_flowDistortionStrength);
-
-  ADD_STAT_TO_TWEAKBAR("Simulation Time", "group=\'Simulation\'");
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_SimulationStepsPerSecond);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowDamping);
-  ADD_CVAR_TO_TWEAKBAR_RW(SceneConfig::Simulation::g_FlowAcceleration);
-
   // register eventhandler
   GlobalEvents::g_pWindowMessage->AddEventHandler(ezEvent<const GlobalEvents::Win32Message&>::Handler(&AntTweakBarInterface::WindowMessageEventHandler, this));
 
@@ -206,17 +244,17 @@ ezResult AntTweakBarInterface::Init()
 void AntTweakBarInterface::WindowMessageEventHandler(const GlobalEvents::Win32Message& message)
 {
   // puffer message to avoid recursive calling 
-  m_MessageQueue.PushBack(message);
+  m_messageQueue.PushBack(message);
 }
 
 void AntTweakBarInterface::Render()
 {
   // unwind message buffer - this avoid recursive calls
-  while(!m_MessageQueue.IsEmpty())
+  while(!m_messageQueue.IsEmpty())
   {
-    GlobalEvents::Win32Message message = m_MessageQueue.PeekFront();
+    GlobalEvents::Win32Message message = m_messageQueue.PeekFront();
     TwEventWin(message.wnd, message.msg, message.wParam, message.lParam);
-    m_MessageQueue.PopFront();
+    m_messageQueue.PopFront();
   }
 
   TwDraw();

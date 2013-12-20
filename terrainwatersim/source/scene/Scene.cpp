@@ -19,36 +19,37 @@
 
 #include "gl/resources/FramebufferObject.h"
 #include "gl/resources/textures/Texture2D.h"
+#include <Foundation/Basics/Types/Variant.h>
 
 namespace SceneConfig
 {
   namespace TerrainRendering
   {
-    ezCVarBool g_Wireframe("Wireframe Terrain", false, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
-    ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=3.0 max=200");
-    ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group=\'Terrain Rendering\'");
-    ezCVarFloat g_FresnelReflection("Fresnel Reflection Coef", 0.1f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=0.0 max=2.0 step = 0.01");
-    ezCVarFloat g_SpecularPower("Specular Power", 4.0f, ezCVarFlags::Save, "group=\'Terrain Rendering\' min=0.0 max=32.0 step = 0.5");
+    ezCVarBool g_Wireframe("Wireframe Terrain", false, ezCVarFlags::Save, "group='Terrain Rendering'");
+    ezCVarFloat g_PixelPerTriangle("Aimed Pixel/Triangle", 25.0f, ezCVarFlags::Save, "group='Terrain Rendering' min=3.0 max=200");
+    ezCVarBool g_UseAnisotropicFilter("Anisotropic Filter on/off", true, ezCVarFlags::Save, "group='Terrain Rendering'");
+    ezCVarFloat g_FresnelReflection("Fresnel Reflection Coef", 0.1f, ezCVarFlags::Save, "group='Terrain Rendering' min=0.0 max=2.0 step = 0.01");
+    ezCVarFloat g_SpecularPower("Specular Power", 4.0f, ezCVarFlags::Save, "group='Terrain Rendering' min=0.0 max=32.0 step = 0.5");
   }
   namespace WaterRendering
   {
-    ezCVarBool g_wireframe("Wireframe Water", false, ezCVarFlags::Save, "group=\'Water Rendering\'");
-    CVarRGBImpl(g_surfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
-    CVarRGBImpl(g_bigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.005");
-    CVarRGBImpl(g_extinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=1.0 step=0.0025");
-    ezCVarFloat g_opaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.5 step=0.005");
+    ezCVarBool g_wireframe("Wireframe Water", false, ezCVarFlags::Save, "group='Water Rendering'");
+    CVarRGBImpl(g_surfaceColor, "Surface Color", ezVec3(0.0029f, 0.1788f, 0.27f), ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_bigDepthColor, "Big-Depth Color", ezVec3(0.00195f, 0.00098f, 0.0725f), ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=1.0 step=0.005");
+    CVarRGBImpl(g_extinctionCoefficients, "Extinction Coefficients", ezVec3(0.1278f, 0.0735f, 0.5f), ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=1.0 step=0.0025");
+    ezCVarFloat g_opaqueness("Opaqueness", 0.01f, ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=0.5 step=0.005");
 
-    ezCVarFloat g_normalMapRepeat("Normalmap repeat", 30.0f, ezCVarFlags::Save, "group=\'Water Rendering\' min=5.0 max=100.0 step=1");
-    ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.3 step=0.001");
-    ezCVarFloat g_normalLayerBlendInveral("Normal layer blend interval", 0.01f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.5 max=50.0 step=0.25");
-    ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.001f, ezCVarFlags::Save, "group=\'Water Rendering\' min=0.0 max=0.1 step=0.0005");
+    ezCVarFloat g_normalMapRepeat("Normalmap repeat", 30.0f, ezCVarFlags::Save, "group='Water Rendering' min=5.0 max=100.0 step=1");
+    ezCVarFloat g_speedToNormalDistortion("Flow to normal Distortion", 0.01f, ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=0.3 step=0.001");
+    ezCVarFloat g_normalLayerBlendInveral("Normal layer blend interval", 0.01f, ezCVarFlags::Save, "group='Water Rendering' min=0.5 max=50.0 step=0.25");
+    ezCVarFloat g_flowDistortionStrength("Flow distortion strength", 0.001f, ezCVarFlags::Save, "group='Water Rendering' min=0.0 max=0.1 step=0.0005");
   }
 
   namespace Simulation
   {
     ezCVarFloat g_SimulationStepsPerSecond("Simulation steps per second", 60, ezCVarFlags::Save, "group='Simulation' min=30 max=300");
-    ezCVarFloat g_FlowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group=Simulation min=0.2 max=1.0 step=0.01");
-    ezCVarFloat g_FlowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group=Simulation min=0.5 max=100.0 step=0.1");
+    ezCVarFloat g_FlowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group='Simulation' min=0.2 max=1.0 step=0.01");
+    ezCVarFloat g_FlowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group='Simulation' min=0.5 max=100.0 step=0.1");
   }
 }
 
@@ -106,11 +107,30 @@ void Scene::InitGlobalUBO()
 
 }
 
+// CVar type conversions
+template<typename T> struct CVarType {};
+template<> struct CVarType<ezCVarFloat> { typedef float type; };
+template<> struct CVarType<ezCVarBool> { typedef bool type; };
+template<> struct CVarType<ezCVarInt> { typedef int type; };
+template<> struct CVarType<ezCVarString> { typedef char* type; };
+
+
+// Macro for adding a change handler to a arbitrary cvar and add it to the interface
+#define CreateCVarInterfaceEntry(cvar, changeHandler) \
+  (cvar).m_CVarEvents.AddEventHandler(ezEvent<const ezCVar::CVarEvent&>::Handler([=](const ezCVar::CVarEvent&) { (changeHandler)((cvar).GetValue()); })); \
+  m_pUserInterface->AddReadWrite((cvar).GetName(), \
+  ezDelegate<ezVariant(void)>([]{ return ezVariant((cvar).GetValue()); }), \
+  ezDelegate<void(const ezVariant &)>([](const ezVariant& val){ (cvar) = val.Get<CVarType<decltype(cvar)>::type>(); }), \
+  (cvar).GetDescription());
+
+// Macro for adding a stat value from ezStats to the interface
+#define CreateStatInterfaceEntry(statname, twDef) \
+  m_pUserInterface->AddReadOnly((statname), ezDelegate<ezString()>([](){ return ezString(ezStats::GetStat((statname))); }), (twDef));
+
+
 void Scene::InitConfig()
 {
-#define CONFIG_EVENTHANDLER_LAMBDA(CODE) ezEvent<const ezCVar::CVarEvent&>::Handler([=](const ezCVar::CVarEvent&) { CODE } )
-
-  // Callbacks for CVars
+  // Resolution change events
   ezEvent<const ezCVar::CVarEvent&>::Handler onResolutionChange = [=](const ezCVar::CVarEvent&)
   {
     // skip invalid sizes
@@ -123,69 +143,60 @@ void Scene::InitConfig()
   };
   GeneralConfig::g_ResolutionWidth.m_CVarEvents.AddEventHandler(onResolutionChange);
   GeneralConfig::g_ResolutionHeight.m_CVarEvents.AddEventHandler(onResolutionChange);
-  /*GeneralConfig::g_MSAASamples.m_CVarEvents.AddEventHandler([=](const ezCVar::CVarEvent&){
-    RecreateScreenBuffers();
-    m_GlobalSceneInfo["NumMSAASamples"].Set(static_cast<ezUInt32>(GeneralConfig::g_MSAASamples.GetValue()));
-  });*/
 
-  SceneConfig::TerrainRendering::g_PixelPerTriangle.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());));
-  SceneConfig::TerrainRendering::g_UseAnisotropicFilter.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());));
-  SceneConfig::TerrainRendering::g_FresnelReflection.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetTerrainFresnelReflectionCoef(SceneConfig::TerrainRendering::g_FresnelReflection.GetValue());));
-  SceneConfig::TerrainRendering::g_SpecularPower.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetTerrainSpecularPower(SceneConfig::TerrainRendering::g_SpecularPower.GetValue());));
+  // General
+  CreateStatInterfaceEntry("Frame time", "group=General");
+  CreateStatInterfaceEntry("Frames per second", "group=General");
 
-  auto setBigDepthColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterBigDepthColor(ezVec3(SceneConfig::WaterRendering::g_bigDepthColorR.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorG.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorB.GetValue())); };
-  SceneConfig::WaterRendering::g_bigDepthColorR.m_CVarEvents.AddEventHandler(setBigDepthColor);
-  SceneConfig::WaterRendering::g_bigDepthColorG.m_CVarEvents.AddEventHandler(setBigDepthColor);
-  SceneConfig::WaterRendering::g_bigDepthColorB.m_CVarEvents.AddEventHandler(setBigDepthColor);
+  // Terrain Rendering
+  m_pUserInterface->AddReadOnly("Terrain Draw Time", ezDelegate<ezString()>([](){ return ezString(ezStats::GetStat("Frames per second")); }), "group='Terrain Rendering'");
+  CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_Wireframe, [](bool) {});
+  CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_PixelPerTriangle, ezDelegate<void(float)>(&Terrain::SetPixelPerTriangle, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_UseAnisotropicFilter, ezDelegate<void(bool)>(&Terrain::SetAnisotropicFiltering, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_FresnelReflection, ezDelegate<void(float)>(&Terrain::SetTerrainFresnelReflectionCoef, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_SpecularPower, ezDelegate<void(float)>(&Terrain::SetTerrainSpecularPower, m_pTerrain));
 
-  auto setSurfaceColor = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterSurfaceColor(ezVec3(SceneConfig::WaterRendering::g_surfaceColorR.GetValue(), SceneConfig::WaterRendering::g_surfaceColorG.GetValue(), SceneConfig::WaterRendering::g_surfaceColorB.GetValue())); };
-  SceneConfig::WaterRendering::g_surfaceColorR.m_CVarEvents.AddEventHandler(setSurfaceColor);
-  SceneConfig::WaterRendering::g_surfaceColorG.m_CVarEvents.AddEventHandler(setSurfaceColor);
-  SceneConfig::WaterRendering::g_surfaceColorB.m_CVarEvents.AddEventHandler(setSurfaceColor);
+  // Water Rendering
+  CreateStatInterfaceEntry("Water Draw Time", "group='Water Rendering'");
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_wireframe, [](bool) {});
 
-  auto setWaterExtinctionCoef = [=](const ezCVar::CVarEvent&) { m_pTerrain->SetWaterExtinctionCoefficients(ezVec3(SceneConfig::WaterRendering::g_extinctionCoefficientsR.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsG.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsB.GetValue())); };
-  SceneConfig::WaterRendering::g_extinctionCoefficientsR.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
-  SceneConfig::WaterRendering::g_extinctionCoefficientsG.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
-  SceneConfig::WaterRendering::g_extinctionCoefficientsB.m_CVarEvents.AddEventHandler(setWaterExtinctionCoef);
+  m_pUserInterface->AddSeperator("Colors", "group='Water Rendering'");
+
+  auto setBigDepthColor = [=](float) { m_pTerrain->SetWaterBigDepthColor(ezVec3(SceneConfig::WaterRendering::g_bigDepthColorR.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorG.GetValue(), SceneConfig::WaterRendering::g_bigDepthColorB.GetValue())); };
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_bigDepthColorR, setBigDepthColor);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_bigDepthColorG, setBigDepthColor);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_bigDepthColorB, setBigDepthColor);
+  auto setWaterExtinctionCoef = [=](const float) { m_pTerrain->SetWaterExtinctionCoefficients(ezVec3(SceneConfig::WaterRendering::g_extinctionCoefficientsR.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsG.GetValue(), SceneConfig::WaterRendering::g_extinctionCoefficientsB.GetValue())); };
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_extinctionCoefficientsR, setWaterExtinctionCoef);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_extinctionCoefficientsG, setWaterExtinctionCoef);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_extinctionCoefficientsB, setWaterExtinctionCoef);
+  auto setSurfaceColor = [=](float) { m_pTerrain->SetWaterSurfaceColor(ezVec3(SceneConfig::WaterRendering::g_surfaceColorR.GetValue(), SceneConfig::WaterRendering::g_surfaceColorG.GetValue(), SceneConfig::WaterRendering::g_surfaceColorB.GetValue())); };
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_surfaceColorR, setSurfaceColor);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_surfaceColorG, setSurfaceColor);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_surfaceColorB, setSurfaceColor);
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_opaqueness, ezDelegate<void(float)>(&Terrain::SetWaterOpaqueness, m_pTerrain));
+
+  m_pUserInterface->AddSeperator("Flow", "group='Water Rendering'");
+
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_normalMapRepeat, ezDelegate<void(float)>(&Terrain::SetWaterNormalMapRepeat, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_speedToNormalDistortion, ezDelegate<void(float)>(&Terrain::SetWaterSpeedToNormalDistortion, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_normalLayerBlendInveral, [&](float seconds) { m_pTerrain->Terrain::SetWaterDistortionLayerBlendInterval(ezTime::Seconds(seconds)); });
+  CreateCVarInterfaceEntry(SceneConfig::WaterRendering::g_flowDistortionStrength, ezDelegate<void(float)>(&Terrain::SetWaterFlowDistortionStrength, m_pTerrain));
 
 
-  SceneConfig::WaterRendering::g_opaqueness.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());));
-
-  SceneConfig::WaterRendering::g_normalMapRepeat.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterNormalMapRepeat(SceneConfig::WaterRendering::g_normalMapRepeat.GetValue());));
-  SceneConfig::WaterRendering::g_speedToNormalDistortion.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterSpeedToNormalDistortion(SceneConfig::WaterRendering::g_speedToNormalDistortion.GetValue());));
-  SceneConfig::WaterRendering::g_normalLayerBlendInveral.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterDistortionLayerBlendInterval(ezTime::Seconds(SceneConfig::WaterRendering::g_normalLayerBlendInveral.GetValue()));));
-  SceneConfig::WaterRendering::g_flowDistortionStrength.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetWaterFlowDistortionStrength(SceneConfig::WaterRendering::g_flowDistortionStrength.GetValue());));
-
-
-    // Simulation
-  SceneConfig::Simulation::g_SimulationStepsPerSecond.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());));
-  SceneConfig::Simulation::g_FlowDamping.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());));
-
-  SceneConfig::Simulation::g_FlowAcceleration.m_CVarEvents.AddEventHandler(CONFIG_EVENTHANDLER_LAMBDA(m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());));
+  // Simulation
+  CreateStatInterfaceEntry("Simulation Time", "group='Simulation'");
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_SimulationStepsPerSecond, ezDelegate<void(float)>(&Terrain::SetSimulationStepsPerSecond, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_FlowDamping, ezDelegate<void(float)>(&Terrain::SetFlowDamping, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_FlowAcceleration, ezDelegate<void(float)>(&Terrain::SetFlowAcceleration, m_pTerrain));
+  m_pUserInterface->AddButton("Reset Simulation", ezDelegate<void()>([&]() { m_pTerrain->CreateHeightmapFromNoiseAndResetSim(); }), "group='Simulation'");
 
 
-  
-  m_pUserInterface->AddButton("Reset Simulation", "Simulation", [&]() { m_pTerrain->CreateHeightmapFromNoiseAndResetSim(); });
 
-  // Trigger initial values that may be saved
-  m_pTerrain->SetPixelPerTriangle(SceneConfig::TerrainRendering::g_PixelPerTriangle.GetValue());
-  m_pTerrain->SetAnisotrpicFiltering(SceneConfig::TerrainRendering::g_UseAnisotropicFilter.GetValue());
-  m_pTerrain->SetTerrainSpecularPower(SceneConfig::TerrainRendering::g_SpecularPower.GetValue());
-  m_pTerrain->SetTerrainFresnelReflectionCoef(SceneConfig::TerrainRendering::g_FresnelReflection.GetValue());
 
-  setBigDepthColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_bigDepthColorR));
-  setSurfaceColor(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_surfaceColorR));
-  setWaterExtinctionCoef(ezCVar::CVarEvent(&SceneConfig::WaterRendering::g_extinctionCoefficientsR));
-  m_pTerrain->SetWaterOpaqueness(SceneConfig::WaterRendering::g_opaqueness.GetValue());
-
-  m_pTerrain->SetWaterNormalMapRepeat(SceneConfig::WaterRendering::g_normalMapRepeat.GetValue());
-  m_pTerrain->SetWaterSpeedToNormalDistortion(SceneConfig::WaterRendering::g_speedToNormalDistortion.GetValue());
-  m_pTerrain->SetWaterDistortionLayerBlendInterval(ezTime::Seconds(SceneConfig::WaterRendering::g_normalLayerBlendInveral.GetValue()));
-  m_pTerrain->SetWaterFlowDistortionStrength(SceneConfig::WaterRendering::g_flowDistortionStrength.GetValue());
-
-  m_pTerrain->SetSimulationStepsPerSecond(SceneConfig::Simulation::g_SimulationStepsPerSecond.GetValue());
-  m_pTerrain->SetFlowDamping(SceneConfig::Simulation::g_FlowDamping.GetValue());
-  m_pTerrain->SetFlowAcceleration(SceneConfig::Simulation::g_FlowAcceleration.GetValue());
+  // Trigger all cvar changed since CVar's default values are not necessarily setting's status
+  for(ezCVar* pCVarInst = ezCVar::GetFirstInstance(); pCVarInst; pCVarInst = pCVarInst->GetNextInstance())
+    pCVarInst->m_CVarEvents.Broadcast(ezCVar::CVarEvent(pCVarInst));
 }
 
 void Scene::RecreateScreenBuffers()
@@ -264,7 +275,7 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_pTerrainDrawTimer->End();
   if(SceneConfig::TerrainRendering::g_Wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+    
   // render water
   if(SceneConfig::WaterRendering::g_wireframe)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

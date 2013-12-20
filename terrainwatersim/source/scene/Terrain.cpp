@@ -173,20 +173,20 @@ void Terrain::SetSimulationStepsPerSecond(float simulationStepsPerSecond)
   SetFlowAcceleration(m_flowAcceleration);
 
   float cellDistance = m_worldSize / m_gridSize;
-  //m_simulationParametersUBO["CellAreaInv_timeScaled"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() / (cellDistance * cellDistance)));
+  m_simulationParametersUBO["CellAreaInv_timeScaled"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() / (cellDistance * cellDistance)));
 }
 
 void Terrain::SetFlowDamping(float flowDamping)
 {
   m_flowDamping = flowDamping;
-  //m_simulationParametersUBO["FlowFriction_perStep"].Set(ezMath::Pow(m_flowDamping, static_cast<float>(m_simulationStepLength.GetSeconds())));
+  m_simulationParametersUBO["FlowFriction_perStep"].Set(ezMath::Pow(m_flowDamping, static_cast<float>(m_simulationStepLength.GetSeconds())));
 }
 
 void Terrain::SetFlowAcceleration(float flowAcceleration)
 {
   m_flowAcceleration = flowAcceleration;
   float cellDistance = m_worldSize / m_gridSize;
-  //m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
+  m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
 
@@ -260,8 +260,13 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
   }
 
   // Todo: Is this very slow?
-  if(anySimStep)
-    m_pTerrainData->GenMipMaps();
+ // if(anySimStep)
+ //   m_pTerrainData->GenMipMaps();
+
+  // Unbind to be assure the gpu that no more reads will happen
+  gl::Texture::ResetImageBinding(0);
+  gl::Texture::ResetImageBinding(1);
+  gl::Texture::ResetImageBinding(2);
 }
 
 void Terrain::UpdateVisibilty(const ezVec3& cameraPosition)
@@ -300,7 +305,7 @@ void Terrain::DrawTerrain()
 void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap)
 {
   const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
-
+  
   m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
   m_texturingSamplerObjectDataGrids->BindSampler(1); // refraction
   m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
@@ -334,7 +339,6 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
 
   // UBO setup
   m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezSystemTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
-
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_waterRenderingUBO.BindBuffer(6);

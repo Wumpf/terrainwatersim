@@ -50,7 +50,7 @@ public:
   void SetPixelPerTriangle(float pixelPerTriangle);
 
   bool GetAnisotropicFiltering() const { return m_anisotropicFiltering; }
-  void SetAnisotrpicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
+  void SetAnisotropicFiltering(bool anisotropicFiltering) { m_anisotropicFiltering = anisotropicFiltering; }
 
     // Terrain
   void SetTerrainFresnelReflectionCoef(float terrainFresnelReflectionCoef) { m_terrainRenderingUBO["FresnelReflectionCoefficient"].Set(terrainFresnelReflectionCoef); }

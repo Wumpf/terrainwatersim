@@ -21,6 +21,8 @@ namespace gl
     void BindImage(GLuint slotIndex, ImageAccess access) { BindImage(0, access, m_format); }
     void BindImage(GLuint slotIndex, ImageAccess access, GLenum format);
 
+    static void ResetImageBinding(GLuint slotIndex) { glBindImageTexture(0, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA8); }
+
     TextureId GetInternHandle() { return m_TextureHandle; }
 
     ezUInt32 GetWidth() const           { return m_width; }
