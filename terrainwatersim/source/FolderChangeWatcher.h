@@ -18,15 +18,15 @@ private:
   class FolderWatchThread : public ezThread
   {
   public:
-    FolderWatchThread(const ezString& sWatchedDirectory, FolderChangeWatcher& parent);
-    void Stop() { m_bRun = false; }
+    FolderWatchThread(const ezString& watchedDirectory, FolderChangeWatcher& parent);
+    void Stop() { m_run = false; }
 
   private:
     virtual ezUInt32 Run() EZ_OVERRIDE;
 
     FolderChangeWatcher& m_parent;
-    const ezString m_sWatchedDirectory;
-    bool m_bRun;
+    const ezString m_watchedDirectory;
+    bool m_run;
     HANDLE m_changeHandle;
     ezUInt64 m_lastTrackedModification;
   };

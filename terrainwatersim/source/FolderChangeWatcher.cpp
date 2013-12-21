@@ -43,8 +43,8 @@ ezString FolderChangeWatcher::PopChangedFile()
 FolderChangeWatcher::FolderWatchThread::FolderWatchThread(const ezString& sWatchedDirectory, FolderChangeWatcher& parent) :
   ezThread(sWatchedDirectory.GetData()),
   m_parent(parent),
-  m_sWatchedDirectory(sWatchedDirectory),
-  m_bRun(true)
+  m_watchedDirectory(sWatchedDirectory),
+  m_run(true)
 {
   m_changeHandle = FindFirstChangeNotificationW( 
     ezStringWChar(sWatchedDirectory.GetData()).GetData(),      // directory to watch 
@@ -62,43 +62,61 @@ FolderChangeWatcher::FolderWatchThread::FolderWatchThread(const ezString& sWatch
 
 ezUInt32 FolderChangeWatcher::FolderWatchThread::Run()
 {
-  ezStringBuilder wildcardPath(m_sWatchedDirectory.GetData());
-  wildcardPath.AppendPath("*");
-  ezStringWChar wildcardPath_wchar(wildcardPath.GetData());
+  ezList<ezString> directoryQueue;
 
-  while(m_bRun)
+  while(m_run)
   {
     DWORD waitStatus = WaitForMultipleObjects(1, &m_changeHandle, TRUE, 200);
 
     if(waitStatus == WAIT_OBJECT_0)
     {
-      // iterate over each file
-      WIN32_FIND_DATAW ffd;
-      HANDLE hFind = FindFirstFileW(wildcardPath_wchar.GetData(), &ffd);
-      if (hFind == INVALID_HANDLE_VALUE)
-        continue; // don't log this, happens far to often!
+      directoryQueue.PushBack("");
 
       ezUInt64 lastTrackedModificationNew = m_lastTrackedModification;
 
-      do {
-        // ignore directories
-        if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-        {
-          ezUInt64 fileTime = *reinterpret_cast<ezUInt64*>(&ffd.ftLastWriteTime);
-          if(fileTime > m_lastTrackedModification)
-          {
-            lastTrackedModificationNew = std::max(lastTrackedModificationNew, fileTime);
-            
-            ezStringUtf8 changedFile(ffd.cFileName);
-            m_parent.m_queueMutex.Acquire();
-            m_parent.m_changedFileQueue.PushBack(changedFile.GetData());
-            m_parent.m_queueMutex.Release();
+      while(!directoryQueue.IsEmpty())
+      {
+        ezString currentSubDirectory = directoryQueue.PeekFront();
+        directoryQueue.PopFront();
 
-            ezLog::Info("File was changed: \"%s\"", changedFile.GetData());
+        ezStringBuilder wildcardPath(m_watchedDirectory.GetData());
+        wildcardPath.AppendPath(currentSubDirectory.GetData(), "*");
+        ezStringWChar wildcardPath_wchar(wildcardPath.GetData());
+
+        // iterate over each file
+        WIN32_FIND_DATAW ffd;
+        HANDLE hFind = FindFirstFileW(wildcardPath_wchar.GetData(), &ffd);
+        if(hFind == INVALID_HANDLE_VALUE)
+          continue; // don't log this, happens far to often!
+
+
+        do {
+          if(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY && ffd.cFileName[0] != L'.')
+          {
+            ezStringBuilder newDirectory(currentSubDirectory.GetData());
+            newDirectory.AppendPath(ezStringUtf8(ffd.cFileName).GetData());
+            directoryQueue.PushBack(newDirectory);
           }
-        }
-      } while (FindNextFile(hFind, &ffd) != 0);
-      FindClose(hFind);
+          else
+          {
+            ezUInt64 fileTime = *reinterpret_cast<ezUInt64*>(&ffd.ftLastWriteTime);
+            if(fileTime > m_lastTrackedModification)
+            {
+              lastTrackedModificationNew = std::max(lastTrackedModificationNew, fileTime);
+
+              ezStringBuilder changedFile(currentSubDirectory.GetData());
+              changedFile.AppendPath(ezStringUtf8(ffd.cFileName).GetData());
+
+              m_parent.m_queueMutex.Acquire();
+              m_parent.m_changedFileQueue.PushBack(changedFile.GetData());
+              m_parent.m_queueMutex.Release();
+
+              ezLog::Info("File was changed: \"%s\"", changedFile.GetData());
+            }
+          }
+        } while(FindNextFile(hFind, &ffd) != 0);
+        FindClose(hFind);
+      }
 
       m_lastTrackedModification = lastTrackedModificationNew;
     }
