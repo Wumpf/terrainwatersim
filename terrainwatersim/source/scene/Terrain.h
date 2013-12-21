@@ -40,7 +40,7 @@ public:
   const gl::ShaderObject& GetTerrainShader() { return m_terrainRenderShader; }
   const gl::ShaderObject& GetWaterShader() { return m_waterRenderShader; }
 
-  float GetTerrainWorldSize() const             { return m_worldSize; }
+  float GetTerrainWorldSize() const             { return m_gridWorldSize; }
   //void SetTerrainWorldSize(float worldSize)     { m_worldSize = worldSize; }    // Expected patch count changes!
   float GetMinBlockSizeWorld() const             { return m_minPatchSizeWorld; }
   //void SetMinBlockSizeWorld(float worldSize)     { m_minBlockSizeWorld = worldSize; } // Expected patch count changes!
@@ -86,10 +86,10 @@ private:
   // Settings
 
   // general
-  float m_worldSize;
+  float m_gridWorldSize;
   float m_minPatchSizeWorld;
   float m_heightScale;
-  ezUInt32 m_gridSize;
+  ezUInt32 m_gridResolution;
 
   // simulation
   ezTime m_simulationStepLength;

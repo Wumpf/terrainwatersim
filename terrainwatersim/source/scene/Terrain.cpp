@@ -19,8 +19,8 @@ const float Terrain::m_maxTesselationFactor = 64.0f;
 const float Terrain::m_refractionTextureSizeFactor = 1.0f;
 
 Terrain::Terrain(const ezSizeU32& screenSize) :
-  m_worldSize(1024.0f),
-  m_gridSize(1024),
+  m_gridWorldSize(1024.0f),
+  m_gridResolution(1024),
   m_minPatchSizeWorld(16.0f),
   m_heightScale(300.0f),
   m_anisotropicFiltering(false),
@@ -52,7 +52,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
 {
   EZ_LOG_BLOCK("Terrain");
 
-  m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_worldSize, m_minPatchSizeWorld, 8, 8);
+  m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_minPatchSizeWorld, 8, 5);
 
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -87,7 +87,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   // set some default values
   m_landscapeInfoUBO["GridMinPosition"].Set(ezVec2(0.0f));
   m_landscapeInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
-  m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_worldSize);
+  m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_gridWorldSize);
   SetPixelPerTriangle(50.0f);
   m_terrainRenderingUBO["TextureRepeat"].Set(0.05f);
 
@@ -107,7 +107,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
 
   // sampler
   m_texturingSamplerObjectDataGrids = &gl::SamplerObject::GetSamplerObject(
-    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::CLAMP));
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT));
   m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 16));
   m_texturingSamplerObjectTrilinear = &gl::SamplerObject::GetSamplerObject(
@@ -172,7 +172,7 @@ void Terrain::SetSimulationStepsPerSecond(float simulationStepsPerSecond)
   SetFlowDamping(m_flowDamping);
   SetFlowAcceleration(m_flowAcceleration);
 
-  float cellDistance = m_worldSize / m_gridSize;
+  float cellDistance = m_gridWorldSize / m_gridResolution;
   m_simulationParametersUBO["CellAreaInv_timeScaled"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() / (cellDistance * cellDistance)));
 }
 
@@ -185,7 +185,7 @@ void Terrain::SetFlowDamping(float flowDamping)
 void Terrain::SetFlowAcceleration(float flowAcceleration)
 {
   m_flowAcceleration = flowAcceleration;
-  float cellDistance = m_worldSize / m_gridSize;
+  float cellDistance = m_gridWorldSize / m_gridResolution;
   m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
@@ -195,22 +195,22 @@ void Terrain::CreateHeightmapFromNoiseAndResetSim()
   if(m_pTerrainData != NULL)
     EZ_DEFAULT_DELETE(m_pTerrainData);
 
-  m_pTerrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, -1);
-  ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_gridSize*m_gridSize);
+  m_pTerrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, -1);
+  ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_gridResolution*m_gridResolution);
 
   NoiseGenerator noiseGen;
-  float mulitplier = 1.0f / static_cast<float>(m_gridSize - 1);
+  float mulitplier = 1.0f / static_cast<float>(m_gridResolution - 1);
 
 #pragma omp parallel for // OpenMP parallel for loop.
-  for(ezInt32 y = 0; y < static_cast<ezInt32>(m_gridSize); ++y) // Needs to be signed for OpenMP.
+  for(ezInt32 y = 0; y < static_cast<ezInt32>(m_gridResolution); ++y) // Needs to be signed for OpenMP.
   {
-    for(ezUInt32 x = 0; x < m_gridSize; ++x)
+    for(ezUInt32 x = 0; x < m_gridResolution; ++x)
     {
-      volumeData[x + y * m_gridSize].r = (noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, false, NULL) * 0.5f + 0.5f) * m_heightScale;
-      volumeData[x + y * m_gridSize].g = 0.3f;
-      volumeData[x + y * m_gridSize].b = 0.3f;
-      volumeData[x + y * m_gridSize].a = std::max(0.0f, (0.45f - pow(ezVec2(x * mulitplier - 0.5f, y * mulitplier - 0.5f).GetLengthSquared(), 2.0f)*800.0f) *m_heightScale
-        - volumeData[x + y * m_gridSize].r);
+      volumeData[x + y * m_gridResolution].r = (noiseGen.GetValueNoise(ezVec3(mulitplier*x, mulitplier*y, 0.0f), 2, 10, 0.43f, true, NULL) * 0.5f + 0.5f) * m_heightScale;
+      volumeData[x + y * m_gridResolution].g = 0.3f;
+      volumeData[x + y * m_gridResolution].b = 0.3f;
+      volumeData[x + y * m_gridResolution].a = std::max(0.0f, (0.45f - pow(ezVec2(x * mulitplier - 0.5f, y * mulitplier - 0.5f).GetLengthSquared(), 2.0f)*800.0f) *m_heightScale
+        - volumeData[x + y * m_gridResolution].r);
     }
   }
   m_pTerrainData->SetData(0, volumeData);
@@ -222,14 +222,14 @@ void Terrain::CreateHeightmapFromNoiseAndResetSim()
   // Create flow textures
   if(m_pWaterOutgoingFlow != NULL)
     EZ_DEFAULT_DELETE(m_pWaterOutgoingFlow);
-  m_pWaterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RGBA32F, 1);
-  ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_gridSize*m_gridSize);
+  m_pWaterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, 1);
+  ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_gridResolution*m_gridResolution);
   ezMemoryUtils::ZeroFill(pEmptyBuffer.GetPtr(), pEmptyBuffer.GetCount());
   m_pWaterOutgoingFlow->SetData(0, pEmptyBuffer.GetPtr());
   EZ_DEFAULT_DELETE_ARRAY(pEmptyBuffer);
 
   if(m_pWaterFlowMap == NULL)
-    m_pWaterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridSize, m_gridSize, GL_RG16F, 1);
+    m_pWaterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RG16F, 1);
 }
 
 void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
@@ -250,13 +250,13 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
     m_updateFlowShader.Activate();
-    glDispatchCompute(m_gridSize / 16, m_gridSize / 16, 1);
+    glDispatchCompute(m_gridResolution / 16, m_gridResolution / 16, 1);
 
     m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
     m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ, GL_RGBA32F);
     m_pWaterFlowMap->BindImage(2, gl::Texture::ImageAccess::WRITE, GL_RG16F);
     m_applyFlowShader.Activate();
-    glDispatchCompute(m_gridSize / 16, m_gridSize / 16, 1);
+    glDispatchCompute(m_gridResolution / 16, m_gridResolution / 16, 1);
   }
 
   // Todo: Is this very slow?

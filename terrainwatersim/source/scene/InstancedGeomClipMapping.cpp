@@ -2,10 +2,9 @@
 #include "InstancedGeomClipMapping.h"
 
 
-InstancedGeomClipMapping::InstancedGeomClipMapping(float maxGridSize, float minPatchSizeWorld, ezUInt32 ringThinkness, ezUInt32 numRings) :
+InstancedGeomClipMapping::InstancedGeomClipMapping(float minPatchSizeWorld, ezUInt32 ringThinkness, ezUInt32 numRings) :
   m_ringThinkness(ringThinkness),
   m_numRings(numRings),
-  m_maxGridSize(maxGridSize),
   m_minPatchSizeWorld(minPatchSizeWorld)
 {
   // Patch vertex buffer
@@ -22,7 +21,7 @@ InstancedGeomClipMapping::InstancedGeomClipMapping(float maxGridSize, float minP
 
   // Instance buffers
   // Try to guess max number of patches:
-  m_maxPatchInstances[(ezUInt32)PatchType::FULL] = static_cast<ezUInt32>(ezMath::Pow(m_maxGridSize / m_minPatchSizeWorld / 2, 2.0f));
+  m_maxPatchInstances[(ezUInt32)PatchType::FULL] = ringThinkness * ringThinkness * 4 * numRings;
   m_maxPatchInstances[(ezUInt32)PatchType::STITCH1] = static_cast<ezUInt32>(m_maxPatchInstances[(ezUInt32)PatchType::FULL] * (static_cast<float>(4 * 2 * m_ringThinkness) / (2 * m_ringThinkness * 2 * m_ringThinkness)));
   m_maxPatchInstances[(ezUInt32)PatchType::STITCH2] = m_maxPatchInstances[(ezUInt32)PatchType::STITCH1] / 4;
 
@@ -109,12 +108,6 @@ void InstancedGeomClipMapping::UpdateInstanceData(const ezVec3& cameraPosition)
       ezMath::Floor(cameraPosition.z / currentPatch.worldScale / 2) * currentPatch.worldScale * 2);
     ezVec2 positionMin = cameraBlockPosition - ezVec2(currentPatch.worldScale * m_ringThinkness);
     ezVec2 positionMax = cameraBlockPosition + ezVec2(currentPatch.worldScale * m_ringThinkness);
-
-    // World is not infinite!
-    positionMin.x = ezMath::Clamp(positionMin.x, 0.0f, m_maxGridSize);
-    positionMin.y = ezMath::Clamp(positionMin.y, 0.0f, m_maxGridSize);
-    positionMax.x = ezMath::Clamp(positionMax.x, 0.0f, m_maxGridSize);
-    positionMax.y = ezMath::Clamp(positionMax.y, 0.0f, m_maxGridSize);
 
     for(currentPatch.worldPosition.x = positionMin.x; currentPatch.worldPosition.x < positionMax.x; currentPatch.worldPosition.x += currentPatch.worldScale)
     {
