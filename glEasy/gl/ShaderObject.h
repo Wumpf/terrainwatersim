@@ -37,6 +37,7 @@ namespace gl
     const ezString& GetName() const { return m_name; }
 
     ezResult AddShaderFromFile(ShaderType type, const ezString& sFilename, std::initializer_list<ezString> defines = {});
+    /// \todo Perform lookup if shader is already created. Store source code hash
     ezResult AddShaderFromSource(ShaderType type, const ezString& pSourceCode, const ezString& sOriginName, std::initializer_list<ezString> defines = {});
     ezResult CreateProgram();
 
@@ -75,12 +76,13 @@ namespace gl
 
 
     /// Returns infos about global uniforms
-    /// \remarks Deliberatly not const so user can use operator[] on the map
+    /// \remarks Deliberately not const so user can use operator[] on the map
     GlobalUniformInfos& GetGlobalUniformInfo()    { return m_GlobalUniformInfo; }
+    
     const GlobalUniformInfos& GetGlobalUniformInfo() const { return m_GlobalUniformInfo; }
 
     /// Returns infos about used uniform buffer definitions
-    /// \remarks Deliberatly not const so user can use operator[] on the map
+    /// \remarks Deliberately not const so user can use operator[] on the map
     UniformBlockInfos& GetUniformBufferInfo()    { return m_UniformBlockInfos; }
     const UniformBlockInfos& GetUniformBufferInfo() const { return m_UniformBlockInfos; }
 

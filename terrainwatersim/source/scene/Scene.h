@@ -44,6 +44,7 @@ private:
 
   class Terrain* m_pTerrain;
   class Background* m_pBackground;
+  class PostProcessing* m_pPostProcessing;
 
   ezUniquePtr<gl::TimerQuery> m_pTerrainDrawTimer;
   ezUniquePtr<gl::TimerQuery> m_pWaterDrawTimer;

@@ -20,6 +20,7 @@
 #include "gl/resources/FramebufferObject.h"
 #include "gl/resources/textures/Texture2D.h"
 #include <Foundation/Basics/Types/Variant.h>
+#include "PostProcessing.h"
 
 namespace SceneConfig
 {
@@ -69,6 +70,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
 
   m_pTerrain = EZ_DEFAULT_NEW(Terrain)(GeneralConfig::GetScreenResolution());
   m_pBackground = EZ_DEFAULT_NEW(Background)(256);
+  m_pPostProcessing = EZ_DEFAULT_NEW(PostProcessing)();
 
   // global ubo inits
   InitGlobalUBO();
@@ -212,6 +214,7 @@ Scene::~Scene(void)
 {
   EZ_DEFAULT_DELETE(m_pTerrain);
   EZ_DEFAULT_DELETE(m_pBackground);
+  EZ_DEFAULT_DELETE(m_pPostProcessing);
 }
 
 ezResult Scene::Update(ezTime lastFrameDuration)
@@ -290,32 +293,11 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_pBackground->Draw();
 
   // Resolve rendertarget to backbuffer
-  glEnable(GL_FRAMEBUFFER_SRGB);
-  glDisable(GL_DEPTH_TEST); // no more depth needed
-  glDepthMask(GL_FALSE);
-
-  // blit is slow according to this http://stackoverflow.com/questions/9209936/copy-texture-to-screen-buffer-without-drawing-quad-opengl
-  // But it turned out, that it is still the standard way to resolve textures.. so since the shader is already there, let's choose the best
-  if(m_pLinearHDRBuffer->GetNumMSAASamples() > 0)
-  {
-    ezRectU32 screenRect(0, 0, m_pLinearHDRBuffer->GetWidth(), m_pLinearHDRBuffer->GetHeight());
-    m_pLinearHDRFramebuffer->BlitTo(NULL, screenRect, screenRect);
-  }
-  else
-  {
-    gl::FramebufferObject::BindBackBuffer();
-    m_pLinearHDRBuffer->Bind(0);
-    m_pCopyShader->Activate();
-    gl::ScreenAlignedTriangle::Draw();
-  }
+  m_pPostProcessing->ApplyAndRenderToBackBuffer(*m_pLinearHDRFramebuffer.Get());
 
 
 
   // Render ui directly to backbuffer
-  gl::FramebufferObject::BindBackBuffer();
-  glViewport(0, 0, GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue());
-//  gl::ShaderObject::ResetShaderBinding();
-  glDisable(GL_FRAMEBUFFER_SRGB);
   RenderUI();
 
   return EZ_SUCCESS;
@@ -323,5 +305,6 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
 void Scene::RenderUI()
 {
+  glBindSampler(0, 0);
   m_pUserInterface->Render();
 }

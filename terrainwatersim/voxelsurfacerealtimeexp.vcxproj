@@ -118,6 +118,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\scene\AntTweakBarInterface.h" />
     <ClInclude Include="source\scene\Background.h" />
     <ClInclude Include="source\scene\InstancedGeomClipMapping.h" />
+    <ClInclude Include="source\scene\PostProcessing.h" />
     <ClInclude Include="source\scene\Scene.h" />
     <ClInclude Include="source\scene\Terrain.h" />
     <ClInclude Include="source\UniquePtr.h" />
@@ -126,6 +127,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\athmosphericScattering.frag" />
     <None Include="shader\background.frag" />
     <None Include="shader\eachCubemapFace.geom" />
+    <None Include="shader\postpro\tonemapCombine.frag" />
     <None Include="shader\simulation.comp" />
     <None Include="shader\constantbuffers.glsl" />
     <None Include="shader\helper.glsl" />
@@ -158,6 +160,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClCompile Include="source\scene\AntTweakBarInterface.cpp" />
     <ClCompile Include="source\scene\Background.cpp" />
     <ClCompile Include="source\scene\InstancedGeomClipMapping.cpp" />
+    <ClCompile Include="source\scene\PostProcessing.cpp" />
     <ClCompile Include="source\scene\Scene.cpp" />
     <ClCompile Include="source\scene\Terrain.cpp" />
   </ItemGroup>
