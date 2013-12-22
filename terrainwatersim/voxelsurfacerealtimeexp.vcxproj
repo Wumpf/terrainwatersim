@@ -127,6 +127,9 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\athmosphericScattering.frag" />
     <None Include="shader\background.frag" />
     <None Include="shader\eachCubemapFace.geom" />
+    <None Include="shader\postpro\luminanceAdapt.frag" />
+    <None Include="shader\postpro\luminanceStart.frag" />
+    <None Include="shader\postpro\postproCommon.glsl" />
     <None Include="shader\postpro\tonemapCombine.frag" />
     <None Include="shader\simulation.comp" />
     <None Include="shader\constantbuffers.glsl" />

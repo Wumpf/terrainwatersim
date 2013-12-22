@@ -51,8 +51,8 @@ namespace SceneConfig
 
   namespace Simulation
   {
-    extern ezCVarFloat g_SimulationStepsPerSecond;
-    extern ezCVarFloat g_FlowDamping;
-    extern ezCVarFloat g_FlowAcceleration;
+    extern ezCVarFloat g_simulationStepsPerSecond;
+    extern ezCVarFloat g_flowDamping;
+    extern ezCVarFloat g_flowAcceleration;
   }
 }

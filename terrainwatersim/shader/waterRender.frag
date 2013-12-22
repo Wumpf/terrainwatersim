@@ -194,7 +194,7 @@ void main()
 	color = mix(color, foam.rgb, saturate(flowSpeedSq*SpeedToFoamBlend) * foam.a);
 
 	// Fogging
-	color = ApplyFog(color, cameraDistance, toCamera);
+	color = ApplyFog(color, CameraPosition, cameraDistance, toCamera);
 
 	// Color output
 	FragColor.rgb = color;

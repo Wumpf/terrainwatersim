@@ -4,23 +4,25 @@
 
 #include "RenderWindow.h"
 
-#include "gl/ScreenAlignedTriangle.h"
-#include "gl/Font.h"
-#include "gl/TimerQuery.h"
-#include "gl/GLUtils.h"
+#include <gl/ScreenAlignedTriangle.h>
+#include <gl/Font.h>
+#include <gl/TimerQuery.h>
+#include <gl/GLUtils.h>
+#include <gl/resources/FramebufferObject.h>
+#include <gl/resources/textures/Texture2D.h>
 
 #include "math/camera/FreeCamera.h"
 
 #include "Terrain.h"
 #include "Background.h"
+#include "PostProcessing.h"
 
 #include "AntTweakBarInterface.h"
-#include <Foundation/Utilities/Stats.h>
 
-#include "gl/resources/FramebufferObject.h"
-#include "gl/resources/textures/Texture2D.h"
+#include <Foundation/Utilities/Stats.h>
 #include <Foundation/Basics/Types/Variant.h>
-#include "PostProcessing.h"
+
+
 
 namespace SceneConfig
 {
@@ -48,9 +50,15 @@ namespace SceneConfig
 
   namespace Simulation
   {
-    ezCVarFloat g_SimulationStepsPerSecond("Simulation steps per second", 60, ezCVarFlags::Save, "group='Simulation' min=30 max=300");
-    ezCVarFloat g_FlowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group='Simulation' min=0.2 max=1.0 step=0.01");
-    ezCVarFloat g_FlowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group='Simulation' min=0.5 max=100.0 step=0.1");
+    ezCVarFloat g_simulationStepsPerSecond("Simulation steps per second", 60, ezCVarFlags::Save, "group='Simulation' min=30 max=300");
+    ezCVarFloat g_flowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group='Simulation' min=0.2 max=1.0 step=0.01");
+    ezCVarFloat g_flowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group='Simulation' min=0.5 max=100.0 step=0.1");
+  }
+
+  namespace PostPro
+  {
+    ezCVarFloat g_exposure("Exposure", 0.3f, ezCVarFlags::Save, "group='PostProcessing' min=0.0 max=2.0 step = 0.05");
+    ezCVarFloat g_adaptationSpeed("Adaptation Speed", 0.5f, ezCVarFlags::Save, "group='PostProcessing' min=0 max=4 step=0.1");
   }
 }
 
@@ -70,7 +78,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
 
   m_pTerrain = EZ_DEFAULT_NEW(Terrain)(GeneralConfig::GetScreenResolution());
   m_pBackground = EZ_DEFAULT_NEW(Background)(256);
-  m_pPostProcessing = EZ_DEFAULT_NEW(PostProcessing)();
+  m_pPostProcessing = EZ_DEFAULT_NEW(PostProcessing)(GeneralConfig::GetScreenResolution());
 
   // global ubo inits
   InitGlobalUBO();
@@ -140,6 +148,7 @@ void Scene::InitConfig()
       return;
 
     m_pTerrain->RecreateScreenSizeDependentTextures(GeneralConfig::GetScreenResolution());
+    m_pPostProcessing->RecreateScreenSizeDependentTextures(GeneralConfig::GetScreenResolution());
     m_pCamera->ChangeAspectRatio(static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue());
     RecreateScreenBuffers();
   };
@@ -188,12 +197,15 @@ void Scene::InitConfig()
 
   // Simulation
   CreateStatInterfaceEntry("Simulation Time", "group='Simulation'");
-  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_SimulationStepsPerSecond, ezDelegate<void(float)>(&Terrain::SetSimulationStepsPerSecond, m_pTerrain));
-  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_FlowDamping, ezDelegate<void(float)>(&Terrain::SetFlowDamping, m_pTerrain));
-  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_FlowAcceleration, ezDelegate<void(float)>(&Terrain::SetFlowAcceleration, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_simulationStepsPerSecond, ezDelegate<void(float)>(&Terrain::SetSimulationStepsPerSecond, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_flowDamping, ezDelegate<void(float)>(&Terrain::SetFlowDamping, m_pTerrain));
+  CreateCVarInterfaceEntry(SceneConfig::Simulation::g_flowAcceleration, ezDelegate<void(float)>(&Terrain::SetFlowAcceleration, m_pTerrain));
   m_pUserInterface->AddButton("Reset Simulation", ezDelegate<void()>([&]() { m_pTerrain->CreateHeightmapFromNoiseAndResetSim(); }), "group='Simulation'");
 
 
+  // Postprocessing
+  CreateCVarInterfaceEntry(SceneConfig::PostPro::g_exposure, ezDelegate<void(float)>(&PostProcessing::SetExposure, m_pPostProcessing));
+  CreateCVarInterfaceEntry(SceneConfig::PostPro::g_adaptationSpeed, ezDelegate<void(float)>(&PostProcessing::SetLuminanceAdaptationSpeed, m_pPostProcessing));
 
 
   // Trigger all cvar changed since CVar's default values are not necessarily setting's status
@@ -293,7 +305,7 @@ ezResult Scene::Render(ezTime lastFrameDuration)
   m_pBackground->Draw();
 
   // Resolve rendertarget to backbuffer
-  m_pPostProcessing->ApplyAndRenderToBackBuffer(*m_pLinearHDRFramebuffer.Get());
+  m_pPostProcessing->ApplyAndRenderToBackBuffer(lastFrameDuration, *m_pLinearHDRFramebuffer.Get());
 
 
 

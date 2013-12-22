@@ -140,6 +140,15 @@
     <None Include="shader\postpro\tonemapCombine.frag">
       <Filter>shader\postpro</Filter>
     </None>
+    <None Include="shader\postpro\luminanceStart.frag">
+      <Filter>shader\postpro</Filter>
+    </None>
+    <None Include="shader\postpro\luminanceAdapt.frag">
+      <Filter>shader\postpro</Filter>
+    </None>
+    <None Include="shader\postpro\postproCommon.glsl">
+      <Filter>shader\postpro</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\math\NoiseGenerator.cpp">

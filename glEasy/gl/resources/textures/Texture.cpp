@@ -6,13 +6,13 @@ namespace gl
 {
   Texture* Texture::s_pBoundTextures[32];
 
-  Texture::Texture(ezUInt32 uiWidth, ezUInt32 uiHeight, ezUInt32 uiDepth, GLuint format, ezInt32 iNumMipLevels, ezUInt32 numMSAASamples) :
-    m_width(uiWidth),
-    m_height(uiHeight),
-    m_depth(uiDepth),
+  Texture::Texture(ezUInt32 width, ezUInt32 height, ezUInt32 depth, GLuint format, ezInt32 numMipLevels, ezUInt32 numMSAASamples) :
+    m_width(width),
+    m_height(height),
+    m_depth(depth),
 
     m_format(format),
-    m_numMipLevels(ConvertMipMapSettingToActualCount(iNumMipLevels, uiWidth, uiHeight, format)),
+    m_numMipLevels(ConvertMipMapSettingToActualCount(numMipLevels, width, height, depth)),
 
     m_numMSAASamples(numMSAASamples)
   {
@@ -33,24 +33,12 @@ namespace gl
     else if(iMipMapSetting < 0)
     {
       ezUInt32 uiNumMipLevels = 0;
-      if(depth != 0)
+      while(width > 0 || height > 0 || depth > 0)
       {
-        while(width > 1 && height > 1 && depth > 1)
-        {
-          width /= 2;
-          height /= 2;
-          depth /= 2;
-          ++uiNumMipLevels;
-        }
-      }
-      else
-      {
-        while(width > 1 && height > 1)
-        {
-          width /= 2;
-          height /= 2;
-          ++uiNumMipLevels;
-        }
+        width /= 2;
+        height /= 2;
+        depth /= 2;
+        ++uiNumMipLevels;
       }
       return uiNumMipLevels;
     }

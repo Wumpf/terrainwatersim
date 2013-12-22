@@ -1,8 +1,8 @@
-vec3 ApplyFog(vec3 color, float cameraDistance, vec3 toCameraVec)
+vec3 ApplyFog(vec3 color, vec3 cameraPosition, float cameraDistance, vec3 toCameraVec)
 {
 	const float fogDensity = 0.001;
 	const float fogIntensity = 0.6;
-	float fogAmount = clamp( - fogIntensity * exp(-CameraPosition.y * fogDensity) * (1.0 - exp( cameraDistance * toCameraVec.y * fogDensity)) / toCameraVec.y, 0, 1);
+	float fogAmount = clamp( - fogIntensity * exp(-cameraPosition.y * fogDensity) * (1.0 - exp( cameraDistance * toCameraVec.y * fogDensity)) / toCameraVec.y, 0, 1);
 	vec3 fogColor = vec3(0.18867780436772762, 0.4978442963618773, 0.6616065586417131); // air color
 	return mix(color, fogColor, fogAmount);
 }
@@ -38,6 +38,11 @@ vec3 ComputeRayDirection(in vec2 screenTexCor, in mat4 inverseViewProjection)
 	rayTarget.xyz /= rayTarget.w;
 	return normalize(rayTarget.xyz - rayOrigin.xyz);
 };
+
+float CalcLuminance(vec3 color)
+{
+	return dot(color, vec3(0.299, 0.587, 0.114));
+}
 
 #define saturate(value) clamp((value), 0, 1)
 

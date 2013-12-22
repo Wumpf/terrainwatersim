@@ -115,6 +115,6 @@ void main()
 	FragColor.xyz = diffuseColor_spec.rgb * (GlobalDirLightColor * lighting + GlobalAmbient * ambientLightAmount) + specularAmount * GlobalDirLightColor;
 
 	// clever fog http://www.iquilezles.org/www/articles/fog/fog.htm
-	FragColor.xyz = ApplyFog(FragColor.xyz, cameraDistance, toCamera);
+	FragColor.xyz = ApplyFog(FragColor.xyz, CameraPosition, cameraDistance, toCamera);
 	FragColor.a = 1.0;
 }

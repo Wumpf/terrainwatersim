@@ -19,15 +19,3 @@ layout(binding = 2, shared) uniform GlobalSceneInfo
   vec3 GlobalAmbient;
   //uint NumMSAASamples;
 };
-
-layout(binding = 3, shared) uniform VolumeDataInfo
-{
-  ivec3 VolumeMaxTextureLoad;
-  vec3 VolumeWorldSize;
-  vec3 VolumePosToTexcoord;
-
-  float GradientDescendStepMultiplier;
-  int GradientDescendStepCount;
-};
-
-const float IsoValue = 0.5;
