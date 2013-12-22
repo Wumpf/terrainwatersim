@@ -17,7 +17,7 @@ public:
   void Render();
 
   void AddButton(const ezString& name, ezDelegate<void()>& triggerCallback, const ezString& twDefines= "");
-  void AddReadOnly(const ezString& name, ezDelegate<ezString()>& getValue, const ezString& twDefines = "");
+  void AddReadOnly(const ezString& name, ezDelegate<const char*()>& getValue, const ezString& twDefines = "");
   void AddReadWrite(const ezString& name, ezDelegate<ezVariant()> &getValue, ezDelegate<void(const ezVariant&)>& setValue, const ezString& twDefines = "");
   void AddSeperator(const ezString& name, const ezString& twDefines = "");
 
@@ -45,7 +45,7 @@ private:
   };
   struct EntryReadOnly : public EntryBase
   {
-    ezDelegate<ezString()> getValue;
+    ezDelegate<const char*()> getValue;
   };
   struct EntryReadWrite : public EntryBase
   {

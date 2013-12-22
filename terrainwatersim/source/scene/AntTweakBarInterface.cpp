@@ -143,7 +143,7 @@ void AntTweakBarInterface::AddButton(const ezString& name, ezDelegate<void()>& t
   CheckTwError();
 }
 
-void AntTweakBarInterface::AddReadOnly(const ezString& name, ezDelegate<ezString()>& getValue, const ezString& twDefines)
+void AntTweakBarInterface::AddReadOnly(const ezString& name, ezDelegate<const char*()>& getValue, const ezString& twDefines)
 {
   EntryReadOnly* pEntry = EZ_DEFAULT_NEW(EntryReadOnly)();
   pEntry->name = name;
@@ -151,7 +151,7 @@ void AntTweakBarInterface::AddReadOnly(const ezString& name, ezDelegate<ezString
   m_entries.PushBack(pEntry);
 
   TwGetVarCallback getFkt = [](void *value, void *clientData) {
-    *static_cast<const char**>(value) = static_cast<EntryReadOnly*>(clientData)->getValue().GetData();
+    *static_cast<const char**>(value) = static_cast<EntryReadOnly*>(clientData)->getValue();
   };
 
   TwAddVarCB(m_pTweakBar, name.GetData(), TW_TYPE_CDSTRING, NULL, getFkt, m_entries.PeekBack(), twDefines.GetData());

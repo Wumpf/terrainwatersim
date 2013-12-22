@@ -135,7 +135,7 @@ template<> struct CVarType<ezCVarString> { typedef char* type; };
 
 // Macro for adding a stat value from ezStats to the interface
 #define CreateStatInterfaceEntry(statname, twDef) \
-  m_pUserInterface->AddReadOnly((statname), ezDelegate<ezString()>([](){ return ezString(ezStats::GetStat((statname))); }), (twDef));
+  m_pUserInterface->AddReadOnly((statname), ezDelegate<const char*()>([](){ return ezStats::GetStat((statname)); }), (twDef));
 
 
 void Scene::InitConfig()
@@ -160,7 +160,7 @@ void Scene::InitConfig()
   CreateStatInterfaceEntry("Frames per second", "group=General");
 
   // Terrain Rendering
-  m_pUserInterface->AddReadOnly("Terrain Draw Time", ezDelegate<ezString()>([](){ return ezString(ezStats::GetStat("Frames per second")); }), "group='Terrain Rendering'");
+  CreateStatInterfaceEntry("Terrain Draw Time", "group='Terrain Rendering'");
   CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_Wireframe, [](bool) {});
   CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_PixelPerTriangle, ezDelegate<void(float)>(&Terrain::SetPixelPerTriangle, m_pTerrain));
   CreateCVarInterfaceEntry(SceneConfig::TerrainRendering::g_UseAnisotropicFilter, ezDelegate<void(bool)>(&Terrain::SetAnisotropicFiltering, m_pTerrain));
