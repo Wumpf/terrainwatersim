@@ -158,8 +158,8 @@ void main()
 	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
 	// Don't worry, the outcome is exactly the same!
 	vec3 cameraDirReflection = normalize((2 * nDotV) * normal - toCamera);
-  	float specularAmount = pow(max(0.0, dot(cameraDirReflection, GlobalDirLightDirection)), 8.0);
-  	specularAmount *= fresnel;
+  float specularAmount = pow(saturate(dot(cameraDirReflection, GlobalDirLightDirection)), 8.0);
+  specularAmount *= fresnel;
 
 
 

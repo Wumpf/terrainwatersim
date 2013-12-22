@@ -64,7 +64,7 @@ void main()
 	vec3 heightmapNormal = ComputeNormal(inHeightmapCoord);
 
 	// texturing
-	vec2 texcoord = inWorldPos.xz*TextureRepeat*1.5;
+	vec2 texcoord = inWorldPos.xz*TextureRepeat;
 	float textureSlopeFactor = heightmapNormal.y;
 	
 	vec4 grass_diffuse_spec = texture(GrassDiffuse, texcoord);
@@ -96,7 +96,7 @@ void main()
 	vec3 toCamera = CameraPosition - inWorldPos;
 	float cameraDistance = length(toCamera);
 	toCamera /= cameraDistance;
-  	float specularAmount = pow(max(0.0, dot(refl, toCamera)), SpecularPower) * diffuseColor_spec.a;
+  float specularAmount = pow(saturate(dot(refl, toCamera)), SpecularPower) * diffuseColor_spec.a;
 
 	// Schlick-Fresnel approx
 	float fresnel = Fresnel(dot(normal, toCamera), FresnelReflectionCoefficient);

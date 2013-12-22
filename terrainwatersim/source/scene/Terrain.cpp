@@ -89,7 +89,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_landscapeInfoUBO["MaxTesselationFactor"].Set(m_maxTesselationFactor);
   m_landscapeInfoUBO["HeightmapWorldTexelSize"].Set(1.0f / m_gridWorldSize);
   SetPixelPerTriangle(50.0f);
-  m_terrainRenderingUBO["TextureRepeat"].Set(0.05f);
+  m_terrainRenderingUBO["TextureRepeat"].Set(0.1f);
 
   SetSimulationStepsPerSecond(60.0f);  // Sets implicit all time scaled values
 
@@ -112,6 +112,8 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 16));
   m_texturingSamplerObjectTrilinear = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 1));
+  m_texturingSamplerObjectLinearClamp = &gl::SamplerObject::GetSamplerObject(
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::NEAREST, gl::SamplerObject::Border::CLAMP, 1));
 
   // Create heightmap
   CreateHeightmapFromNoiseAndResetSim();
@@ -260,8 +262,8 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
   }
 
   // Todo: Is this very slow?
- // if(anySimStep)
- //   m_pTerrainData->GenMipMaps();
+  if(anySimStep)
+    m_pTerrainData->GenMipMaps();
 
   // Unbind to be assure the gpu that no more reads will happen
   gl::Texture::ResetImageBinding(0);
@@ -288,7 +290,7 @@ void Terrain::DrawTerrain()
   pTextureFilter->BindSampler(1); // GrassDiffuse
   pTextureFilter->BindSampler(2); // StoneDiffuse
   pTextureFilter->BindSampler(3); // GrassNormal
-  pTextureFilter->BindSampler(4);// StoneNormal
+  pTextureFilter->BindSampler(4); // StoneNormal
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_terrainRenderingUBO.BindBuffer(6);
@@ -307,7 +309,7 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
   
   m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
-  m_texturingSamplerObjectDataGrids->BindSampler(1); // refraction
+  m_texturingSamplerObjectLinearClamp->BindSampler(1); // refraction
   m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
   m_texturingSamplerObjectDataGrids->BindSampler(3); // flowmap
   pTextureFilter->BindSampler(4);// normalmap

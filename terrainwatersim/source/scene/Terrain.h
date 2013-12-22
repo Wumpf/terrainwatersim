@@ -132,6 +132,7 @@ private:
   const gl::SamplerObject* m_texturingSamplerObjectDataGrids;
   const gl::SamplerObject* m_texturingSamplerObjectAnisotropic;
   const gl::SamplerObject* m_texturingSamplerObjectTrilinear;
+  const gl::SamplerObject* m_texturingSamplerObjectLinearClamp;
 
     // Water Textures
   //gl::Texture2D* m_pTextureFoam;
