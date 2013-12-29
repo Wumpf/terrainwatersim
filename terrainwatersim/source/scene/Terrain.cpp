@@ -298,28 +298,18 @@ void Terrain::DrawTerrain()
   // Terrain
   m_terrainRenderShader.Activate();
   m_pGeomClipMaps->DrawGeometry();
-
-  glBindSampler(0, 0);
-  //  glPatchParameteri(GL_PATCH_VERTICES, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap)
 {
   const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
   
-  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
-  m_texturingSamplerObjectLinearClamp->BindSampler(1); // refraction
-  m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
-  m_texturingSamplerObjectDataGrids->BindSampler(3); // flowmap
-  pTextureFilter->BindSampler(4);// normalmap
-  m_texturingSamplerObjectDataGrids->BindSampler(5); // noise
-  pTextureFilter->BindSampler(6); // Foam
 
   // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
   glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   m_pRefractionFBO->Bind(true);
+  m_texturingSamplerObjectLinearClamp->BindSampler(0);
   sceneFBO.GetColorAttachments()[0].pTexture->Bind(0);
   m_copyShader.Activate();
   gl::ScreenAlignedTriangle::Draw();
@@ -329,8 +319,16 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
 
-
   // texture setup
+  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
+  m_texturingSamplerObjectLinearClamp->BindSampler(1); // refraction
+  m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
+  m_texturingSamplerObjectDataGrids->BindSampler(3); // flowmap
+  pTextureFilter->BindSampler(4);// normalmap
+  m_texturingSamplerObjectDataGrids->BindSampler(5); // noise
+  pTextureFilter->BindSampler(6); // Foam
+  m_texturingSamplerObjectTrilinear->BindSampler(7); // TerrainInfo again, but filtered
+
   m_pTerrainData->Bind(0);
   m_pRefractionTexture->Bind(1);
   reflectionCubemap.Bind(2);
@@ -338,6 +336,7 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   m_pWaterNormalMap->Bind(4);
   m_pLowResNoise->Bind(5);
   m_pFoamTexture->Bind(6);
+  m_pTerrainData->Bind(7);
 
   // UBO setup
   m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezSystemTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
@@ -348,7 +347,4 @@ void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflec
   // Water
   m_waterRenderShader.Activate();
   m_pGeomClipMaps->DrawGeometry();
-
-  glBindSampler(0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

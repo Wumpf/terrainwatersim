@@ -8,17 +8,11 @@ public:
 	RenderWindowGL();
 	~RenderWindowGL();
 
-  void CreateGraphicsContext();
-  void DestroyGraphicsContext();
-
   void SwapBuffers();
   virtual void OnWindowMessage(HWND hWnd, UINT Msg, WPARAM WParam, LPARAM LParam) EZ_OVERRIDE;
   virtual void OnResizeMessage(const ezSizeU32& newWindowSize) EZ_OVERRIDE;
-  
-  HDC GetDeviceContext() const { return m_hDeviceContext; }
 
 private:
-  HDC m_hDeviceContext;
-  HGLRC m_hRC;
+  ezResult CreateGraphicsContext() EZ_OVERRIDE;
 };
 

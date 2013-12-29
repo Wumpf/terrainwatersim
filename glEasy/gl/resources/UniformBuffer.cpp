@@ -127,10 +127,12 @@ namespace gl
     glBindBuffer(GL_UNIFORM_BUFFER, m_BufferObject);
     glBufferSubData(GL_UNIFORM_BUFFER, m_uiBufferDirtyRangeStart, m_uiBufferDirtyRangeEnd - m_uiBufferDirtyRangeStart, m_pBufferData + m_uiBufferDirtyRangeStart);
 
+    ezResult result = gl::Utils::CheckError("glBufferSubData");
+
     m_uiBufferDirtyRangeEnd = std::numeric_limits<ezUInt32>::min();
     m_uiBufferDirtyRangeStart = std::numeric_limits<ezUInt32>::max();
 
-    return gl::Utils::CheckError("glBufferSubData");
+    return result;
   }
 
   ezResult UniformBuffer::BindBuffer(GLuint locationIndex)

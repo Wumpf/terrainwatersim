@@ -18,6 +18,8 @@ layout(binding = 4) uniform sampler2D Normalmap;
 layout(binding = 5) uniform sampler2D Noise;
 layout(binding = 6) uniform sampler2D Foam;
 
+layout(binding = 7) uniform sampler2D TerrainInfoFiltered;
+
 
 // Water Rendering constants
 layout(binding = 6) uniform WaterRendering
@@ -175,9 +177,23 @@ void main()
 	// Refraction
 	vec3 refractionTexture;
 	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, inProjectiveCoord, refractionTexture);
-	// Reflection
-	vec3 reflectionColor = texture(ReflectionCubemap, cameraDirReflection).rgb;
-
+	
+	// Reflection using coarse raymarching approach for terrain reflection 
+	vec3 reflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;	
+	
+	//bool terrainReflection = false;
+	vec3 raymarchPos = inWorldPos;
+	for(float t=1.05; t<50.0; t*=1.1f)	// ~40 iterations
+	{
+		raymarchPos += cameraDirReflection * t;
+		vec4 terrainInfo = textureLod(TerrainInfoFiltered, raymarchPos.xz * HeightmapWorldTexelSize, 3);
+		if(terrainInfo.x > raymarchPos.y)
+		{
+			reflectionColor /= CalcLuminance(reflectionColor) * 40.0;	// fake Reflections by darkening the reflection color
+	//		terrainReflection = true;
+			break;
+		}
+	}
 
 	// Combine Refraction & Reflection & Specular
 	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;

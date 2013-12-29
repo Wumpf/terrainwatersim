@@ -9,7 +9,7 @@ const ezVec2 OnScreenLogWriter::m_vScreenPos(10.0f, 20.0f);
 const float OnScreenLogWriter::m_fFadeSpeed = 0.25f;
 
 OnScreenLogWriter::OnScreenLogWriter(const RenderWindowGL& renderWindow) :
-  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Courier New", 14, renderWindow.GetDeviceContext()))
+  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Courier New", 14, renderWindow.GetWindowDC()))
 {
 }
 

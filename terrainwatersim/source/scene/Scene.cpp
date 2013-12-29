@@ -66,7 +66,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   m_pCopyShader(EZ_DEFAULT_NEW_UNIQUE(gl::ShaderObject, "copySceneShader")),
 
   m_pCamera(EZ_DEFAULT_NEW_UNIQUE(FreeCamera, ezAngle::Degree(70.0f), static_cast<float>(GeneralConfig::g_ResolutionWidth.GetValue()) / GeneralConfig::g_ResolutionHeight.GetValue())),
-  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetDeviceContext())),
+  m_pFont(EZ_DEFAULT_NEW_UNIQUE(gl::Font, "Arial", 20, renderWindow.GetWindowDC())),
 
   m_pWaterDrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
   m_pTerrainDrawTimer(EZ_DEFAULT_NEW_UNIQUE(gl::TimerQuery)),
@@ -77,7 +77,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   EZ_LOG_BLOCK("Scene init");
 
   m_pTerrain = EZ_DEFAULT_NEW(Terrain)(GeneralConfig::GetScreenResolution());
-  m_pBackground = EZ_DEFAULT_NEW(Background)(256);
+  m_pBackground = EZ_DEFAULT_NEW(Background)(128);
   m_pPostProcessing = EZ_DEFAULT_NEW(PostProcessing)(GeneralConfig::GetScreenResolution());
 
   // global ubo inits

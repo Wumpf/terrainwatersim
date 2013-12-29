@@ -124,7 +124,7 @@ namespace gl
           ErrorString = "UNKNOWN";
           break;
         }
-        ezLog::Error("OpenGL Error(%s): %s\n", ErrorString.c_str(), sTitle);
+        ezLog::Error("OpenGL Error(%s): %s\n", ErrorString.c_str(), sTitle.GetData());
       }
       return Error == GL_NO_ERROR ? EZ_SUCCESS : EZ_FAILURE;
     }

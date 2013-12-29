@@ -21,9 +21,7 @@ namespace GeneralConfig
   }
 }
  
-RenderWindowGL::RenderWindowGL() :
-  ezWindow(),
-  m_hDeviceContext(NULL), m_hRC(NULL)
+RenderWindowGL::RenderWindowGL() : ezWindow()
 {
   if(GeneralConfig::g_ResolutionWidth.GetValue() == 0)
     GeneralConfig::g_ResolutionWidth = 1024;
@@ -35,6 +33,7 @@ RenderWindowGL::RenderWindowGL() :
   m_CreationDescription.m_ClientAreaSize.height = GeneralConfig::g_ResolutionHeight.GetValue();
   m_CreationDescription.m_bFullscreenWindow = false;
   m_CreationDescription.m_bResizable = true;
+  m_CreationDescription.m_GraphicsAPI = ezGraphicsAPI::OpenGL;
 
   Initialize();
   CreateGraphicsContext();
@@ -42,7 +41,6 @@ RenderWindowGL::RenderWindowGL() :
 
 RenderWindowGL::~RenderWindowGL()
 {
-  DestroyGraphicsContext();
   Destroy();
 }
 
@@ -69,23 +67,7 @@ void RenderWindowGL::OnResizeMessage(const ezSizeU32& newWindowSize)
   ezWindow::OnResizeMessage(newWindowSize);
 }
 
-void RenderWindowGL::DestroyGraphicsContext()
-{
-  if (m_hRC)
-  {
-    wglMakeCurrent(NULL, NULL);
-    wglDeleteContext(m_hRC);
-    m_hRC = NULL;
-  }
-
-  if (m_hDeviceContext)
-  {
-    ReleaseDC(GetNativeWindowHandle(), m_hDeviceContext);
-    m_hDeviceContext = NULL;
-  }
-}
-
-void RenderWindowGL::CreateGraphicsContext()
+ezResult RenderWindowGL::CreateGraphicsContext()
 {
   // init opengl device
   int iColorBits = 24;
@@ -110,23 +92,23 @@ void RenderWindowGL::CreateGraphicsContext()
   HDC hDC = GetDC (GetNativeWindowHandle());
 
   if (hDC == NULL)
-    return;
+    return EZ_FAILURE;
 
   int iPixelformat = ChoosePixelFormat(hDC, &pfd);
   if (iPixelformat == 0)
-    return;
+    return EZ_FAILURE;
 
   if (!SetPixelFormat(hDC, iPixelformat, &pfd))
-    return;
+    return EZ_FAILURE;
 
   HGLRC hRC = wglCreateContext(hDC);
   if (hRC == NULL)
-    return;
+    return EZ_FAILURE;
 
   if (!wglMakeCurrent(hDC, hRC))
-    return;
+    return EZ_FAILURE;
 
-  m_hDeviceContext = hDC;
+  m_hDC = hDC;
   m_hRC = hRC;
 
 
@@ -144,9 +126,11 @@ void RenderWindowGL::CreateGraphicsContext()
   glViewport(0, 0, GeneralConfig::g_ResolutionWidth, GeneralConfig::g_ResolutionHeight);
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_CULL_FACE);
+
+  return EZ_SUCCESS;
 }
 
 void RenderWindowGL::SwapBuffers()
 {
-  ::SwapBuffers(m_hDeviceContext);
+  ::SwapBuffers(m_hDC);
 }
