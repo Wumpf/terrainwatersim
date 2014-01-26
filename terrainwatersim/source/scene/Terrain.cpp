@@ -261,14 +261,14 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
     glDispatchCompute(m_gridResolution / 16, m_gridResolution / 16, 1);
   }
 
-  // Todo: Is this very slow?
-  if(anySimStep)
-    m_pTerrainData->GenMipMaps();
-
   // Unbind to be assure the gpu that no more reads will happen
   gl::Texture::ResetImageBinding(0);
   gl::Texture::ResetImageBinding(1);
   gl::Texture::ResetImageBinding(2);
+
+  // Todo: Is this very slow?
+  if (anySimStep)
+    m_pTerrainData->GenMipMaps();
 }
 
 void Terrain::UpdateVisibilty(const ezVec3& cameraPosition)

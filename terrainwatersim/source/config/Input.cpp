@@ -39,22 +39,22 @@ void Application::SetupInput()
   inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_KeyW;
   ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraForward, inputConfig, false);
   inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_KeyA;
-  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraLeft, inputConfig, false);
+  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRight, inputConfig, false);
   inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_KeyS;
   ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraBackward, inputConfig, false);
   inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_KeyD;
-  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRight, inputConfig, false);
+  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraLeft, inputConfig, false);
 
 
   inputConfig.m_fInputSlotScale[0]= InputConfig::g_fCameraRotationScale;
   inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMoveNegX;
-  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisXNeg, inputConfig, false);
-  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMoveNegY;
-  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisYNeg, inputConfig, false);
-  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMovePosX;
   ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisXPos, inputConfig, false);
-  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMovePosY;
+  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMoveNegY;
   ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisYPos, inputConfig, false);
+  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMovePosX;
+  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisXNeg, inputConfig, false);
+  inputConfig.m_sInputSlotTrigger[0] = ezInputSlot_MouseMovePosY;
+  ezInputManager::SetInputActionConfig(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisYNeg, inputConfig, false);
 }
 
 void Application::UpdateInput(ezTime lastFrameDuration)

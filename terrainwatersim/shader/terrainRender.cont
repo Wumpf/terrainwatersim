@@ -3,6 +3,7 @@
 #include "constantbuffers.glsl"
 #include "landscapeRenderData.glsl"
 #include "landscapeRenderFunctions.glsl"
+#include "helper.glsl"
 
 layout(location = 0) in vec3 inWorldPos[];
 layout(location = 1) in vec2 inHeightmapCoord[];
@@ -17,7 +18,7 @@ void main()
 {
 	// Per Patch computation.
 	if (gl_InvocationID == 0)
-	{	
+	{
 		vec3 mid = 0.25 * (inWorldPos[0] + inWorldPos[1] + inWorldPos[2]);
 
 		for(int i=0; i<3; ++i)	// unroll in ogl 4.3?
