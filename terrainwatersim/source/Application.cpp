@@ -15,7 +15,6 @@
 
 #include <Foundation/Utilities/Stats.h>
 
-#include "FolderChangeWatcher.h"
 #include "GlobalEvents.h"
 
 #include <gl/ShaderObject.h>
@@ -71,7 +70,7 @@ void Application::AfterEngineInit()
   m_pScene = EZ_DEFAULT_NEW(Scene)(*m_pWindow);
 
   // reset time
-  m_LastFrameTime = ezSystemTime::Now();
+  m_LastFrameTime = ezTime::Now();
 }
 
 void Application::BeforeEngineShutdown()
@@ -93,10 +92,16 @@ void Application::BeforeEngineShutdown()
   EZ_DEFAULT_DELETE(m_pHTMLLogWriter);
 }
 
+void Application::handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action)
+{
+  if (action == FW::Actions::Modified)
+    gl::ShaderObject::s_shaderFileChangedEvent.Broadcast(filename.c_str());
+}
+
 ezApplication::ApplicationExecution Application::Run()
 {
   // timing
-  ezTime now = ezSystemTime::Now();
+  ezTime now = ezTime::Now();
   ezTime lastFrameDuration = now - m_LastFrameTime;
   m_LastFrameTime = now;
 
@@ -118,12 +123,7 @@ void Application::Update(ezTime lastFrameDuration)
     m_bRunning = false;
   m_pOnScreenLogWriter->Update(lastFrameDuration);
 
-  ezString changedShaderFile = m_pShaderChangesWatcher->PopChangedFile();
-  while(changedShaderFile != "")
-  {
-    gl::ShaderObject::s_shaderFileChangedEvent.GetStatic().Broadcast(changedShaderFile);
-    changedShaderFile = m_pShaderChangesWatcher->PopChangedFile();
-  }
+  m_pShaderChangesWatcher->update();
 
   // Update frame statistics.
   ezStringBuilder stats; stats.Format("%.2f fps", 1.0 / lastFrameDuration.GetSeconds());
@@ -154,7 +154,8 @@ void Application::SetupFileSystem()
   shaderDir.AppendPath("..", "..", "..", "terrainwatersim"); // dev only! otherwise the realtime shader editing doesn't work as expected (since path is too long for automated copy -.-)
   shaderDir.AppendPath("Shader");
   ezFileSystem::AddDataDirectory(shaderDir.GetData(), ezFileSystem::ReadOnly, "graphics", "");
-  m_pShaderChangesWatcher = EZ_DEFAULT_NEW(FolderChangeWatcher)(shaderDir.GetData());
+  m_pShaderChangesWatcher = EZ_DEFAULT_NEW(FW::FileWatcher)();
+  m_pShaderChangesWatcher->addWatch(shaderDir.GetData(), this);
 
   ezStringBuilder textureDir(applicationDir);
   textureDir.AppendPath("..", "..", "..", "terrainwatersim"); // dev only! otherwise manual copies must be made (since path is too long for automated copy -.-)

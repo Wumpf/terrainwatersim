@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Application/Application.h>
+#include "FileWatcher/FileWatcher.h"
 
 namespace ezLogWriter
 {
@@ -9,7 +10,7 @@ namespace ezLogWriter
 class OnScreenLogWriter;
 
 /// Basic application framework
-class Application : public ezApplication
+class Application : public ezApplication, FW::FileWatchListener
 {
 public:
   Application();
@@ -18,6 +19,8 @@ public:
   virtual void AfterEngineInit() EZ_OVERRIDE;
   virtual void BeforeEngineShutdown() EZ_OVERRIDE;
   virtual ezApplication::ApplicationExecution Run() EZ_OVERRIDE;
+
+  void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action);
 
 private:
   void SetupFileSystem();
@@ -33,7 +36,7 @@ private:
   class RenderWindowGL* m_pWindow;
   class Scene* m_pScene;
 
-  class FolderChangeWatcher* m_pShaderChangesWatcher;
+  FW::FileWatcher* m_pShaderChangesWatcher;
 
   ezTime m_LastFrameTime;
   bool m_bRunning;

@@ -13,9 +13,6 @@
     <ClInclude Include="source\math\camera\Camera.h">
       <Filter>source\math\camera</Filter>
     </ClInclude>
-    <ClInclude Include="source\FolderChangeWatcher.h">
-      <Filter>source\utils</Filter>
-    </ClInclude>
     <ClInclude Include="source\UniquePtr.h">
       <Filter>source\utils</Filter>
     </ClInclude>
@@ -58,6 +55,21 @@
     <ClInclude Include="source\scene\PostProcessing.h">
       <Filter>source\scene</Filter>
     </ClInclude>
+    <ClInclude Include="source\FileWatcher\FileWatcherImpl.h">
+      <Filter>source\FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FileWatcher\FileWatcherLinux.h">
+      <Filter>source\FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FileWatcher\FileWatcherOSX.h">
+      <Filter>source\FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FileWatcher\FileWatcherWin32.h">
+      <Filter>source\FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="source\FileWatcher\FileWatcher.h">
+      <Filter>source\FileWatcher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -83,6 +95,9 @@
     </Filter>
     <Filter Include="shader\postpro">
       <UniqueIdentifier>{246eae25-aeeb-4d5e-af30-f175ec48c0c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\FileWatcher">
+      <UniqueIdentifier>{7440b640-f725-46fe-a285-0bd0bb9e2005}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +164,12 @@
     <None Include="shader\postpro\postproCommon.glsl">
       <Filter>shader\postpro</Filter>
     </None>
+    <None Include="shader\terrainReflectionMapGen.frag">
+      <Filter>shader</Filter>
+    </None>
+    <None Include="shader\maxMapGenStep.frag">
+      <Filter>shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\math\NoiseGenerator.cpp">
@@ -162,9 +183,6 @@
     </ClCompile>
     <ClCompile Include="source\math\camera\Camera.cpp">
       <Filter>source\math\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="source\FolderChangeWatcher.cpp">
-      <Filter>source\utils</Filter>
     </ClCompile>
     <ClCompile Include="source\PCH.cpp">
       <Filter>source</Filter>
@@ -202,5 +220,22 @@
     <ClCompile Include="source\scene\PostProcessing.cpp">
       <Filter>source\scene</Filter>
     </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherLinux.cpp">
+      <Filter>source\FileWatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherOSX.cpp">
+      <Filter>source\FileWatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherWin32.cpp">
+      <Filter>source\FileWatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcher.cpp">
+      <Filter>source\FileWatcher</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="source\FileWatcher\License.txt">
+      <Filter>source\FileWatcher</Filter>
+    </Text>
   </ItemGroup>
 </Project>

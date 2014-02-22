@@ -106,7 +106,11 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\Application.h" />
     <ClInclude Include="source\config\GlobalCVar.h" />
     <ClInclude Include="source\config\InputConfig.h" />
-    <ClInclude Include="source\FolderChangeWatcher.h" />
+    <ClInclude Include="source\FileWatcher\FileWatcher.h" />
+    <ClInclude Include="source\FileWatcher\FileWatcherImpl.h" />
+    <ClInclude Include="source\FileWatcher\FileWatcherLinux.h" />
+    <ClInclude Include="source\FileWatcher\FileWatcherOSX.h" />
+    <ClInclude Include="source\FileWatcher\FileWatcherWin32.h" />
     <ClInclude Include="source\GlobalEvents.h" />
     <ClInclude Include="source\math\camera\Camera.h" />
     <ClInclude Include="source\math\camera\FreeCamera.h" />
@@ -127,6 +131,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\athmosphericScattering.frag" />
     <None Include="shader\background.frag" />
     <None Include="shader\eachCubemapFace.geom" />
+    <None Include="shader\maxMapGenStep.frag" />
     <None Include="shader\postpro\luminanceAdapt.frag" />
     <None Include="shader\postpro\luminanceStart.frag" />
     <None Include="shader\postpro\postproCommon.glsl" />
@@ -136,6 +141,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <None Include="shader\helper.glsl" />
     <None Include="shader\landscapeRenderFunctions.glsl" />
     <None Include="shader\screenTri.vert" />
+    <None Include="shader\terrainReflectionMapGen.frag" />
     <None Include="shader\terrainRender.cont" />
     <None Include="shader\terrainRender.eval" />
     <None Include="shader\terrainRender.frag" />
@@ -149,7 +155,18 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
   <ItemGroup>
     <ClCompile Include="source\Application.cpp" />
     <ClCompile Include="source\config\Input.cpp" />
-    <ClCompile Include="source\FolderChangeWatcher.cpp" />
+    <ClCompile Include="source\FileWatcher\FileWatcher.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherLinux.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherOSX.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="source\FileWatcher\FileWatcherWin32.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="source\GlobalEvents.cpp" />
     <ClCompile Include="source\math\camera\Camera.cpp" />
     <ClCompile Include="source\math\camera\FreeCamera.cpp" />
@@ -166,6 +183,9 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClCompile Include="source\scene\PostProcessing.cpp" />
     <ClCompile Include="source\scene\Scene.cpp" />
     <ClCompile Include="source\scene\Terrain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="source\FileWatcher\License.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
