@@ -15,7 +15,7 @@ namespace gl
 {
   /// Global event for changed shader files.
   /// All Shader Objects will register upon this event. If any shader file is changed, just brodcast here!
-  ezStatic<ezEvent<const ezString&>> ShaderObject::s_shaderFileChangedEvent;
+  ezEvent<const ezString&> ShaderObject::s_shaderFileChangedEvent;
 
   const ShaderObject* ShaderObject::s_pCurrentlyActiveShaderObject = NULL;
 
@@ -31,7 +31,7 @@ namespace gl
       shader.bLoaded = false;
     }
 
-    s_shaderFileChangedEvent.GetStatic().AddEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
+    s_shaderFileChangedEvent.AddEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
   }
 
   ShaderObject::~ShaderObject()
@@ -51,7 +51,7 @@ namespace gl
     if(m_bContainsAssembledProgram)
       glDeleteProgram(m_Program);
 
-    s_shaderFileChangedEvent.GetStatic().RemoveEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
+    s_shaderFileChangedEvent.RemoveEventHandler(ezEvent<const ezString&>::Handler(&ShaderObject::FileEventHandler, this));
   }
 
   ezResult ShaderObject::AddShaderFromFile(ShaderType Type, const ezString& sFilename, std::initializer_list<ezString> defines)

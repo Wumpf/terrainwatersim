@@ -73,13 +73,20 @@ namespace gl
 
       if(autoViewportSet)
       {
-        Texture* pSizeSource = NULL;
+        Attachment* pSizeSource = NULL;
         if(m_depthStencil.pTexture)
-          pSizeSource = m_depthStencil.pTexture;
+          pSizeSource = &m_depthStencil;
         else
-          pSizeSource = m_colorAttachments[0].pTexture;
+          pSizeSource = &m_colorAttachments[0];
+
         // Due to creation asserts pSizeSource should be now non zero!
-        glViewport(0, 0, pSizeSource->GetWidth(), pSizeSource->GetHeight());
+        ezSizeU32 size(pSizeSource->pTexture->GetWidth(), pSizeSource->pTexture->GetHeight());
+        for (ezUInt32 mipLevel = 0; mipLevel < pSizeSource->mipLevel; ++mipLevel)
+        {
+          size.width /= 2;
+          size.height /= 2;
+        }
+        glViewport(0, 0, size.width, size.height);
       }
     }
   }

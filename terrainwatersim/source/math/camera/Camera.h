@@ -3,7 +3,7 @@
 class Camera
 {
 public:
-  Camera(ezAngle fov, float fAspectRatio, float nearPlane = 0.1f, float farPlane = 2000.0f);
+  Camera(ezAngle fov, float fAspectRatio, float nearPlane = 0.1f, float farPlane = 1000.0f);
   virtual ~Camera();
 
   void ChangeAspectRatio(float aspectRatio);

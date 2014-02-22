@@ -5,7 +5,7 @@
 
 #include <Foundation/Utilities/Stats.h>
 
-ezStatic<ezDynamicArray<ezUInt8>> AntTweakBarInterface::m_callbackFunctionObjectbuffer;
+ezDynamicArray<ezUInt8> AntTweakBarInterface::m_callbackFunctionObjectbuffer;
 
 static TwType TwTypeFromCVarType(ezCVarType::Enum type)
 {
@@ -70,7 +70,7 @@ static void GetVarValue(Type& var, void *value)
   do { \
     TwSetVarCallback setFkt = [](const void *value, void *clientData) { \
       SetVarValue(var, value); \
-      var##_changedEvent.GetStatic().Broadcast(var); \
+      var##_changedEvent..Broadcast(var); \
     }; \
     TwGetVarCallback getFkt = [](void *value, void *clientData) { \
       GetVarValue(var, value); \

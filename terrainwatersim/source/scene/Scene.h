@@ -1,6 +1,7 @@
 #pragma once
 
-#include "gl/resources/UniformBuffer.h"
+#include <gl/resources/UniformBuffer.h>
+#include <gl/ShaderObject.h>
 
 // declarations
 namespace gl
@@ -31,23 +32,34 @@ private:
   void InitConfig();
   void InitGlobalUBO();
   void RecreateScreenBuffers();
+  void UpdateDepthMaxMap();
 
-  ezUniquePtr<gl::FramebufferObject> m_pLinearHDRFramebuffer;
-  ezUniquePtr<gl::Texture2D> m_pLinearHDRBuffer;
-  ezUniquePtr<gl::Texture2D> m_pDepthBuffer;
+  gl::FramebufferObject* m_linearHDRFramebuffer;
+  gl::Texture2D* m_linearHDRBuffer;
+  gl::Texture2D* m_depthBuffer; ///< Scene depth buffer. Contains mipmaps to store maxmaps.
 
-  ezUniquePtr<gl::ShaderObject> m_pCopyShader;
+  gl::Texture2D* m_linearHDRBuffer_Half;
+  gl::FramebufferObject* m_linearHDRFramebuffer_Half; ///< Has no depth.
+  gl::Texture2D* m_depthBufferMaxMaps; ///< Maximum mipmaps for the scene depth buffer, starts with half size depth buffer.
+  ezHybridArray<gl::FramebufferObject*, 16> m_depthBufferMaxMapFBOs; ///< A FBO for every miplevel of m_depthBufferMaxMap, from big to small (usual mip order).
+
+  gl::Texture2D* m_lowresScreenColorTexture;
+  gl::FramebufferObject* m_lowresScreenColorFBO;
+
+  gl::ShaderObject m_maxMapGenStep;
+
+  gl::ShaderObject m_copyShader;
 
   gl::UniformBuffer m_CameraUBO;
   gl::UniformBuffer m_TimeUBO;
   gl::UniformBuffer m_GlobalSceneInfo;
 
-  class Terrain* m_pTerrain;
+  class Terrain* m_terrain;
   class Background* m_pBackground;
   class PostProcessing* m_pPostProcessing;
 
   ezUniquePtr<gl::TimerQuery> m_pTerrainDrawTimer;
-  ezUniquePtr<gl::TimerQuery> m_pWaterDrawTimer;
+  ezUniquePtr<gl::TimerQuery> m_waterDrawTimer;
   ezUniquePtr<gl::TimerQuery> m_pSimulationTimer;
 
   ezUniquePtr<class AntTweakBarInterface> m_pUserInterface;

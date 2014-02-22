@@ -11,9 +11,7 @@ Camera::Camera(ezAngle fov, float aspectRatio, float nearPlane, float farPlane) 
   m_fov(fov),
   m_aspectRatio(aspectRatio)
 {
-  m_ProjectionMatrix.SetPerspectiveProjectionMatrixFromFovY(m_fov, m_aspectRatio, m_nearPlane, m_farPlane, ezProjectionDepthRange::MinusOneToOne);
-
-  UpdateMatrices();
+  ChangeAspectRatio(aspectRatio);
 }
 
 void Camera::ChangeAspectRatio(float newAspectRatio)

@@ -54,8 +54,9 @@ namespace gl
     void BindSampler(ezUInt32 textureStage) const;
 
     /// Removes all existing sampler objects.
-    void ClearAllCachedSamplerObjects() { s_existingSamplerObjects.GetStatic().Clear(); }
+    void ClearAllCachedSamplerObjects() { s_existingSamplerObjects.Clear(); }
 
+    SamplerId GetInternSamplerId() const { return m_samplerId; }
 
     ~SamplerObject();
 
@@ -65,7 +66,7 @@ namespace gl
  
 
     static const SamplerObject* s_pSamplerBindings[32];
-    static ezStatic<ezHashTable<Desc, SamplerObject>> s_existingSamplerObjects;
+    static ezHashTable<Desc, SamplerObject> s_existingSamplerObjects;
 
     SamplerId m_samplerId;
   };

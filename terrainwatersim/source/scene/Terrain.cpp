@@ -14,9 +14,9 @@
 
 #include "..\config\GlobalCVar.h"
 #include <Foundation\Math\Rect.h>
+#include <Foundation\Time\Time.h>
 
 const float Terrain::m_maxTesselationFactor = 64.0f;
-const float Terrain::m_refractionTextureSizeFactor = 1.0f;
 
 Terrain::Terrain(const ezSizeU32& screenSize) :
   m_gridWorldSize(1024.0f),
@@ -33,26 +33,23 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_waterRenderShader("waterRender"),
   m_applyFlowShader("applyFlow"),
   m_updateFlowShader("updateFlow"),
-  m_copyShader("copyRefractionShader"),
+  m_copyShader("copyRefraction"),
 
-  m_pTerrainData(NULL),
-  m_pWaterOutgoingFlow(NULL),
-  m_pWaterFlowMap(NULL),
+  m_terrainData(NULL),
+  m_waterOutgoingFlow(NULL),
+  m_waterFlowMap(NULL),
 
-  m_pTextureGrassDiffuseSpec(NULL),
-  m_pTextureStoneDiffuseSpec(NULL),
-  m_pTextureGrassNormalHeight(NULL),
-  m_pTextureStoneNormalHeight(NULL),
-  m_pWaterNormalMap(NULL),
-  m_pLowResNoise(NULL),
-  m_pFoamTexture(NULL),
-  
-  m_pRefractionFBO(NULL),
-  m_pRefractionTexture(NULL)
+  m_textureGrassDiffuseSpec(NULL),
+  m_textureStoneDiffuseSpec(NULL),
+  m_textureGrassNormalHeight(NULL),
+  m_textureStoneNormalHeight(NULL),
+  m_waterNormalMap(NULL),
+  m_lowResNoise(NULL),
+  m_foamTexture(NULL)
 {
   EZ_LOG_BLOCK("Terrain");
 
-  m_pGeomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_minPatchSizeWorld, 8, 5);
+  m_geomClipMaps = EZ_DEFAULT_NEW(InstancedGeomClipMapping)(m_minPatchSizeWorld, 8, 5);
 
   // shader init
   m_terrainRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "terrainRender.vert");
@@ -66,7 +63,6 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::EVALUATION, "waterRender.eval");
   m_waterRenderShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "waterRender.frag");
   m_waterRenderShader.CreateProgram();
-
   
   m_applyFlowShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "flowApply.comp");
   m_applyFlowShader.CreateProgram();
@@ -106,59 +102,44 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   SetWaterNormalMapRepeat(30.0f);
 
   // sampler
-  m_texturingSamplerObjectDataGrids = &gl::SamplerObject::GetSamplerObject(
-    gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT));
   m_texturingSamplerObjectAnisotropic = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 16));
   m_texturingSamplerObjectTrilinear = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Border::REPEAT, 1));
   m_texturingSamplerObjectLinearClamp = &gl::SamplerObject::GetSamplerObject(
     gl::SamplerObject::Desc(gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::LINEAR, gl::SamplerObject::Filter::NEAREST, gl::SamplerObject::Border::CLAMP, 1));
+  m_texturingSamplerObjectNearestRepeat = &gl::SamplerObject::GetSamplerObject(
+    gl::SamplerObject::Desc(gl::SamplerObject::Filter::NEAREST, gl::SamplerObject::Filter::NEAREST, gl::SamplerObject::Filter::NEAREST, gl::SamplerObject::Border::REPEAT, 1));
+
 
   // Create heightmap
   CreateHeightmapFromNoiseAndResetSim();
 
   // load textures
-  m_pTextureGrassDiffuseSpec = gl::Texture2D::LoadFromFile("grass.tga", true);
-  m_pTextureStoneDiffuseSpec = gl::Texture2D::LoadFromFile("rock.tga", true);
-  m_pTextureGrassNormalHeight = gl::Texture2D::LoadFromFile("grass_normal.tga");
-  m_pTextureStoneNormalHeight = gl::Texture2D::LoadFromFile("rock_normal.tga");
+  m_textureGrassDiffuseSpec = gl::Texture2D::LoadFromFile("grass.tga", true);
+  m_textureStoneDiffuseSpec = gl::Texture2D::LoadFromFile("rock.tga", true);
+  m_textureGrassNormalHeight = gl::Texture2D::LoadFromFile("grass_normal.tga");
+  m_textureStoneNormalHeight = gl::Texture2D::LoadFromFile("rock_normal.tga");
 
-  m_pWaterNormalMap = gl::Texture2D::LoadFromFile("water_normal.png", true);
-  m_pLowResNoise = gl::Texture2D::LoadFromFile("noise.png", true);
-  m_pFoamTexture = gl::Texture2D::LoadFromFile("foam.png", true);
-
-  RecreateScreenSizeDependentTextures(screenSize);
+  m_waterNormalMap = gl::Texture2D::LoadFromFile("water_normal.png", true);
+  m_lowResNoise = gl::Texture2D::LoadFromFile("noise.png", true);
+  m_foamTexture = gl::Texture2D::LoadFromFile("foam.png", true);
 }
 
 Terrain::~Terrain()
 {
-  EZ_DEFAULT_DELETE(m_pTerrainData);
-  EZ_DEFAULT_DELETE(m_pWaterOutgoingFlow);
-  EZ_DEFAULT_DELETE(m_pWaterFlowMap);
-  EZ_DEFAULT_DELETE(m_pGeomClipMaps);
+  EZ_DEFAULT_DELETE(m_terrainData);
+  EZ_DEFAULT_DELETE(m_waterOutgoingFlow);
+  EZ_DEFAULT_DELETE(m_waterFlowMap);
+  EZ_DEFAULT_DELETE(m_geomClipMaps);
 
-  EZ_DEFAULT_DELETE(m_pTextureGrassDiffuseSpec);
-  EZ_DEFAULT_DELETE(m_pTextureStoneDiffuseSpec);
-  EZ_DEFAULT_DELETE(m_pTextureGrassNormalHeight);
-  EZ_DEFAULT_DELETE(m_pTextureStoneNormalHeight);
-  EZ_DEFAULT_DELETE(m_pWaterNormalMap);
-  EZ_DEFAULT_DELETE(m_pLowResNoise);
-  EZ_DEFAULT_DELETE(m_pFoamTexture);
-
-  EZ_DEFAULT_DELETE(m_pRefractionFBO);
-  EZ_DEFAULT_DELETE(m_pRefractionTexture);
-}
-
-void Terrain::RecreateScreenSizeDependentTextures(const ezSizeU32& screenSize)
-{
-  EZ_DEFAULT_DELETE(m_pRefractionFBO);
-  EZ_DEFAULT_DELETE(m_pRefractionTexture);
-
-  m_pRefractionTexture = EZ_DEFAULT_NEW(gl::Texture2D)(static_cast<ezUInt32>(screenSize.width * m_refractionTextureSizeFactor),
-    static_cast<ezUInt32>(screenSize.height * m_refractionTextureSizeFactor), GL_RGBA16F, 1, 0);
-  
-  m_pRefractionFBO = EZ_DEFAULT_NEW(gl::FramebufferObject)( { gl::FramebufferObject::Attachment(m_pRefractionTexture) });
+  EZ_DEFAULT_DELETE(m_textureGrassDiffuseSpec);
+  EZ_DEFAULT_DELETE(m_textureStoneDiffuseSpec);
+  EZ_DEFAULT_DELETE(m_textureGrassNormalHeight);
+  EZ_DEFAULT_DELETE(m_textureStoneNormalHeight);
+  EZ_DEFAULT_DELETE(m_waterNormalMap);
+  EZ_DEFAULT_DELETE(m_lowResNoise);
+  EZ_DEFAULT_DELETE(m_foamTexture);
 }
 
 void Terrain::SetPixelPerTriangle(float pixelPerTriangle)
@@ -191,13 +172,12 @@ void Terrain::SetFlowAcceleration(float flowAcceleration)
   m_simulationParametersUBO["WaterAcceleration_perStep"].Set(static_cast<float>(m_simulationStepLength.GetSeconds() * m_flowAcceleration * cellDistance));
 }
 
-
 void Terrain::CreateHeightmapFromNoiseAndResetSim()
 {
-  if(m_pTerrainData != NULL)
-    EZ_DEFAULT_DELETE(m_pTerrainData);
+  if(m_terrainData != NULL)
+    EZ_DEFAULT_DELETE(m_terrainData);
 
-  m_pTerrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, -1);
+  m_terrainData = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, -1);
   ezColor* volumeData = EZ_DEFAULT_NEW_RAW_BUFFER(ezColor, m_gridResolution*m_gridResolution);
 
   NoiseGenerator noiseGen;
@@ -215,23 +195,21 @@ void Terrain::CreateHeightmapFromNoiseAndResetSim()
         - volumeData[x + y * m_gridResolution].r);
     }
   }
-  m_pTerrainData->SetData(0, volumeData);
+  m_terrainData->SetData(0, volumeData);
 
   EZ_DEFAULT_DELETE_RAW_BUFFER(volumeData);
 
-
-
   // Create flow textures
-  if(m_pWaterOutgoingFlow != NULL)
-    EZ_DEFAULT_DELETE(m_pWaterOutgoingFlow);
-  m_pWaterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, 1);
+  if(m_waterOutgoingFlow != NULL)
+    EZ_DEFAULT_DELETE(m_waterOutgoingFlow);
+  m_waterOutgoingFlow = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RGBA32F, 1);
   ezArrayPtr<ezColor> pEmptyBuffer = EZ_DEFAULT_NEW_ARRAY(ezColor, m_gridResolution*m_gridResolution);
   ezMemoryUtils::ZeroFill(pEmptyBuffer.GetPtr(), pEmptyBuffer.GetCount());
-  m_pWaterOutgoingFlow->SetData(0, pEmptyBuffer.GetPtr());
+  m_waterOutgoingFlow->SetData(0, pEmptyBuffer.GetPtr());
   EZ_DEFAULT_DELETE_ARRAY(pEmptyBuffer);
 
-  if(m_pWaterFlowMap == NULL)
-    m_pWaterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RG16F, 1);
+  if(m_waterFlowMap == NULL)
+    m_waterFlowMap = EZ_DEFAULT_NEW(gl::Texture2D)(m_gridResolution, m_gridResolution, GL_RG16F, 1);
 }
 
 void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
@@ -249,14 +227,14 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
 
   for(; numSimulationSteps > 0; --numSimulationSteps)
   {
-    m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
-    m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
+    m_terrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
+    m_waterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
     m_updateFlowShader.Activate();
     glDispatchCompute(m_gridResolution / 16, m_gridResolution / 16, 1);
 
-    m_pTerrainData->BindImage(0, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
-    m_pWaterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ, GL_RGBA32F);
-    m_pWaterFlowMap->BindImage(2, gl::Texture::ImageAccess::WRITE, GL_RG16F);
+    m_terrainData->BindImage(0, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
+    m_waterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ, GL_RGBA32F);
+    m_waterFlowMap->BindImage(2, gl::Texture::ImageAccess::WRITE, GL_RG16F);
     m_applyFlowShader.Activate();
     glDispatchCompute(m_gridResolution / 16, m_gridResolution / 16, 1);
   }
@@ -266,27 +244,29 @@ void Terrain::PerformSimulationStep(ezTime lastFrameDuration)
   gl::Texture::ResetImageBinding(1);
   gl::Texture::ResetImageBinding(2);
 
-  // Todo: Is this very slow?
+  // Update mip and max maps
   if (anySimStep)
-    m_pTerrainData->GenMipMaps();
+  {
+    m_terrainData->GenMipMaps();
+  }
 }
 
 void Terrain::UpdateVisibilty(const ezVec3& cameraPosition)
 {
-  m_pGeomClipMaps->UpdateInstanceData(cameraPosition);
+  m_geomClipMaps->UpdateInstanceData(cameraPosition);
 }
 
 void Terrain::DrawTerrain()
 {
   const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
 
-  m_pTerrainData->Bind(0);
-  m_pTextureGrassDiffuseSpec->Bind(1);
-  m_pTextureStoneDiffuseSpec->Bind(2);
-  m_pTextureGrassNormalHeight->Bind(3);
-  m_pTextureStoneNormalHeight->Bind(4);
+  m_terrainData->Bind(0);
+  m_textureGrassDiffuseSpec->Bind(1);
+  m_textureStoneDiffuseSpec->Bind(2);
+  m_textureGrassNormalHeight->Bind(3);
+  m_textureStoneNormalHeight->Bind(4);
 
-  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
+  m_texturingSamplerObjectTrilinear->BindSampler(0); // TerrainInfo
   pTextureFilter->BindSampler(1); // GrassDiffuse
   pTextureFilter->BindSampler(2); // StoneDiffuse
   pTextureFilter->BindSampler(3); // GrassNormal
@@ -297,54 +277,41 @@ void Terrain::DrawTerrain()
 
   // Terrain
   m_terrainRenderShader.Activate();
-  m_pGeomClipMaps->DrawGeometry();
+  m_geomClipMaps->DrawGeometry();
 }
 
-void Terrain::DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap)
+void Terrain::DrawWater(gl::Texture2D& lowresSceneCopy, gl::Texture2D& depthBufferMaxMaps, gl::TextureCube& reflectionCubemap)
 {
   const gl::SamplerObject* pTextureFilter = m_anisotropicFiltering ? m_texturingSamplerObjectAnisotropic : m_texturingSamplerObjectTrilinear;
-  
-
-  // Copy framebuffer to low res refraction (because drawing & reading simultaneously doesn't work!) texture
-  glDisable(GL_DEPTH_TEST);
-  glDepthMask(GL_FALSE);
-  m_pRefractionFBO->Bind(true);
-  m_texturingSamplerObjectLinearClamp->BindSampler(0);
-  sceneFBO.GetColorAttachments()[0].pTexture->Bind(0);
-  m_copyShader.Activate();
-  gl::ScreenAlignedTriangle::Draw();
-
-  // reset
-  sceneFBO.Bind(true);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
 
   // texture setup
-  m_texturingSamplerObjectDataGrids->BindSampler(0); // TerrainInfo
-  m_texturingSamplerObjectLinearClamp->BindSampler(1); // refraction
-  m_texturingSamplerObjectDataGrids->BindSampler(2); // reflection
-  m_texturingSamplerObjectDataGrids->BindSampler(3); // flowmap
+  m_texturingSamplerObjectTrilinear->BindSampler(0); // TerrainInfo
+  m_texturingSamplerObjectLinearClamp->BindSampler(1); // refraction/reflection
+  m_texturingSamplerObjectTrilinear->BindSampler(2); // reflection
+  m_texturingSamplerObjectTrilinear->BindSampler(3); // flowmap
   pTextureFilter->BindSampler(4);// normalmap
-  m_texturingSamplerObjectDataGrids->BindSampler(5); // noise
+  m_texturingSamplerObjectTrilinear->BindSampler(5); // noise
   pTextureFilter->BindSampler(6); // Foam
   m_texturingSamplerObjectTrilinear->BindSampler(7); // TerrainInfo again, but filtered
-
-  m_pTerrainData->Bind(0);
-  m_pRefractionTexture->Bind(1);
+  m_texturingSamplerObjectNearestRepeat->BindSampler(8); // Maxmapped Depth
+  
+  m_terrainData->Bind(0);
+  lowresSceneCopy.Bind(1);
   reflectionCubemap.Bind(2);
-  m_pWaterFlowMap->Bind(3);
-  m_pWaterNormalMap->Bind(4);
-  m_pLowResNoise->Bind(5);
-  m_pFoamTexture->Bind(6);
-  m_pTerrainData->Bind(7);
+  m_waterFlowMap->Bind(3);
+  m_waterNormalMap->Bind(4);
+  m_lowResNoise->Bind(5);
+  m_foamTexture->Bind(6);
+  m_terrainData->Bind(7);
+  depthBufferMaxMaps.Bind(8);
 
   // UBO setup
-  m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezSystemTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
+  m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_waterRenderingUBO.BindBuffer(6);
 
   // Water
   m_waterRenderShader.Activate();
-  m_pGeomClipMaps->DrawGeometry();
+  m_geomClipMaps->DrawGeometry();
 }

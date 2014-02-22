@@ -6,19 +6,20 @@
 
 layout(location = 0) in vec3 inWorldPos;
 layout(location = 1) in vec2 inHeightmapCoord;
-layout(location = 2) in vec3 inProjectiveCoord;
+layout(location = 2) in vec4 inProjectiveCoord;
 
 layout(location = 0, index = 0) out vec4 FragColor;
 
 // Texture for refraction color
-layout(binding = 1) uniform sampler2D RefractionTexture;
+layout(binding = 1) uniform sampler2D SceneTexture;
 layout(binding = 2) uniform samplerCube ReflectionCubemap;
 layout(binding = 3) uniform sampler2D FlowMap;
 layout(binding = 4) uniform sampler2D Normalmap;
 layout(binding = 5) uniform sampler2D Noise;
 layout(binding = 6) uniform sampler2D Foam;
-
 layout(binding = 7) uniform sampler2D TerrainInfoFiltered;
+
+layout(binding = 8) uniform sampler2D SceneDepthTexture;
 
 
 // Water Rendering constants
@@ -62,7 +63,7 @@ vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 	return normalize(cross(vecdz, vecdx));
 }
 
-vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec3 projectiveCoord, out vec3 refractionTexture) 
+vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec2 projectiveCoord, out vec3 refractionTexture) 
 {
 	vec3 refractionVector = Refract(nDotV, toCamera, normal, RefractionAirToWater);
 
@@ -77,39 +78,121 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 /*	vec3 underwaterGroudPos = In.WorldPos + refractionVector * waterRefractionDepth;
 	vec3 underwaterProjective = (ViewProjection * vec4(underwaterGroudPos, 1.0)).xyw;
 	vec2 refractiveTexcoord = 0.5f * (underwaterProjective.z + underwaterProjective.xy) / underwaterProjective.z;
-	refractionTexture = textureLod(RefractionTexture, refractiveTexcoord, 0).rgb;
-		// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
+	SceneTexture = textureLod(SceneTexture, refractiveTexcoord, 0).rgb;
+	// General Problem: Refraction coordinates may lie outside the screen tex (we would need a cubemap)
 	// So we just blend over to no refraction at all if necessary
 	// Projective Texture has also a bit distortion, so the effect won't  be that bad
-	vec3 projectiveTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1), 0).rgb;
+	vec3 projectiveTexture = textureLod(SceneTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz*0.1), 0).rgb;
 
 	vec2 refractToScreenMid = abs(refractiveTexcoord * 2.0 - 1.0);
 	float projectiveWeight = saturate(max(refractToScreenMid.x, refractToScreenMid.y));
 	projectiveWeight = pow(projectiveWeight, 16);
-	refractionTexture = mix(refractionTexture, projectiveTexture, projectiveWeight);
+	SceneTexture = mix(SceneTexture, projectiveTexture, projectiveWeight);
 */
 
-	refractionTexture = textureLod(RefractionTexture, saturate(projectiveCoord.xy / projectiveCoord.z + normal.xz* waterRefractionDepth * 0.05), 0).rgb;
+	refractionTexture = textureLod(SceneTexture, saturate(projectiveCoord + normal.xz* waterRefractionDepth * 0.05), 0).rgb;
 
 
 	// Water color
 	// This otherwise quite convincing reference assumes linear extinction, I'll go with exponential- http://www.gamedev.net/page/reference/index.html/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
-	// This leaves the questions: What are convincint Extinction coefficients?
+	// This leaves the questions: What are convining Extinction coefficients?
 	
-	// For that solved the equations exp(-4.5 * R) = exp(-75 * G) = exp(-300 * B) = 0.001 (depths are from link above)
+	// For that I solved the equations exp(-4.5 * R) = exp(-75 * G) = exp(-300 * B) = 0.001 (depths are from link above)
 	// .. which is.. convincing pseudo physical! :)
-//	const vec3 ColorExtinctionCoefficient_ = vec3(1.53506f, 0.0921034f, 0.0230259f);
+	//const vec3 ColorExtinctionCoefficient_ = vec3(1.53506f, 0.0921034f, 0.0230259f);
 	// But tweakable is still better... 
 
 	// All non-refractive parts (water self color) are lit with nDotL
 
-
 	vec3 colorExtinction = clamp(exp(-waterRefractionDepth * ColorExtinctionCoefficient), 0, 1);
 	vec3 normalLightingColor = GlobalDirLightColor * nDotL + GlobalAmbient;
 	vec3 waterColor = mix(refractionTexture, SurfaceColor * normalLightingColor, saturate(waterRefractionDepth * Opaqueness));
-	
 
 	return mix(BigDepthColor, waterColor, colorExtinction);
+}
+
+
+#define XNEG 1
+#define YNEG 2
+//#define ZNEG 4
+bool MaxMapBasedDepthBufferRaymarching(in vec3 texEntry, in vec3 rayDirection_TextureSpace, out vec2 intersectionTexcoord, const uint config)
+{
+	int numIterations = 0;
+	const int maxIterations = 20;
+
+	// Currently examined miplevel, do not start at lowest level
+	int currentMipLevel = textureQueryLevels(SceneDepthTexture)-3; // Start with 16xX texture.
+	vec2 currentLevelResolution = textureSize(SceneDepthTexture, currentMipLevel);//8;
+
+	vec3 rayDirection_TexelSpace = rayDirection_TextureSpace;
+	rayDirection_TexelSpace.xy *= currentLevelResolution;
+	texEntry.xy *= currentLevelResolution;
+
+	while (all(lessThan(texEntry.xy, currentLevelResolution) && greaterThan(texEntry.xy, vec2(0.0))))
+	{
+		// Anti-Endlessloop code.
+		//++numIterations;
+		//if (numIterations > maxIterations)
+		// 	break;
+
+		// Compute tex exit
+		vec2 tXY;// = (float2(1.0f, 1.0f) - frac(texEntry.xz)) / rayDirection_TexelSpace.xz;
+		tXY.x = ((config & XNEG) > 0) ? fract(texEntry.x) : (1.0 - fract(texEntry.x));
+		tXY.y = ((config & YNEG) > 0) ? fract(texEntry.y) : (1.0 - fract(texEntry.y));
+		tXY /= abs(rayDirection_TexelSpace.xy);
+
+		vec3 texExit;
+		if(tXY.x < tXY.y)
+		{
+		  	texExit.yz = texEntry.yz + rayDirection_TexelSpace.yz * (tXY.x);
+		  	// The line above should do exactly that even for the missing component, but numeric instability kicks in.
+		  	// The problem with negative stepping is that we have to express that we are staying closely *behind* the border
+		  	// Because of this there a epsilon subtracted.
+		  	texExit.x = ((config & XNEG) > 0) ? ceil(texEntry.x) - 1.0001 : (floor(texEntry.x) + 1.0);
+		}
+		else
+		{
+			texExit.xz = texEntry.xz + rayDirection_TexelSpace.xz * tXY.y;
+			// Same here...
+			texExit.y = ((config & YNEG) > 0) ? ceil(texEntry.y) - 1.0001 : (floor(texEntry.y) + 1.0);
+		}
+
+		// Sample Height - some configurations need mirrored coordinates.
+		vec2 samplingPosition = texEntry.xy;
+		float heightValue = texelFetch(SceneDepthTexture, ivec2(samplingPosition), currentMipLevel).r;
+
+		// Hit?
+		if (heightValue < texExit.z)
+		{
+			// "Descending" on depth -> new hit!
+			vec3 intersection = texExit - max((texExit.z - heightValue) / rayDirection_TexelSpace.z, 0) * rayDirection_TexelSpace;
+			//texExit.z = heightValue;
+
+			if (currentMipLevel == 0)
+			{
+				intersectionTexcoord = texEntry.xy / currentLevelResolution;
+				return heightValue != 1.0;
+			}
+			else
+			{
+				// Todo: Currently only going down, but could also go up in certain situations! This COULD help performance, could also make it worse
+
+				// Problem: Depth buffer is not square! Need to check
+				--currentMipLevel;
+				intersection.xy /= currentLevelResolution;
+				
+				currentLevelResolution = textureSize(SceneDepthTexture, currentMipLevel);
+				rayDirection_TexelSpace.xy = rayDirection_TextureSpace.xy * currentLevelResolution;
+				
+				texEntry = intersection;
+				texEntry.xy = texEntry.xy * currentLevelResolution;
+			}
+		}
+		else
+			texEntry = texExit;
+	}
+
+	return false;
 }
 
 void main()
@@ -138,8 +221,7 @@ void main()
 	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
 
 	// Final Normal
-	vec3 normal = normalize(ComputeHeightmapNormal(inHeightmapCoord) + normalMapNormal * 0.75);
-
+	vec3 normal = normalize(ComputeHeightmapNormal(inHeightmapCoord) + normalMapNormal * 0.25);
 
 	// vector to camera and camera distance
 	vec3 toCamera = CameraPosition - inWorldPos;
@@ -155,13 +237,12 @@ void main()
 	// Schlick-Fresnel approx
 	float fresnel = Fresnel(nDotV, ReflectionCoefficient);
 
-
 	// specular lighting
 	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
 	// Don't worry, the outcome is exactly the same!
 	vec3 cameraDirReflection = normalize((2 * nDotV) * normal - toCamera);
-  float specularAmount = pow(saturate(dot(cameraDirReflection, GlobalDirLightDirection)), 8.0);
-  specularAmount *= fresnel;
+	float specularAmount = pow(saturate(dot(cameraDirReflection, GlobalDirLightDirection)), 8.0);
+	specularAmount *= fresnel;
 
 
 
@@ -175,14 +256,14 @@ void main()
 
 
 	// Refraction
+	vec3 projectiveTexcoords = inProjectiveCoord.xyz / inProjectiveCoord.w;
 	vec3 refractionTexture;
-	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, inProjectiveCoord, refractionTexture);
+	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, projectiveTexcoords.xy, refractionTexture);
 	
-	// Reflection using coarse raymarching approach for terrain reflection 
-	vec3 reflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;	
-	
+
+	// Screenspace local reflection.
 	//bool terrainReflection = false;
-	vec3 raymarchPos = inWorldPos;
+	/*vec3 raymarchPos = inWorldPos;
 	for(float t=1.05; t<50.0; t*=1.1f)	// ~40 iterations
 	{
 		raymarchPos += cameraDirReflection * t;
@@ -193,7 +274,62 @@ void main()
 	//		terrainReflection = true;
 			break;
 		}
+	}*/
+
+
+
+//	
+
+	// Transform reflection vector to viewspace
+	vec4 reflectedPos = (ViewProjection * vec4(inWorldPos + cameraDirReflection, 1.0));
+	reflectedPos.xyz /= reflectedPos.w;
+	reflectedPos.xy = reflectedPos.xy * 0.5 + vec2(0.5);
+	vec3 reflectionScreenSpace = reflectedPos.xyz - projectiveTexcoords.xyz;
+	
+	float screenSpaceReflectionIntensity = 0.0f;
+	vec2 screenSpaceReflectionTexcoord = vec2(0,0);
+
+	if(reflectionScreenSpace.z > 0)
+	{
+		if(reflectionScreenSpace.y > 0)
+		{
+			if(reflectionScreenSpace.x > 0)
+				screenSpaceReflectionIntensity = float(MaxMapBasedDepthBufferRaymarching(projectiveTexcoords, reflectionScreenSpace, screenSpaceReflectionTexcoord, 0));
+			else
+				screenSpaceReflectionIntensity = float(MaxMapBasedDepthBufferRaymarching(projectiveTexcoords, reflectionScreenSpace, screenSpaceReflectionTexcoord, XNEG));
+		}
+		else
+		{
+			if(reflectionScreenSpace.x > 0)
+				screenSpaceReflectionIntensity = float(MaxMapBasedDepthBufferRaymarching(projectiveTexcoords, reflectionScreenSpace, screenSpaceReflectionTexcoord, YNEG));
+			else
+				screenSpaceReflectionIntensity = float(MaxMapBasedDepthBufferRaymarching(projectiveTexcoords, reflectionScreenSpace, screenSpaceReflectionTexcoord, XNEG | YNEG));
+		}
 	}
+
+	vec3 reflectionColor;
+	if(screenSpaceReflectionIntensity != 0.0f)
+	{
+		vec2 ssReflectionCoordToBorder = vec2(1.0) - screenSpaceReflectionTexcoord * 2.0f;
+		ssReflectionCoordToBorder *= ssReflectionCoordToBorder;
+		float borderFade = dot(ssReflectionCoordToBorder, ssReflectionCoordToBorder);
+		screenSpaceReflectionIntensity *= 1.0 - borderFade * borderFade;
+		//screenSpaceReflectionIntensity *= 1-reflectionScreenSpace.z;
+
+
+		vec3 screenSpaceReflectionColor = textureLod(SceneTexture, screenSpaceReflectionTexcoord.xy, 0.0).rgb;	
+		vec3 cubemapReflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;	
+
+		reflectionColor = mix(cubemapReflectionColor, screenSpaceReflectionColor, screenSpaceReflectionIntensity);
+	}
+	else
+	{
+		reflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;
+	}
+
+	
+
+//reflectionColor = pow(texture(SceneDepthTexture, projectiveTexcoords.xy).rrr, vec3(10000));
 
 	// Combine Refraction & Reflection & Specular
 	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;

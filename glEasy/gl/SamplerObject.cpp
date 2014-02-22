@@ -3,7 +3,7 @@
 
 namespace gl
 {
-  ezStatic<ezHashTable<SamplerObject::Desc, SamplerObject>> SamplerObject::s_existingSamplerObjects;
+  ezHashTable<SamplerObject::Desc, SamplerObject> SamplerObject::s_existingSamplerObjects;
   const SamplerObject* SamplerObject::s_pSamplerBindings[32];
 
   SamplerObject::Desc::Desc(Filter minFilter, Filter magFilter, Filter mipFilter,
@@ -65,17 +65,17 @@ namespace gl
   {
     gl::SamplerObject* pSamplerObject;
 
-    bool exists = s_existingSamplerObjects.GetStatic().TryGetValue(desc, pSamplerObject);
+    bool exists = s_existingSamplerObjects.TryGetValue(desc, pSamplerObject);
     if(!exists)
     {
       gl::SamplerObject samplerObject(desc);
-      s_existingSamplerObjects.GetStatic().Insert(desc, samplerObject);
+      s_existingSamplerObjects.Insert(desc, samplerObject);
 
       // prevent deletion (since it's not guaranteed that the rvalue ctor already did that event if the object scope is further shrinked to the insert method)
       samplerObject.m_samplerId = std::numeric_limits<GLuint>::max();
 
       // additional search necessary to avoid copies
-      s_existingSamplerObjects.GetStatic().TryGetValue(desc, pSamplerObject);
+      s_existingSamplerObjects.TryGetValue(desc, pSamplerObject);
     }
 
     return *pSamplerObject;

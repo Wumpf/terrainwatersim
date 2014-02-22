@@ -18,7 +18,7 @@ namespace gl
     gl::Utils::CheckError("glTexStorage2D");
   }
 
-  Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps, ezIAllocator* pAllocator)
+  Texture2D* Texture2D::LoadFromFile(const ezString& sFilename, bool sRGB, bool generateMipMaps, ezAllocatorBase* pAllocator)
   {
     int uiTexSizeX = -1;
     int uiTexSizeY = -1;

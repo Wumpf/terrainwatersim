@@ -10,7 +10,7 @@ layout(location = 1) in vec2 inHeightmapCoord[];
 
 layout(location = 0) out vec3 outWorldPos;
 layout(location = 1) out vec2 outHeightmapCoord;
-layout(location = 2) out vec3 outProjectiveCoord;
+layout(location = 2) out vec4 outProjectiveCoord;
 
 in gl_PerVertex
 {
@@ -37,5 +37,5 @@ void main()
 
 	gl_Position = ViewProjection * vec4(outWorldPos, 1.0);
 	outProjectiveCoord.xy = 0.5 * (gl_Position.w + gl_Position.xy);
-	outProjectiveCoord.z = gl_Position.w;
+	outProjectiveCoord.zw = gl_Position.zw;
 }

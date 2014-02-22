@@ -17,17 +17,16 @@ class Terrain
 public:
   Terrain(const ezSizeU32& screenSize);
   ~Terrain();
-  
-  /// Recreate all texture resources that are dependant on the screen size - call this on every screen size change!
-  void RecreateScreenSizeDependentTextures(const ezSizeU32& screenSize);
 
   /// Updates simulation.
   void PerformSimulationStep(ezTime lastFrameDuration);
 
   void UpdateVisibilty(const ezVec3& cameraPosition);
   void DrawTerrain();
-  /// Draws water. Needs to take a low resolution resolved copy of current framebuffer.
-  void DrawWater(gl::FramebufferObject& sceneFBO, gl::TextureCube& reflectionCubemap);
+  
+  /// \param lowresSceneCopy       Low resolution version of the framebuffer.
+  /// \param depthBufferMaxMaps    Maxmapped depth buffer starting with resolution of lowresSceneCopy.
+  void DrawWater(gl::Texture2D& lowresSceneCopy, gl::Texture2D& depthBufferMaxMaps, gl::TextureCube& reflectionCubemap);
 
 
   /// Creates heightmap from noise and resets flow.
@@ -80,7 +79,6 @@ public:
 
 
 private:
-
   void UpdateSimulationParameters();
 
   // Settings
@@ -100,7 +98,6 @@ private:
   float m_pixelPerTriangle;
   static const float m_maxTesselationFactor;
   bool m_anisotropicFiltering;
-  static const float m_refractionTextureSizeFactor;
     // Waterflow
   ezTime m_waterDistortionLayerBlendInterval;
 
@@ -109,11 +106,11 @@ private:
 
 
   // Graphics resources.
-  class InstancedGeomClipMapping* m_pGeomClipMaps;
+  class InstancedGeomClipMapping* m_geomClipMaps;
 
-  gl::Texture2D* m_pTerrainData;
-  gl::Texture2D* m_pWaterOutgoingFlow;
-  gl::Texture2D* m_pWaterFlowMap;
+  gl::Texture2D* m_terrainData;
+  gl::Texture2D* m_waterOutgoingFlow;
+  gl::Texture2D* m_waterFlowMap;
 
     // Shader
   gl::ShaderObject m_updateFlowShader;
@@ -129,25 +126,22 @@ private:
   gl::UniformBuffer m_waterRenderingUBO;
 
     // Samplers
-  const gl::SamplerObject* m_texturingSamplerObjectDataGrids;
   const gl::SamplerObject* m_texturingSamplerObjectAnisotropic;
   const gl::SamplerObject* m_texturingSamplerObjectTrilinear;
   const gl::SamplerObject* m_texturingSamplerObjectLinearClamp;
-
+  const gl::SamplerObject* m_texturingSamplerObjectNearestRepeat;
+  
     // Water Textures
-  //gl::Texture2D* m_pTextureFoam;
+  //gl::Texture2D* m_textureFoam;
 
     // Terrain Textures
-  gl::Texture2D* m_pTextureGrassDiffuseSpec;
-  gl::Texture2D* m_pTextureStoneDiffuseSpec;
-  gl::Texture2D* m_pTextureGrassNormalHeight;
-  gl::Texture2D* m_pTextureStoneNormalHeight;
+  gl::Texture2D* m_textureGrassDiffuseSpec;
+  gl::Texture2D* m_textureStoneDiffuseSpec;
+  gl::Texture2D* m_textureGrassNormalHeight;
+  gl::Texture2D* m_textureStoneNormalHeight;
 
-  gl::Texture2D* m_pWaterNormalMap;
-  gl::Texture2D* m_pLowResNoise;
-  gl::Texture2D* m_pFoamTexture;
-
-  gl::Texture2D* m_pRefractionTexture;
-  gl::FramebufferObject* m_pRefractionFBO;  // needed for drawing to (resolve)
+  gl::Texture2D* m_waterNormalMap;
+  gl::Texture2D* m_lowResNoise;
+  gl::Texture2D* m_foamTexture;
 };
 

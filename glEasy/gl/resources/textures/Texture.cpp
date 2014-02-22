@@ -27,10 +27,7 @@ namespace gl
 
   ezUInt32 Texture::ConvertMipMapSettingToActualCount(ezInt32 iMipMapSetting, ezUInt32 width, ezUInt32 height, ezUInt32 depth)
   {
-    if(iMipMapSetting == 0)
-      return 1;
-
-    else if(iMipMapSetting < 0)
+    if(iMipMapSetting <= 0)
     {
       ezUInt32 uiNumMipLevels = 0;
       while(width > 0 || height > 0 || depth > 0)

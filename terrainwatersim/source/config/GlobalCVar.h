@@ -39,7 +39,7 @@ namespace SceneConfig
     CVarRGBDecl(g_surfaceColor);
     CVarRGBDecl(g_bigDepthColor);
     CVarRGBDecl(g_extinctionCoefficients);
-    extern ezStatic<ezEvent<ezVec3>> g_extinctionCoefficients_changedEvent;
+    extern ezEvent<ezVec3> g_extinctionCoefficients_changedEvent;
 
     extern ezCVarFloat g_opaqueness;
 

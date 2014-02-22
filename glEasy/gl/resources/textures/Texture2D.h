@@ -14,7 +14,7 @@ namespace gl
     ///
     /// Uses given to create an object if file loading is successful. Use corresponding deallocator to remove the texture.
     /// Will return NULL on error.
-    static Texture2D* LoadFromFile(const ezString& sFilename, bool sRGB = false, bool generateMipMaps = true, ezIAllocator* pAllocator = ezFoundation::GetDefaultAllocator());
+    static Texture2D* LoadFromFile(const ezString& sFilename, bool sRGB = false, bool generateMipMaps = true, ezAllocatorBase* pAllocator = ezFoundation::GetDefaultAllocator());
 
     void SetData(ezUInt32 mipLevel, const ezColor* pData);
     void SetData(ezUInt32 mipLevel, const ezColor8UNorm* pData);

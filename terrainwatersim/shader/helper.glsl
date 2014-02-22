@@ -44,6 +44,19 @@ float CalcLuminance(vec3 color)
 	return dot(color, vec3(0.299, 0.587, 0.114));
 }
 
+// Combines two normalvectors from normalmaps to a new one.
+// The "from normalmaps" part is quite important since it makes assumptions to the orientation!
+// -> Please insert raw normalmap data!
+// http://blog.selfshadow.com/publications/blending-in-detail/
+vec3 CombineNormalmaps(vec3 normalmap1, vec3 normalmap2)
+{
+    vec3 t = normalmap1.xyz * vec3( 2,  2, 2) + vec3(-1, -1,  0);
+    vec3 u = normalmap2.xyz * vec3(-2, -2, 2) + vec3( 1,  1, -1);
+    vec3 r = t * dot(t, u) - u*t.z;
+    return normalize(r);
+}
+
+
 #define saturate(value) clamp((value), 0, 1)
 
 

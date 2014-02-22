@@ -92,7 +92,7 @@ namespace gl
 
     /// Global event for changed shader files.
     /// All Shader Objects will register upon this event. If any shader file is changed, just broadcast here!
-    static ezStatic<ezEvent<const ezString&>> s_shaderFileChangedEvent;
+    static ezEvent<const ezString&> s_shaderFileChangedEvent;
 
   private:
     /// Print information about the compiling step

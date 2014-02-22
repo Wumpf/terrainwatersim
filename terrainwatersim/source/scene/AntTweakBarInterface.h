@@ -57,5 +57,5 @@ private:
 
   /// Buffer for C++ function object callback that will be mapped to C-Function calls for use with TwBar
   /// Needs to be static to be available from C-Calls
-  static ezStatic<ezDynamicArray<ezUInt8>> m_callbackFunctionObjectbuffer;
+  static ezDynamicArray<ezUInt8> m_callbackFunctionObjectbuffer;
 };
