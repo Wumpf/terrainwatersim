@@ -52,7 +52,7 @@ namespace SceneConfig
   namespace Simulation
   {
     ezCVarFloat g_simulationStepsPerSecond("Simulation steps per second", 60, ezCVarFlags::Save, "group='Simulation' min=30 max=300");
-    ezCVarFloat g_flowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group='Simulation' min=0.2 max=1.0 step=0.01");
+    ezCVarFloat g_flowDamping("Flow Damping", 0.98f, ezCVarFlags::Save, "group='Simulation' min=0.0 max=1.0 step=0.01");
     ezCVarFloat g_flowAcceleration("Flow Acceleration", 10.0f, ezCVarFlags::Save, "group='Simulation' min=0.5 max=100.0 step=0.1");
   }
 

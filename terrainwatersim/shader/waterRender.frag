@@ -38,6 +38,8 @@ layout(binding = 6) uniform WaterRendering
 	float FlowDistortionTimer;
 };
 
+#define SCREENSPACE_REFLECTIONS
+
 const float RefractionIndex_Water = 1.33;
 const float RefractionIndex_Air = 1.00029;
 const float RefractionAirToWater = RefractionIndex_Air / RefractionIndex_Water;
@@ -62,6 +64,21 @@ vec3 ComputeHeightmapNormal(in vec2 heightmapCoord)
 	vec3 vecdx = vec3(worldStep, h[2] - h[3], 0.0);
 	return normalize(cross(vecdz, vecdx));
 }
+
+float TexcoordBorderBlendInv(vec2 texcoord)
+{
+	vec2 toBorder = vec2(1.0) - texcoord * 2.0f;
+	toBorder *= toBorder;
+	float borderFade = dot(toBorder, toBorder);
+	return borderFade;
+}
+
+float TexcoordBorderBlend(vec2 texcoord)
+{
+	return saturate(1.0 - TexcoordBorderBlendInv(texcoord));
+}
+
+
 
 vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec2 projectiveCoord, out vec3 refractionTexture) 
 {
@@ -89,8 +106,9 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	projectiveWeight = pow(projectiveWeight, 16);
 	SceneTexture = mix(SceneTexture, projectiveTexture, projectiveWeight);
 */
-
-	refractionTexture = textureLod(SceneTexture, saturate(projectiveCoord + normal.xz* waterRefractionDepth * 0.05), 0).rgb;
+	float nearBorder = TexcoordBorderBlend(projectiveCoord); //  reduce waves at screen border where informatoin is missing!
+	vec2 refractionTex = saturate(projectiveCoord + normal.xz* waterRefractionDepth * 0.05 * nearBorder);
+	refractionTexture = textureLod(SceneTexture, refractionTex, 0).rgb;
 
 
 	// Water color
@@ -111,7 +129,6 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	return mix(BigDepthColor, waterColor, colorExtinction);
 }
 
-
 #define XNEG 1
 #define YNEG 2
 //#define ZNEG 4
@@ -122,7 +139,7 @@ bool MaxMapBasedDepthBufferRaymarching(in vec3 texEntry, in vec3 rayDirection_Te
 
 	// Currently examined miplevel, do not start at lowest level
 	int currentMipLevel = textureQueryLevels(SceneDepthTexture)-3; // Start with 16xX texture.
-	vec2 currentLevelResolution = textureSize(SceneDepthTexture, currentMipLevel);//8;
+	ivec2 currentLevelResolution = textureSize(SceneDepthTexture, currentMipLevel);//8;
 
 	vec3 rayDirection_TexelSpace = rayDirection_TextureSpace;
 	rayDirection_TexelSpace.xy *= currentLevelResolution;
@@ -165,7 +182,7 @@ bool MaxMapBasedDepthBufferRaymarching(in vec3 texEntry, in vec3 rayDirection_Te
 		if (heightValue < texExit.z)
 		{
 			// "Descending" on depth -> new hit!
-			vec3 intersection = texExit - max((texExit.z - heightValue) / rayDirection_TexelSpace.z, 0) * rayDirection_TexelSpace;
+			vec3 intersection = texExit - max((texExit.z - heightValue) / rayDirection_TexelSpace.z, 0.0) * rayDirection_TexelSpace;
 			//texExit.z = heightValue;
 
 			if (currentMipLevel == 0)
@@ -177,7 +194,6 @@ bool MaxMapBasedDepthBufferRaymarching(in vec3 texEntry, in vec3 rayDirection_Te
 			{
 				// Todo: Currently only going down, but could also go up in certain situations! This COULD help performance, could also make it worse
 
-				// Problem: Depth buffer is not square! Need to check
 				--currentMipLevel;
 				intersection.xy /= currentLevelResolution;
 				
@@ -199,6 +215,7 @@ void main()
 {
 	// flow - http://www.slideshare.net/alexvlachos/siggraph-2010-water-flow-in-portal-2
 	vec2 flow = textureLod(FlowMap, inHeightmapCoord, 0.0).xy;
+
 	float noise = texture(Noise, inHeightmapCoord*6).x;
 
 	float distortTimer = FlowDistortionTimer + noise;
@@ -211,17 +228,26 @@ void main()
 	vec2 normalmapCoord0 = normalmapCoord + distortionFactor0 * flowDistortion;
 	vec2 normalmapCoord1 = normalmapCoord + distortionFactor1 * flowDistortion + vec2(0.3);
 
-	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xzy;
-	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xzy;
-	vec3 normalMapNormal = mix(normalMapLayer0, normalMapLayer1, distortionBlend);
-		// scale with speed
+	vec3 normalMapLayer0 = texture(Normalmap, normalmapCoord0).xyz;
+	vec3 normalMapLayer1 = texture(Normalmap, normalmapCoord1).xyz;
+
+	// partial derivative blending - http://blog.selfshadow.com/publications/blending-in-detail/
+	vec3 normalMapNormal = normalize(vec3(mix(normalMapLayer0.xy / normalMapLayer0.z, normalMapLayer1.xy / normalMapLayer1.z, distortionBlend), 1)).xzy;
+	//vec3 normalMapNormal = mix(normalMapLayer0, normalMapLayer1, distortionBlend).xzy;
+
+
+	// scale y with speed
 	float flowSpeedSq = dot(flow, flow);
 	float flowSpeed = sqrt(flowSpeedSq);
-	normalMapNormal = normalMapNormal * 2.0 - vec3(1.0);
-	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed;
+	normalMapNormal.xz = normalMapNormal.xz * 2.0 - vec2(1.0);	// Don't change y, since it will be manipulated further it doesn't really matter
+	normalMapNormal.y /= SpeedToNormalDistortion * flowSpeed + 0.01f;
+	normalMapNormal = normalize(normalMapNormal);
 
 	// Final Normal
-	vec3 normal = normalize(ComputeHeightmapNormal(inHeightmapCoord) + normalMapNormal * 0.25);
+	vec3 heightmapNormal = ComputeHeightmapNormal(inHeightmapCoord);
+	//vec3 normal = normalize(vec3(heightmapNormal.xz + normalMapNormal.xz, heightmapNormal.y * normalMapNormal.y)).xzy;
+	vec3 normal = normalize(vec3(mix(heightmapNormal.xz / heightmapNormal.y, normalMapNormal.xz / normalMapNormal.y, 0.2), 1)).xzy;
+
 
 	// vector to camera and camera distance
 	vec3 toCamera = CameraPosition - inWorldPos;
@@ -235,7 +261,7 @@ void main()
 	// Normal dot Camera - angle of viewer to water surface
 	float nDotV = saturate(dot(normal, toCamera));
 	// Schlick-Fresnel approx
-	float fresnel = Fresnel(nDotV, ReflectionCoefficient);
+	float fresnel = saturate(Fresnel(nDotV, ReflectionCoefficient));
 
 	// specular lighting
 	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
@@ -281,6 +307,8 @@ void main()
 //	
 
 	// Transform reflection vector to viewspace
+	vec3 reflectionColor;
+#ifdef SCREENSPACE_REFLECTIONS
 	vec4 reflectedPos = (ViewProjection * vec4(inWorldPos + cameraDirReflection, 1.0));
 	reflectedPos.xyz /= reflectedPos.w;
 	reflectedPos.xy = reflectedPos.xy * 0.5 + vec2(0.5);
@@ -306,33 +334,32 @@ void main()
 				screenSpaceReflectionIntensity = float(MaxMapBasedDepthBufferRaymarching(projectiveTexcoords, reflectionScreenSpace, screenSpaceReflectionTexcoord, XNEG | YNEG));
 		}
 	}
-
-	vec3 reflectionColor;
+	
 	if(screenSpaceReflectionIntensity != 0.0f)
 	{
-		vec2 ssReflectionCoordToBorder = vec2(1.0) - screenSpaceReflectionTexcoord * 2.0f;
-		ssReflectionCoordToBorder *= ssReflectionCoordToBorder;
-		float borderFade = dot(ssReflectionCoordToBorder, ssReflectionCoordToBorder);
-		screenSpaceReflectionIntensity *= 1.0 - borderFade * borderFade;
+		screenSpaceReflectionIntensity *= TexcoordBorderBlend(screenSpaceReflectionTexcoord.xy);
 		//screenSpaceReflectionIntensity *= 1-reflectionScreenSpace.z;
 
 
-		vec3 screenSpaceReflectionColor = textureLod(SceneTexture, screenSpaceReflectionTexcoord.xy, 0.0).rgb;	
+		vec3 screenSpaceReflectionColor = textureLod(SceneTexture, screenSpaceReflectionTexcoord.xy, 0.0).rgb;
 		vec3 cubemapReflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;	
 
-		reflectionColor = mix(cubemapReflectionColor, screenSpaceReflectionColor, screenSpaceReflectionIntensity);
+		reflectionColor = mix(cubemapReflectionColor, screenSpaceReflectionColor, saturate(screenSpaceReflectionIntensity));
 	}
 	else
+#endif
 	{
 		reflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;
 	}
 
+	// If the reflection vector goes under the water, manipulate the 
+//	fresnel -= saturate(-cameraDirReflection.y * 2);
 	
 
 //reflectionColor = pow(texture(SceneDepthTexture, projectiveTexcoords.xy).rrr, vec3(10000));
 
 	// Combine Refraction & Reflection & Specular
-	vec3 color = mix(refractionColor, reflectionColor, saturate(fresnel)) + GlobalDirLightColor * specularAmount;
+	vec3 color = mix(refractionColor, reflectionColor, fresnel) + GlobalDirLightColor * specularAmount;
 	
 	// Shore hack against artifacts
 	float pixelToGround = inWorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach

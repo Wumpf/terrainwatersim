@@ -306,7 +306,9 @@ void Terrain::DrawWater(gl::Texture2D& lowresSceneCopy, gl::Texture2D& depthBuff
   depthBufferMaxMaps.Bind(8);
 
   // UBO setup
-  m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(ezTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds()));
+  double flowDistortionTimer = ezTime::Now().GetSeconds() / m_waterDistortionLayerBlendInterval.GetSeconds();
+  flowDistortionTimer = ezMath::Mod(flowDistortionTimer, 16000.0);// Keeps accuracy high and avoids flickering. Trading it against ab big flicker every x seconds
+  m_waterRenderingUBO["FlowDistortionTimer"].Set(static_cast<float>(flowDistortionTimer));
 
   m_landscapeInfoUBO.BindBuffer(5);
   m_waterRenderingUBO.BindBuffer(6);
