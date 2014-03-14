@@ -4,6 +4,8 @@ layout(binding = 0, shared) uniform Camera
   mat4 InverseViewProjection;
   mat4 ViewMatrix;
   vec3 CameraPosition;
+  float NearPlane;
+  float FarPlane;
 };
 
 layout(binding = 1, shared) uniform Time

@@ -34,7 +34,6 @@ void main()
 	if(terrainInfo.a < 0.1)
 		outWorldPos.y -= 10.0;
 
-
 	gl_Position = ViewProjection * vec4(outWorldPos, 1.0);
 	outProjectiveCoord.xy = 0.5 * (gl_Position.w + gl_Position.xy);
 	outProjectiveCoord.zw = gl_Position.zw;

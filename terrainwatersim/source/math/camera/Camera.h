@@ -18,6 +18,9 @@ public:
   const ezVec3& GetUp() const { return m_vUp; }
   const ezVec3& GetViewDir() const { return m_ViewDir; }
 
+  float GetNearPlane() const { return m_nearPlane; }
+  float GetFarPlane() const { return m_farPlane; }
+
   void SetPosition(const ezVec3 vPosition) { m_vPosition = vPosition; }
 
 protected:

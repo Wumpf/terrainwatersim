@@ -257,7 +257,7 @@ void Scene::RecreateScreenBuffers()
     EZ_DEFAULT_DELETE(m_depthBufferMaxMapFBOs[i]);
   }
   m_depthBufferMaxMapFBOs.Clear();
-  m_depthBufferMaxMaps = EZ_DEFAULT_NEW(gl::Texture2D)(m_depthBuffer->GetWidth()/2, m_depthBuffer->GetHeight()/2, GL_R32F, 0 /*, GeneralConfig::g_MSAASamples.GetValue()*/);
+  m_depthBufferMaxMaps = EZ_DEFAULT_NEW(gl::Texture2D)(m_depthBuffer->GetWidth(), m_depthBuffer->GetHeight(), GL_R32F, 0 /*, GeneralConfig::g_MSAASamples.GetValue()*/);
   for (ezUInt32 mipLevel = 0; mipLevel < m_depthBufferMaxMaps->GetNumMipLevels(); ++mipLevel)
   {
     m_depthBufferMaxMapFBOs.PushBack(EZ_DEFAULT_NEW(gl::FramebufferObject)({ gl::FramebufferObject::Attachment(m_depthBufferMaxMaps, mipLevel, 0) }));
@@ -295,7 +295,7 @@ Scene::~Scene(void)
 
 void Scene::UpdateDepthMaxMap()
 {
-  m_maxMapGenStep.Activate();
+  m_copyShader.Activate();
 
   // Initial: copy from heightmap.
   m_depthBufferMaxMapFBOs[0]->Bind(true);
@@ -305,7 +305,7 @@ void Scene::UpdateDepthMaxMap()
   gl::ScreenAlignedTriangle::Draw();
 
   // Here be dragons: Read from one mipmap and write to other.
- 
+  m_maxMapGenStep.Activate();
   for (ezUInt32 mipLevel = 1; mipLevel < m_depthBufferMaxMapFBOs.GetCount(); ++mipLevel)
   {
     m_depthBufferMaxMapFBOs[mipLevel]->Bind(true);
@@ -328,6 +328,8 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   inverseViewProjection.Invert();
   m_CameraUBO["InverseViewProjection"].Set(inverseViewProjection);
   m_CameraUBO["CameraPosition"].Set(m_pCamera->GetPosition());
+  m_CameraUBO["FarPlane"].Set(m_pCamera->GetFarPlane());
+  m_CameraUBO["NearPlane"].Set(m_pCamera->GetNearPlane());
   
   // update stats vars
   ezStringBuilder statString; statString.Format("%.3f ms", m_pTerrainDrawTimer->GetLastTimeElapsed(true).GetMilliseconds());
@@ -392,9 +394,6 @@ ezResult Scene::Render(ezTime lastFrameDuration)
 
   // reset
   m_linearHDRFramebuffer->Bind(true);
-  glEnable(GL_DEPTH_TEST);
-  glDepthMask(GL_TRUE);
-
 
   // render water
   if(SceneConfig::WaterRendering::g_wireframe)

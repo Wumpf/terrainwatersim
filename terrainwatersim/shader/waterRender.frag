@@ -80,12 +80,12 @@ float TexcoordBorderBlend(vec2 texcoord)
 
 
 
-vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec2 projectiveCoord, out vec3 refractionTexture) 
+vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal, float waterDepth, vec2 projectiveCoord, float shoreFade, out vec3 refractionTexture) 
 {
 	vec3 refractionVector = Refract(nDotV, toCamera, normal, RefractionAirToWater);
 
 	// basically same hack as with the viewspace water depth hack
-	float waterRefractionDepth = waterDepth / saturate(-dot(normal, refractionVector) + 0.1);
+	float waterRefractionDepth = waterDepth / saturate(-dot(normal, refractionVector) + 0.1) * shoreFade;
 
 	// This was a promising attempt to mimic correct refraction
 	// Basic problems:
@@ -107,7 +107,7 @@ vec3 ComputeRefractionColor(float nDotV, float nDotL, vec3 toCamera, vec3 normal
 	SceneTexture = mix(SceneTexture, projectiveTexture, projectiveWeight);
 */
 	float nearBorder = TexcoordBorderBlend(projectiveCoord); //  reduce waves at screen border where informatoin is missing!
-	vec2 refractionTex = saturate(projectiveCoord + normal.xz* waterRefractionDepth * 0.05 * nearBorder);
+	vec2 refractionTex = saturate(projectiveCoord + normal.xz * (waterRefractionDepth * 0.05 * nearBorder));
 	refractionTexture = textureLod(SceneTexture, refractionTex, 0).rgb;
 
 
@@ -255,13 +255,21 @@ void main()
 	toCamera /= cameraDistance;
 
 
+	vec3 projectiveTexcoords = inProjectiveCoord.xyz / inProjectiveCoord.w;
+
+    // Similar to soft particles, fade were depth matches other geometry.
+    float depthBufferDepth = LinearizeZBufferDepth(textureLod(SceneDepthTexture, projectiveTexcoords.xy, 0.0).r); 
+    float shoreFade = saturate((depthBufferDepth - inProjectiveCoord.z)*0.3f);
+  	shoreFade *= shoreFade;
+  	shoreFade *= shoreFade;
+
 
 	// Normal dot Light - basic lighting term
 	float nDotL = saturate(dot(normal, GlobalDirLightDirection));
 	// Normal dot Camera - angle of viewer to water surface
 	float nDotV = saturate(dot(normal, toCamera));
 	// Schlick-Fresnel approx
-	float fresnel = saturate(Fresnel(nDotV, ReflectionCoefficient));
+	float fresnel = saturate(Fresnel(nDotV, ReflectionCoefficient)) * shoreFade;
 
 	// specular lighting
 	// use camera dir reflection instead of light reflection because cam reflection is needed for cubemapReflection
@@ -271,40 +279,15 @@ void main()
 	specularAmount *= fresnel;
 
 
-
 	// Water depth
 	vec4 terrainInfo = texture(TerrainInfo, inHeightmapCoord);
 	float waterDepth = terrainInfo.a;
 
-	// Needed: amout of water in screenspace on this very pixel
-	// This would need raymarching... instead just use this self-made approximation
-	//float waterViewSpaceDepth = waterDepth / saturate(nDotV + 0.1);
 
+    // Refraction
+    vec3 refractionTexture;
+	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, projectiveTexcoords.xy, shoreFade, refractionTexture);
 
-	// Refraction
-	vec3 projectiveTexcoords = inProjectiveCoord.xyz / inProjectiveCoord.w;
-	vec3 refractionTexture;
-	vec3 refractionColor = ComputeRefractionColor(nDotV, nDotL, toCamera, normal, waterDepth, projectiveTexcoords.xy, refractionTexture);
-	
-
-	// Screenspace local reflection.
-	//bool terrainReflection = false;
-	/*vec3 raymarchPos = inWorldPos;
-	for(float t=1.05; t<50.0; t*=1.1f)	// ~40 iterations
-	{
-		raymarchPos += cameraDirReflection * t;
-		vec4 terrainInfo = textureLod(TerrainInfoFiltered, raymarchPos.xz * HeightmapWorldTexelSize, 3);
-		if(terrainInfo.x > raymarchPos.y)
-		{
-			reflectionColor /= CalcLuminance(reflectionColor) * 40.0;	// fake Reflections by darkening the reflection color
-	//		terrainReflection = true;
-			break;
-		}
-	}*/
-
-
-
-//	
 
 	// Transform reflection vector to viewspace
 	vec3 reflectionColor;
@@ -352,30 +335,20 @@ void main()
 		reflectionColor = textureLod(ReflectionCubemap, cameraDirReflection, 0.0).rgb;
 	}
 
-	// If the reflection vector goes under the water, manipulate the 
-//	fresnel -= saturate(-cameraDirReflection.y * 2);
-	
-
-//reflectionColor = pow(texture(SceneDepthTexture, projectiveTexcoords.xy).rrr, vec3(10000));
-
 	// Combine Refraction & Reflection & Specular
 	vec3 color = mix(refractionColor, reflectionColor, fresnel) + GlobalDirLightColor * specularAmount;
 	
-	// Shore hack against artifacts
-	float pixelToGround = inWorldPos.y - terrainInfo.r;	// this is a bit better than the classic terrainInfo.a approach
-	color = mix(refractionTexture, color, saturate(pixelToGround*pixelToGround * 0.25));
-
 	// Foam for fast water - just reuse the same coord and technique from the normalmaps
 	const float SpeedToFoamBlend = 0.00004;
 	vec4 foam0 = texture(Foam, normalmapCoord0);
 	vec4 foam1 = texture(Foam, normalmapCoord1);
 	vec4 foam = mix(foam0, foam1, distortionBlend);
-	color = mix(color, foam.rgb, saturate(flowSpeedSq*SpeedToFoamBlend) * foam.a);
+	color = mix(color, foam.rgb, saturate(flowSpeedSq*SpeedToFoamBlend) * foam.a * shoreFade);
 
 	// Fogging
 	color = ApplyFog(color, CameraPosition, cameraDistance, toCamera);
 
 	// Color output
-	FragColor.rgb = color;
+	FragColor.rgb = vec3(color);
 	FragColor.a = 1.0;
 }

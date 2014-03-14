@@ -1,3 +1,5 @@
+#include "constantbuffers.glsl"
+
 vec3 ApplyFog(vec3 color, vec3 cameraPosition, float cameraDistance, vec3 toCameraVec)
 {
 	const float fogDensity = 0.001;
@@ -56,29 +58,11 @@ vec3 CombineNormalmaps(vec3 normalmap1, vec3 normalmap2)
     return normalize(r);
 }
 
+// Basically removes the w division from z again.
+// Good explanation: http://stackoverflow.com/questions/6652253/getting-the-true-z-value-from-the-depth-buffer
+float LinearizeZBufferDepth(float depthFromZBuffer)
+{
+    return (2.0 * NearPlane * FarPlane) / (FarPlane + NearPlane - (2.0 * depthFromZBuffer - 1.0) * (FarPlane - NearPlane));
+}
 
 #define saturate(value) clamp((value), 0, 1)
-
-
-/*
-vec4 interpolateQuad(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
-{
-	vec4 a = mix(v0, v1, gl_TessCoord.x);
-	vec4 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
-
-vec3 interpolateQuad(in vec3 v0, in vec3 v1, in vec3 v2, in vec3 v3)
-{
-	vec3 a = mix(v0, v1, gl_TessCoord.x);
-	vec3 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
-
-vec2 interpolateQuad(in vec2 v0, in vec2 v1, in vec2 v2, in vec2 v3)
-{
-	vec2 a = mix(v0, v1, gl_TessCoord.x);
-	vec2 b = mix(v3, v2, gl_TessCoord.x);
-	return mix(a, b, gl_TessCoord.y);
-}
-*/

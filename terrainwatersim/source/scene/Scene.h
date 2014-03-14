@@ -40,7 +40,7 @@ private:
 
   gl::Texture2D* m_linearHDRBuffer_Half;
   gl::FramebufferObject* m_linearHDRFramebuffer_Half; ///< Has no depth.
-  gl::Texture2D* m_depthBufferMaxMaps; ///< Maximum mipmaps for the scene depth buffer, starts with half size depth buffer.
+  gl::Texture2D* m_depthBufferMaxMaps; ///< Maximum mipmaps for the scene depth buffer, depth buffer copy.
   ezHybridArray<gl::FramebufferObject*, 16> m_depthBufferMaxMapFBOs; ///< A FBO for every miplevel of m_depthBufferMaxMap, from big to small (usual mip order).
 
   gl::Texture2D* m_lowresScreenColorTexture;
