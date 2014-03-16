@@ -1,6 +1,7 @@
 #include "PCH.h"
 #include "InstancedGeomClipMapping.h"
 
+const ezUInt32 InstancedGeomClipMapping::s_indexCounts[static_cast<int>(PatchType::NUM_TYPES)] = { 24, 21, 18 };
 
 InstancedGeomClipMapping::InstancedGeomClipMapping(float minPatchSizeWorld, ezUInt32 ringThinkness, ezUInt32 numRings) :
   m_ringThinkness(ringThinkness),
@@ -174,6 +175,6 @@ void InstancedGeomClipMapping::DrawGeometry()
   {
     glBindVertexArray(m_patchVertexArray[i]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_patchIndexBuffer[i]);
-    glDrawElementsInstanced(GL_PATCHES, 8 * 3, GL_UNSIGNED_BYTE, NULL, m_currentInstanceData[i].GetCount());
+    glDrawElementsInstanced(GL_PATCHES, s_indexCounts[i], GL_UNSIGNED_BYTE, NULL, m_currentInstanceData[i].GetCount());
   }
 }

@@ -30,6 +30,8 @@ private:
     NUM_TYPES
   };
 
+  static const ezUInt32 s_indexCounts[static_cast<int>(PatchType::NUM_TYPES)];
+
   gl::IndexBufferId m_patchIndexBuffer[(ezUInt32)PatchType::NUM_TYPES];
   gl::BufferId m_patchInstanceBuffer[(ezUInt32)PatchType::NUM_TYPES];
   ezUInt32 m_maxPatchInstances[(ezUInt32)PatchType::NUM_TYPES];
