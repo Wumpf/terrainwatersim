@@ -65,7 +65,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;ezCoreUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\WinVs2013Debug64" $(TargetDir) /Y /C
@@ -112,7 +112,6 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
     <ClInclude Include="source\FileWatcher\FileWatcherOSX.h" />
     <ClInclude Include="source\FileWatcher\FileWatcherWin32.h" />
     <ClInclude Include="source\GlobalEvents.h" />
-    <ClInclude Include="source\math\camera\Camera.h" />
     <ClInclude Include="source\math\camera\FreeCamera.h" />
     <ClInclude Include="source\math\NoiseGenerator.h" />
     <ClInclude Include="source\math\Random.h" />
@@ -168,7 +167,6 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\GlobalEvents.cpp" />
-    <ClCompile Include="source\math\camera\Camera.cpp" />
     <ClCompile Include="source\math\camera\FreeCamera.cpp" />
     <ClCompile Include="source\math\NoiseGenerator.cpp" />
     <ClCompile Include="source\math\Random.cpp" />

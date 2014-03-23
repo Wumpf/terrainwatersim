@@ -96,7 +96,7 @@ Scene::Scene(const RenderWindowGL& renderWindow) :
   InitGlobalUBO();
 
   ezVec3 vCameraPos(m_terrain->GetTerrainWorldSize() / 2, 200, m_terrain->GetTerrainWorldSize() / 2);
-  m_pCamera->SetPosition(vCameraPos);
+  m_pCamera->MoveGlobally(vCameraPos - m_pCamera->GetPosition());
 
   // Shader for buffer copy operations
   m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");

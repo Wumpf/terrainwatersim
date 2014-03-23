@@ -10,9 +10,6 @@
     <ClInclude Include="source\math\camera\FreeCamera.h">
       <Filter>source\math\camera</Filter>
     </ClInclude>
-    <ClInclude Include="source\math\camera\Camera.h">
-      <Filter>source\math\camera</Filter>
-    </ClInclude>
     <ClInclude Include="source\UniquePtr.h">
       <Filter>source\utils</Filter>
     </ClInclude>
@@ -179,9 +176,6 @@
       <Filter>source\math</Filter>
     </ClCompile>
     <ClCompile Include="source\math\camera\FreeCamera.cpp">
-      <Filter>source\math\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="source\math\camera\Camera.cpp">
       <Filter>source\math\camera</Filter>
     </ClCompile>
     <ClCompile Include="source\PCH.cpp">
