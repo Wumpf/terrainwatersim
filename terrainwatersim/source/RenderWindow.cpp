@@ -33,7 +33,6 @@ RenderWindowGL::RenderWindowGL() : ezWindow()
   m_CreationDescription.m_ClientAreaSize.height = GeneralConfig::g_ResolutionHeight.GetValue();
   m_CreationDescription.m_bFullscreenWindow = false;
   m_CreationDescription.m_bResizable = true;
-  m_CreationDescription.m_GraphicsAPI = ezGraphicsAPI::OpenGL;
 
   Initialize();
   CreateGraphicsContext();

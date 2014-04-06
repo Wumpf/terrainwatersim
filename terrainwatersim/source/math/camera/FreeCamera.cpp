@@ -4,8 +4,8 @@
 
 FreeCamera::FreeCamera(ezAngle fov, float aspectRatio) :
   ezCamera(),
-  m_mouseX(ezMath::BasicType<float>::Pi()),
-  m_mouseY(ezMath::BasicType<float>::Pi())
+  m_mouseX(0),
+  m_mouseY(ezMath::BasicType<float>::Pi()/2)
 {
   SetCameraMode(ezCamera::PerspectiveFixedFovY, 85.0f, 0.1f, 1000.0f);
   LookAt(ezVec3::ZeroVector(), ezVec3(1,-0.1f,0));
@@ -41,11 +41,13 @@ void FreeCamera::Update(ezTime lastFrameDuration)
     ezInputManager::GetInputActionState(InputConfig::g_szSetName_Camera, InputConfig::g_szAction_CameraRotateAxisYNeg, &fMouseYDeltaNeg);
     m_mouseX -= fMouseXDeltaPos - fMouseXDeltaNeg;
     m_mouseY -= fMouseYDeltaPos - fMouseYDeltaNeg;
-
-    viewDir.x = cosf(m_mouseX) * sinf(m_mouseY);
-    viewDir.y = cosf(m_mouseY);
-    viewDir.z = sinf(m_mouseX) * sinf(m_mouseY);
   }
+
+  m_mouseY = ezMath::Clamp(m_mouseY, 0.1f, ezMath::BasicType<float>::Pi() - 0.1f);
+
+  viewDir.x = cosf(m_mouseX) * sinf(m_mouseY);
+  viewDir.y = cosf(m_mouseY);
+  viewDir.z = sinf(m_mouseX) * sinf(m_mouseY);
 
   /*
   float theta2 = m_fMouseY + ezMath::BasicType<float>::Pi() / 2.0f;

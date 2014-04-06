@@ -22,6 +22,8 @@
 
 #include <Foundation/Utilities/Stats.h>
 #include <Foundation/Basics/Types/Variant.h>
+#include <Foundation/Utilities/GraphicsUtils.h>
+#include <Core/Input/InputManager.h>
 
 
 
@@ -338,6 +340,16 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   ezStats::SetStat("Water Draw Time", statString.GetData());
   statString.Format("%.3f ms", m_pSimulationTimer->GetLastTimeElapsed(true).GetMilliseconds());
   ezStats::SetStat("Simulation Time", statString.GetData());
+
+
+  // Picking
+  ezVec2 cursorPosition;
+  ezInputManager::GetInputSlotState(ezInputSlot_MousePositionX, &cursorPosition.x);
+  ezInputManager::GetInputSlotState(ezInputSlot_MousePositionY, &cursorPosition.y);
+  ezVec3 cursorPositionScreenCor(cursorPosition.x / GeneralConfig::g_ResolutionWidth.GetValue(), 1.0f - cursorPosition.y / GeneralConfig::g_ResolutionHeight.GetValue(), 0.0f);
+  ezVec3 pickRayStart, pickRayDir;
+  ezGraphicsUtils::ConvertScreenPosToWorldPos(inverseViewProjection, ezProjectionDepthRange::MinusOneToOne, 0, 0,
+                        GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), cursorPositionScreenCor, pickRayStart, &pickRayDir);
 
   // simulate
   m_pSimulationTimer->Start();
