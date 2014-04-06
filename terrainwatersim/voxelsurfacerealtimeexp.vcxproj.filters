@@ -134,9 +134,6 @@
     <None Include="shader\waterRender.cont">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\simulation.comp">
-      <Filter>shader</Filter>
-    </None>
     <None Include="shader\textureOutput.frag">
       <Filter>shader</Filter>
     </None>

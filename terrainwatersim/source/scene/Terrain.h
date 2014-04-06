@@ -32,6 +32,11 @@ public:
   /// Creates heightmap from noise and resets flow.
   void CreateHeightmapFromNoiseAndResetSim();
 
+  // Brush functions
+
+  /// Adds water at a given position with a radial falloff.
+  /// \param strength   Intensity scaler to the brush.
+  void ApplyRadialWaterBrush(ezVec2 worldPositionXZ, float strength);
 
   // Getter & Setter
 
@@ -118,12 +123,14 @@ private:
   gl::ShaderObject m_waterRenderShader;
   gl::ShaderObject m_terrainRenderShader;
   gl::ShaderObject m_copyShader;
+  gl::ShaderObject m_waterBrushShader;
 
     // UBO
   gl::UniformBuffer m_landscapeInfoUBO;
   gl::UniformBuffer m_simulationParametersUBO;
   gl::UniformBuffer m_terrainRenderingUBO;
   gl::UniformBuffer m_waterRenderingUBO;
+  gl::UniformBuffer m_brushUBO;
 
     // Samplers
   const gl::SamplerObject* m_texturingSamplerObjectAnisotropic;

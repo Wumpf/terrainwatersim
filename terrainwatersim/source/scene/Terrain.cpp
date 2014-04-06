@@ -34,6 +34,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_applyFlowShader("applyFlow"),
   m_updateFlowShader("updateFlow"),
   m_copyShader("copyRefraction"),
+  m_waterBrushShader("waterBrush"),
 
   m_terrainData(NULL),
   m_waterOutgoingFlow(NULL),
@@ -68,6 +69,9 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_applyFlowShader.CreateProgram();
   m_updateFlowShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "flowUpdate.comp");
   m_updateFlowShader.CreateProgram();
+
+  m_waterBrushShader.AddShaderFromFile(gl::ShaderObject::ShaderType::COMPUTE, "waterBrush.comp");
+  m_waterBrushShader.CreateProgram();
   
   m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::VERTEX, "screenTri.vert");
   m_copyShader.AddShaderFromFile(gl::ShaderObject::ShaderType::FRAGMENT, "textureOutput.frag");
@@ -78,6 +82,7 @@ Terrain::Terrain(const ezSizeU32& screenSize) :
   m_simulationParametersUBO.Init({ &m_applyFlowShader, &m_updateFlowShader }, "SimulationParameters");
   m_waterRenderingUBO.Init({ &m_waterRenderShader }, "WaterRendering");
   m_terrainRenderingUBO.Init({ &m_terrainRenderShader }, "TerrainRendering");
+  m_brushUBO.Init({ &m_waterBrushShader }, "BrushInfo");
 
 
   // set some default values
@@ -140,6 +145,26 @@ Terrain::~Terrain()
   EZ_DEFAULT_DELETE(m_waterNormalMap);
   EZ_DEFAULT_DELETE(m_lowResNoise);
   EZ_DEFAULT_DELETE(m_foamTexture);
+}
+
+void Terrain::ApplyRadialWaterBrush(ezVec2 worldPositionXZ, float strength)
+{
+  worldPositionXZ /= m_gridWorldSize;
+  worldPositionXZ.x = ezMath::Fraction(worldPositionXZ.x);
+  worldPositionXZ.y = ezMath::Fraction(worldPositionXZ.y);
+  worldPositionXZ *= static_cast<float>(m_gridResolution);
+
+  m_brushUBO["BrushPositionTexelCor"].Set(worldPositionXZ);
+  m_brushUBO["BrushIntensity"].Set(strength);
+  m_brushUBO["BrushSizeSq"].Set(32.0f);
+
+  m_terrainData->BindImage(0, gl::Texture::ImageAccess::READ, GL_RGBA32F);
+  m_waterOutgoingFlow->BindImage(1, gl::Texture::ImageAccess::READ_WRITE, GL_RGBA32F);
+
+  m_brushUBO.BindBuffer(7);
+
+  m_waterBrushShader.Activate();
+  glDispatchCompute(m_gridResolution / 32, m_gridResolution / 32, 1);
 }
 
 void Terrain::SetPixelPerTriangle(float pixelPerTriangle)

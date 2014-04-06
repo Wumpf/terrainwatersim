@@ -351,6 +351,12 @@ ezResult Scene::Update(ezTime lastFrameDuration)
   ezGraphicsUtils::ConvertScreenPosToWorldPos(inverseViewProjection, ezProjectionDepthRange::MinusOneToOne, 0, 0,
                         GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), cursorPositionScreenCor, pickRayStart, &pickRayDir);
 
+  // Water Brush
+  if (ezInputManager::GetInputSlotState(ezInputSlot_MouseButton0) == ezKeyState::Down)
+  {
+    m_terrain->ApplyRadialWaterBrush(ezVec2(m_pCamera->GetPosition().x, m_pCamera->GetPosition().z), lastFrameDuration.GetSeconds() * 100.0f);
+  }
+
   // simulate
   m_pSimulationTimer->Start();
   m_terrain->PerformSimulationStep(lastFrameDuration);
