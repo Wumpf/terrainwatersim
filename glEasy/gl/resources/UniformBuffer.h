@@ -23,7 +23,7 @@ namespace gl
       Variable(const UniformVariableInfo& metaInfo, UniformBuffer* pUniformBuffer) :
         ShaderVariable(metaInfo), m_pUniformBuffer(pUniformBuffer) {}
 
-      void Set(const void* pData, ezUInt32 SizeInBytes) EZ_OVERRIDE;
+      void Set(const void* pData, ezUInt32 SizeInBytes) override;
 
       using gl::ShaderVariable<UniformVariableInfo>::Set;
     private:

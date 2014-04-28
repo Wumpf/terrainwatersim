@@ -25,7 +25,7 @@ namespace gl
 
     void GenMipMaps();
 
-    GLenum GetOpenGLTextureType() EZ_OVERRIDE { return GL_TEXTURE_CUBE_MAP; }
+    GLenum GetOpenGLTextureType() override { return GL_TEXTURE_CUBE_MAP; }
   };
 
 }

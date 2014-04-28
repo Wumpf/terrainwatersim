@@ -4,7 +4,6 @@
 
 namespace gl
 {
-
   /// \brief Easy to use OpenGL Sampler Object
   ///
   /// Will store all runtime create sampler objects in a intern static list. List will be cleared on program shutdown or on explicit call.
@@ -33,7 +32,7 @@ namespace gl
       Desc(Filter minFilter, Filter magFilter, Filter mipFilter, Border borderHandlingU, Border borderHandlingV, Border m_borderHandlingW,
         ezUInt32 maxAnisotropy = 1, ezColor borderColor = ezColor::GetWhite());
 
-      bool operator == (const Desc& lft) { return ezMemoryUtils::ByteCompare(this, &lft) == 0;  }
+      bool operator == (const Desc& lft) const { return ezMemoryUtils::ByteCompare(this, &lft) == 0;  }
 
       Filter minFilter;
       Filter magFilter;
@@ -63,12 +62,26 @@ namespace gl
   private:
     SamplerObject(const Desc& samplerDesc);
     SamplerObject(SamplerObject&& cpy);
- 
+
 
     static const SamplerObject* s_pSamplerBindings[32];
-    static ezHashTable<Desc, SamplerObject> s_existingSamplerObjects;
+    static ezHashTable<Desc, SamplerObject, ezHashHelper<Desc>> s_existingSamplerObjects;
 
     SamplerId m_samplerId;
   };
-
 };
+
+template <>
+struct ezHashHelper<gl::SamplerObject::Desc>
+{
+  EZ_FORCE_INLINE static ezUInt32 Hash(const gl::SamplerObject::Desc& value)
+  {
+    return ezHashing::MurmurHash((void*)&value, sizeof(gl::SamplerObject::Desc));
+  }
+
+  EZ_FORCE_INLINE static bool Equal(const gl::SamplerObject::Desc& a, const gl::SamplerObject::Desc& b)
+  {
+    return a == b;
+  }
+};
+

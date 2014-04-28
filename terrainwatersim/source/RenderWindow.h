@@ -9,8 +9,8 @@ public:
 	~RenderWindowGL();
 
   void SwapBuffers();
-  virtual void OnWindowMessage(HWND hWnd, UINT Msg, WPARAM WParam, LPARAM LParam) EZ_OVERRIDE;
-  virtual void OnResizeMessage(const ezSizeU32& newWindowSize) EZ_OVERRIDE;
+  virtual void OnWindowMessage(HWND hWnd, UINT Msg, WPARAM WParam, LPARAM LParam) override;
+  virtual void OnResizeMessage(const ezSizeU32& newWindowSize) override;
 
   HDC GetWindowDC() const { return m_hDC; }
 

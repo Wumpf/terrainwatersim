@@ -13,7 +13,7 @@ namespace gl
     void SetData(ezUInt32 uiMipLevel, const ezColor* pData);
     void SetData(ezUInt32 uiMipLevel, const ezColor8UNorm* pData);
 
-    GLenum GetOpenGLTextureType() EZ_OVERRIDE { return GL_TEXTURE_3D; }
+    GLenum GetOpenGLTextureType() override { return GL_TEXTURE_3D; }
   };
 
 }

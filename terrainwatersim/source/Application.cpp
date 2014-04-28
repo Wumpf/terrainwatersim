@@ -119,8 +119,8 @@ void Application::Update(ezTime lastFrameDuration)
 {
   UpdateInput(lastFrameDuration);
   m_pScene->Update(lastFrameDuration);
-  if(m_pWindow->ProcessWindowMessages() != ezWindow::Continue)
-    m_bRunning = false;
+  m_pWindow->ProcessWindowMessages();
+  m_bRunning = m_pWindow->IsInitialized();
   m_pOnScreenLogWriter->Update(lastFrameDuration);
 
   m_pShaderChangesWatcher->update();

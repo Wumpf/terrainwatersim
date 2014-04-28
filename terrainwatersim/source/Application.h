@@ -16,9 +16,9 @@ public:
   Application();
   ~Application();
 
-  virtual void AfterEngineInit() EZ_OVERRIDE;
-  virtual void BeforeEngineShutdown() EZ_OVERRIDE;
-  virtual ezApplication::ApplicationExecution Run() EZ_OVERRIDE;
+  virtual void AfterEngineInit() override;
+  virtual void BeforeEngineShutdown() override;
+  virtual ezApplication::ApplicationExecution Run() override;
 
   void handleFileAction(FW::WatchID watchid, const FW::String& dir, const FW::String& filename, FW::Action action);
 
