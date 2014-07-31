@@ -1,7 +1,7 @@
 terrainwatersim
 ===============
 
-Some experiments with realtime water &amp; erosion simulation on terrain, using OpenGL 4.3.
+Some experiments with realtime water simulation on terrain, using OpenGL 4.3.
 
 [SCREENSHOTS](https://github.com/Wumpf/terrainwatersim/tree/master/screenshots)
 ---------------
