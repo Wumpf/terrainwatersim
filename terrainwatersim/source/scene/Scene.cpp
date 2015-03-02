@@ -352,7 +352,8 @@ ezResult Scene::Update(ezTime lastFrameDuration)
                         GeneralConfig::g_ResolutionWidth.GetValue(), GeneralConfig::g_ResolutionHeight.GetValue(), cursorPositionScreenCor, pickRayStart, &pickRayDir);
 
   // Water Brush
-  if (ezInputManager::GetInputSlotState(ezInputSlot_MouseButton0) == ezKeyState::Down)
+  //if (ezInputManager::GetInputSlotState(ezInputSlot_MouseButton0) == ezKeyState::Down)
+  if (ezInputManager::GetInputSlotState(ezInputSlot_KeySpace) == ezKeyState::Down)
   {
     m_terrain->ApplyRadialWaterBrush(ezVec2(m_pCamera->GetPosition().x, m_pCamera->GetPosition().z), lastFrameDuration.GetSeconds() * 100.0f);
   }
