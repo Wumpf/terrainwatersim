@@ -11,6 +11,7 @@ public:
   void SwapBuffers();
   virtual void OnWindowMessage(HWND hWnd, UINT Msg, WPARAM WParam, LPARAM LParam) override;
   virtual void OnResizeMessage(const ezSizeU32& newWindowSize) override;
+  virtual void OnClickCloseMessage();
 
   HDC GetWindowDC() const { return m_hDC; }
 

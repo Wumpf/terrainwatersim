@@ -9,7 +9,7 @@
 
 #include <Foundation/io/FileSystem/FileReader.h>
 #include <Foundation/io/OSFile.h>
-#include <Foundation/Basics/Types/ArrayPtr.h>
+#include <Foundation/Types/ArrayPtr.h>
 
 namespace gl
 {
@@ -68,7 +68,7 @@ namespace gl
     {
       // memorize files
       for(auto it=includingFiles.GetIterator(); it.IsValid(); ++it)
-        m_filesPerShaderType.Insert(it.Key(), Type);
+        m_filesPerShaderType.Insert(it.Key(), static_cast<ezUInt32>(Type));
     }
 
     return result;
@@ -107,13 +107,13 @@ namespace gl
     while((pIncludePosition = sourceCode.FindSubString("#include")) != NULL)
     {
       // parse filepath
-      const char* pQuotMarksFirst = ezStringIterator(pIncludePosition).FindSubString("\"");
+      const char* pQuotMarksFirst = ezStringUtils::FindSubString(pIncludePosition, "\"");
       if(pQuotMarksFirst == NULL)
       {
         ezLog::Error("Invalid #include directive in shader file %s. Expected \"", sFilename.GetData());
         break;
       }
-      const char* pQuotMarksSecond = ezStringIterator(pQuotMarksFirst+1).FindSubString("\"");
+      const char* pQuotMarksSecond = ezStringUtils::FindSubString(pQuotMarksFirst + 1, "\"");
       if(pQuotMarksSecond == NULL)
       {
         ezLog::Error("Invalid #include directive in shader file %s. Expected \"", sFilename.GetData());
@@ -235,9 +235,11 @@ namespace gl
       // remove old associated files
       for(auto it=m_filesPerShaderType.GetIterator(); it.IsValid(); ++it)
       {
-        if(it.Value() == type)
+        if(it.Value() == static_cast<ezUInt32>(type))
         {
-          it = m_filesPerShaderType.Erase(it);
+          auto oldIt = it;
+          ++it;
+          m_filesPerShaderType.Remove(oldIt.Key());
           if(!it.IsValid())
             break;
         }
@@ -415,7 +417,7 @@ namespace gl
   }
 
   template<typename BufferVariableType>
-  void ShaderObject::QueryBlockInformations(ezMap<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName)
+  void ShaderObject::QueryBlockInformations(ezHashTable<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName)
   {
     BufferToFill.Clear();
 
@@ -471,11 +473,11 @@ namespace gl
     // does not change any uniform - not necessary!
     //EZ_ASSERT(g_pCurrentlyActiveShaderObject == this, "You need to activate the ShaderObject before calling BindUBO!");
 
-    auto it = m_UniformBlockInfos.Find(sUBOName);
-    if(!it.IsValid())
+    gl::UniformBufferMetaInfo* bufferInfo;
+    if (!m_UniformBlockInfos.TryGetValue(sUBOName, bufferInfo))
       return EZ_FAILURE;
 
-    return ubo.BindBuffer(it.Value().iBufferBinding);
+    return ubo.BindBuffer(bufferInfo->iBufferBinding);
   }
 
   /*
@@ -581,13 +583,13 @@ namespace gl
   /// file handler event for hot reloading
   void ShaderObject::FileEventHandler(const ezString& changedShaderFile)
   {
-    auto it = m_filesPerShaderType.Find(changedShaderFile);
-    if(it.IsValid())
+    ezUInt32 type;
+    if (m_filesPerShaderType.TryGetValue(changedShaderFile, type))
     {
-      if(m_aShader[static_cast<ezUInt32>(it.Value())].bLoaded)
+      if (m_aShader[type].bLoaded)
       {
-        ezString origin(m_aShader[static_cast<ezUInt32>(it.Value())].sOrigin);  // need to copy the string, since it could be deleted in the course of reloading..
-        if(AddShaderFromFile(it.Value(), origin) != EZ_FAILURE && m_bContainsAssembledProgram)
+        ezString origin(m_aShader[type].sOrigin);  // need to copy the string, since it could be deleted in the course of reloading..
+        if (AddShaderFromFile(static_cast<ShaderType>(type), origin) != EZ_FAILURE && m_bContainsAssembledProgram)
           CreateProgram();
       }
     }

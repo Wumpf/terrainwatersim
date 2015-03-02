@@ -42,15 +42,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine;..\glEasy\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Debug64\;$(LibraryPath)</LibraryPath>
+    <IncludePath>source\;..\dependencies\include;..\dependencies\ezEngine\Code\Engine;..\glEasy\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\dependencies\ezEngine\Output\Lib\WinVs2013Debug64\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\bin\$(Configuration)\</OutDir>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>source\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;..\glEasy\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Release64;$(LibraryPath)</LibraryPath>
+    <IncludePath>source\;..\dependencies\include;..\dependencies\ezEngine\Code\Engine;..\glEasy\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)$(Platform)\lib\$(Configuration)\;..\dependencies\lib;..\dependencies\ezEngine\Output\Lib\WinVs2013Release64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\bin\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,7 +97,7 @@ xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;ezThirdParty.lib;OpenGL32.lib;glew32s.lib;AntTweakBar/AntTweakBar64.lib;glEasy.lib;ezCoreUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy $(ProjectDir)textures $(TargetDir)textures\ /D /Y</Command>

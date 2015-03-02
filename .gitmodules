@@ -1,0 +1,6 @@
+[submodule "dependencies/stb"]
+	path = dependencies/stb
+	url = https://github.com/nothings/stb.git
+[submodule "dependencies/ezEngine"]
+	path = dependencies/ezEngine
+	url = https://github.com/ezEngine/ezEngine.git

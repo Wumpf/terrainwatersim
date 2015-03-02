@@ -21,7 +21,7 @@
 #include "AntTweakBarInterface.h"
 
 #include <Foundation/Utilities/Stats.h>
-#include <Foundation/Basics/Types/Variant.h>
+#include <Foundation/Types/Variant.h>
 #include <Foundation/Utilities/GraphicsUtils.h>
 #include <Core/Input/InputManager.h>
 

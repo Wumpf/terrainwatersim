@@ -22,6 +22,6 @@ inline void UniformBuffer::SetData(const void* pData, ezUInt32 dataSize, ezUInt3
 
 inline UniformBuffer::Variable& UniformBuffer::operator[] (const ezString& sVariableName)             
 {
-  EZ_ASSERT(m_Variables.Find(sVariableName).IsValid(), "There is no variable named %s in the uniform buffer \"%s\"", sVariableName.GetData(), m_sBufferName.GetData());
+  EZ_ASSERT(m_Variables.KeyExists(sVariableName), "There is no variable named %s in the uniform buffer \"%s\"", sVariableName.GetData(), m_sBufferName.GetData());
   return m_Variables[sVariableName];
 }

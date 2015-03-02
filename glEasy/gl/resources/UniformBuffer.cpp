@@ -43,17 +43,17 @@ namespace gl
 
   ezResult UniformBuffer::Init(const gl::ShaderObject& shader, const ezString& sBufferName)
   {
-    auto uniformBufferInfoIterator = shader.GetUniformBufferInfo().Find(sBufferName);
-    if(!uniformBufferInfoIterator.IsValid())
+    gl::UniformBufferMetaInfo* uniformBufferInfo = nullptr;
+    if (!shader.GetUniformBufferInfo().TryGetValue(sBufferName, uniformBufferInfo))
     {
       ezLog::Error("Shader \"%s\" doesn't contain a uniform buffer meta block info with the name \"%s\"!", shader.GetName().GetData(), sBufferName.GetData());
       return EZ_FAILURE;
     }
 
-    for(auto it = uniformBufferInfoIterator.Value().Variables.GetIterator(); it.IsValid(); ++it)
+    for (auto it = uniformBufferInfo->Variables.GetIterator(); it.IsValid(); ++it)
       m_Variables.Insert(it.Key(), Variable(it.Value(), this));
 
-    return Init(uniformBufferInfoIterator.Value().iBufferDataSizeByte, sBufferName);
+    return Init(uniformBufferInfo->iBufferDataSizeByte, sBufferName);
   }
 
   ezResult UniformBuffer::Init(std::initializer_list<const gl::ShaderObject*> metaInfos, const ezString& sBufferName)
@@ -70,8 +70,8 @@ namespace gl
                         (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData());
         continue;
       }
-      auto uniformBufferInfoIterator = (*shaderObjectIt)->GetUniformBufferInfo().Find(sBufferName);
-      if(!uniformBufferInfoIterator.IsValid()) // the first was fatal, this one is skippable
+      UniformBufferMetaInfo* uniformBufferInfo = nullptr;
+      if (!(*shaderObjectIt)->GetUniformBufferInfo().TryGetValue(sBufferName, uniformBufferInfo)) // the first was fatal, this one is skippable
       {
         ezLog::Warning("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization doesn't contain the needed meta data! Skipping..", 
                         (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData());
@@ -87,22 +87,22 @@ namespace gl
       }
 
       // sanity check
-      if(uniformBufferInfoIterator.Value().iBufferDataSizeByte != m_uiBufferSizeBytes)
+      if (uniformBufferInfo->iBufferDataSizeByte != m_uiBufferSizeBytes)
       {
         ezLog::Warning("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization gives size %i, first shader gave size %i! Skipping..",
-                   (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData(), uniformBufferInfoIterator.Value().iBufferDataSizeByte, m_uiBufferSizeBytes);
+          (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData(), uniformBufferInfo->iBufferDataSizeByte, m_uiBufferSizeBytes);
         continue;
       }
 
-      for(auto varIt = uniformBufferInfoIterator.Value().Variables.GetIterator(); varIt.IsValid(); ++varIt)
+      for (auto varIt = uniformBufferInfo->Variables.GetIterator(); varIt.IsValid(); ++varIt)
       {
-        auto ownVarIt = m_Variables.Find(varIt.Key());
-        if(ownVarIt.IsValid())  // overlap
+        gl::UniformBuffer::Variable* ownVar = nullptr;
+        if (m_Variables.TryGetValue(varIt.Key(), ownVar))  // overlap
         {
           // sanity check
-          const gl::UniformVariableInfo* ownVar =  &ownVarIt.Value().GetMetaInfo();
-          const gl::UniformVariableInfo* otherVar = &varIt.Value();
-          if(ezMemoryUtils::ByteCompare(ownVar, otherVar) != 0)
+          const gl::UniformVariableInfo* ownVarInfo =  &ownVar->GetMetaInfo();
+          const gl::UniformVariableInfo* otherVarInfo = &varIt.Value();
+          if (ezMemoryUtils::ByteCompare(ownVarInfo, otherVarInfo) != 0)
           {
             ezLog::Error("ShaderObject \"%s\" in list for uniform buffer \"%s\" initialization has a description of variable \"%s\" that doesn't match with the ones before!", 
                     (*shaderObjectIt)->GetName().GetData(), sBufferName.GetData(), varIt.Key().GetData());

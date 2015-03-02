@@ -47,7 +47,7 @@ void OnScreenLogWriter::LogMessageHandler(const ezLoggingEventData& eventData)
       logtext.Append("] ");
     }
 
-    const char* nextLine = ezStringIterator(text).FindSubString("\n");
+    const char* nextLine = ezStringUtils::FindSubString(text, "\n");
     if(nextLine != NULL)
     {
       ezUInt32 count = static_cast<ezUInt32>(nextLine-text);

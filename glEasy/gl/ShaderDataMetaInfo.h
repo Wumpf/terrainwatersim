@@ -130,7 +130,7 @@ namespace gl
     ezInt32   iBufferDataSizeByte;  ///< Minimal buffer size in bytes
 
     /// Known contained variable information
-    ezMap<ezString, VariableType> Variables;
+    ezHashTable<ezString, VariableType> Variables;
 
     // possible, but currently missing:
     // - usage by shader stage (GL_REFERENCED_BY_..)

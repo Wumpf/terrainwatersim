@@ -52,7 +52,7 @@ namespace gl
 
     glSamplerParameteri(m_samplerId, GL_TEXTURE_MAX_ANISOTROPY_EXT, desc.maxAnisotropy);
 
-    glSamplerParameterfv(m_samplerId, GL_TEXTURE_BORDER_COLOR, desc.borderColor);
+    glSamplerParameterfv(m_samplerId, GL_TEXTURE_BORDER_COLOR, &desc.borderColor.r);
   }
 
   SamplerObject::~SamplerObject()

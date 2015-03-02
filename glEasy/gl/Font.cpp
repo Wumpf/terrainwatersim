@@ -42,7 +42,7 @@ namespace gl
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	  glUseProgram(0);
-	  glColor4fv(color);
+	  glColor4fv(&color.r);
 
 	  float screenPosX = screenPosition.x * 2.0f - 1.0f;
 	  float screenPosY = 1.0f - screenPosition.y * 2.0f;

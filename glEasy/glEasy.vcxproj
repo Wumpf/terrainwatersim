@@ -11,10 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\dependencies\include\stb_image\stb_image.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="gl\Font.cpp" />
     <ClCompile Include="gl\GLUtils.cpp" />
     <ClCompile Include="gl\PCH.cpp">
@@ -33,7 +29,6 @@
     <ClCompile Include="gl\TimerQuery.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\dependencies\include\stb_image\stb_image.h" />
     <ClInclude Include="gl\Font.h" />
     <ClInclude Include="gl\gl.h" />
     <ClInclude Include="gl\GLUtils.h" />
@@ -84,14 +79,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Release64;$(LibraryPath)</LibraryPath>
-    <IncludePath>gl\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;$(IncludePath)</IncludePath>
+    <LibraryPath>..\dependencies\lib;..\dependencies\ezEngine\Output\Lib\WinVs2013Debug64;$(LibraryPath)</LibraryPath>
+    <IncludePath>gl\;..\dependencies\include;..\dependencies\ezEngine\Code\Engine;..\dependencies\stb\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Platform)\lib\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>gl\;..\dependencies\include;..\..\ezEngine\Trunk\Code\Engine\;$(IncludePath)</IncludePath>
-    <LibraryPath>..\dependencies\lib;..\..\ezEngine\Trunk\Output\Lib\WinVs2013Debug64;$(LibraryPath)</LibraryPath>
+    <IncludePath>gl\;..\dependencies\include;..\dependencies\ezEngine\Code\Engine;..\dependencies\stb\;$(IncludePath)</IncludePath>
+    <LibraryPath>..\dependencies\lib;..\dependencies\ezEngine\Output\Lib\WinVs2013Debug64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\lib\$(Configuration)\</OutDir>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -110,8 +109,12 @@
       <AdditionalDependencies>ezSystem.lib;ezFoundation.lib;ezCore.lib;OpenGL32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
-      <Command>xcopy "$(SolutionDir)..\ezEngine\Trunk\Output\Bin\WinVs2013Debug64" $(TargetDir) /Y /C</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)dependencies\ezEngine\Output\Bin\WinVs2013Debug64" $(TargetDir) /Y /C</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -138,6 +141,9 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)dependencies\ezEngine\Output\Bin\WinVs2013Release64" $(TargetDir) /Y /C</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

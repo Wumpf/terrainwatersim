@@ -13,9 +13,9 @@ namespace gl
   class ShaderObject
   {
   public:
-    typedef ezMap<ezString, UniformVariableInfo> GlobalUniformInfos;
-    typedef ezMap<ezString, ShaderStorageBufferMetaInfo> ShaderStorageInfos;
-    typedef ezMap<ezString, UniformBufferMetaInfo> UniformBlockInfos;
+    typedef ezHashTable<ezString, UniformVariableInfo> GlobalUniformInfos;
+    typedef ezHashTable<ezString, ShaderStorageBufferMetaInfo> ShaderStorageInfos;
+    typedef ezHashTable<ezString, UniformBufferMetaInfo> UniformBlockInfos;
 
     enum class ShaderType
     {
@@ -113,7 +113,7 @@ namespace gl
 
     /// Intern helper function for gather general BufferInformations
     template<typename BufferVariableType>
-    void QueryBlockInformations(ezMap<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName);
+    void QueryBlockInformations(ezHashTable<ezString, BufferInfo<BufferVariableType>>& BufferToFill, GLenum InterfaceName);
     
 
     /// Name for identifying at runtime
@@ -128,7 +128,7 @@ namespace gl
     static const ShaderObject* s_pCurrentlyActiveShaderObject;
 
     /// list of relevant files - if any of these changes a reload will be triggered
-    ezMap<ezString, ShaderType> m_filesPerShaderType;
+    ezHashTable<ezString, ezUInt32> m_filesPerShaderType;
 
     // underlying shaders
     struct Shader

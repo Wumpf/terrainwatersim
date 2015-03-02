@@ -31,7 +31,7 @@ namespace gl
     };
 
 
-    bool ContainsVariable(const ezString& sVariableName) const       { return m_Variables.Find(sVariableName).IsValid(); }
+    bool ContainsVariable(const ezString& sVariableName) const       { return m_Variables.KeyExists(sVariableName); }
     UniformBuffer::Variable& operator[] (const ezString& sVariableName);
 
     /// \brief Sets data in buffer directly.
@@ -62,7 +62,7 @@ namespace gl
     ezInt8* m_pBufferData;
 
     /// meta information
-    ezMap<ezString, Variable> m_Variables;  /// \todo no ezHashTable possible?
+    ezHashTable<ezString, Variable> m_Variables;  /// \todo no ezHashTable possible?
 
 
     /// Currently bound UBOs - number is arbitrary!

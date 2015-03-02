@@ -2,7 +2,7 @@
 
 #include <Foundation/Containers/List.h>
 #include <Foundation/Containers/Set.h>
-#include <Foundation/Basics/Types/Variant.h>
+#include <Foundation/Types/Variant.h>
 #include "GlobalEvents.h"
 
 #include <AntTweakBar.h>

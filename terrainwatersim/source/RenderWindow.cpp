@@ -126,7 +126,14 @@ ezResult RenderWindowGL::CreateGraphicsContext()
   glDepthFunc(GL_LEQUAL);
   glEnable(GL_CULL_FACE);
 
+  ShowWindow(GetNativeWindowHandle(), SW_MAXIMIZE);
+
   return EZ_SUCCESS;
+}
+
+void RenderWindowGL::OnClickCloseMessage()
+{
+  Destroy();
 }
 
 void RenderWindowGL::SwapBuffers()
